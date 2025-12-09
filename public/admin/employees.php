@@ -534,6 +534,11 @@ $error = $_GET['error'] ?? '';
             height: 38px;
         }
 
+        .btn-view {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
         .btn-edit {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -867,10 +872,13 @@ $error = $_GET['error'] ?? '';
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        <a class="btn-sm btn-edit" href="edit_employee.php?id=<?php echo urlencode($emp['employee_id']); ?>">
+                                        <a class="btn-sm btn-view" href="employee_profile.php?id=<?php echo urlencode($emp['employee_id']); ?>" title="View Profile">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a class="btn-sm btn-edit" href="edit_employee.php?id=<?php echo urlencode($emp['employee_id']); ?>" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a class="btn-sm btn-delete confirm-delete" href="../index.php?page=delete-employee&id=<?php echo urlencode($emp['employee_id']); ?>" data-name="<?php echo htmlspecialchars($emp['full_name']); ?>">
+                                        <a class="btn-sm btn-delete confirm-delete" href="../index.php?page=delete-employee&id=<?php echo urlencode($emp['employee_id']); ?>" data-name="<?php echo htmlspecialchars($emp['full_name']); ?>" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
