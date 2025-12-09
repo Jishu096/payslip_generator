@@ -9,8 +9,50 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'administrator') {
 $username = $_SESSION['username'] ?? 'Admin';
 
 require_once __DIR__ . '/../../app/Models/Employee.php';
+require_once __DIR__ . '/../../app/Config/database.php';
+
+// Get filter parameters
+$filterDepartment = $_GET['department'] ?? '';
+$filterDesignation = $_GET['designation'] ?? '';
+$filterEmploymentType = $_GET['employment_type'] ?? '';
+$filterStatus = $_GET['status'] ?? '';
+
+// Build query with filters
 $employeeModel = new Employee();
-$employees = $employeeModel->getAllEmployees();
+$db = getDBConnection();
+
+$query = "SELECT e.*, d.department_name 
+          FROM employees e 
+          LEFT JOIN departments d ON e.department_id = d.department_id 
+          WHERE 1=1";
+$params = [];
+
+if ($filterDepartment) {
+    $query .= " AND e.department_id = ?";
+    $params[] = $filterDepartment;
+}
+if ($filterDesignation) {
+    $query .= " AND e.designation LIKE ?";
+    $params[] = "%$filterDesignation%";
+}
+if ($filterEmploymentType) {
+    $query .= " AND e.employment_type = ?";
+    $params[] = $filterEmploymentType;
+}
+if ($filterStatus) {
+    $query .= " AND e.status = ?";
+    $params[] = $filterStatus;
+}
+
+$query .= " ORDER BY e.employee_id DESC";
+
+$stmt = $db->prepare($query);
+$stmt->execute($params);
+$employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get all departments for filter dropdown
+$deptStmt = $db->query("SELECT department_id, department_name FROM departments ORDER BY department_name");
+$departments = $deptStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $success = isset($_GET['success']);
 $deleted = isset($_GET['deleted']);
@@ -237,6 +279,238 @@ $error = $_GET['error'] ?? '';
         .badge-inactive { 
             background: var(--badge-danger-bg); 
             color: var(--badge-danger-text); 
+        }
+
+        .badge-on_leave {
+            background: rgba(251, 191, 36, 0.15);
+            color: #f59e0b;
+        }
+
+        [data-theme="dark"] .badge-on_leave {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .filters-section {
+            padding: 20px 30px;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Manrope', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        .btn-filter {
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .btn-export {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-export-excel {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-export-pdf {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Quick View Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+        }
+
+        .close {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            line-height: 1;
+        }
+
+        .close:hover {
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .employee-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .detail-item label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-item .value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .employee-name-clickable {
+            cursor: pointer;
+            color: #667eea;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .employee-name-clickable:hover {
+            color: #764ba2;
+            text-decoration: underline;
         }
 
         .action-btns {
@@ -486,12 +760,66 @@ $error = $_GET['error'] ?? '';
 
         <div class="employee-table">
             <div class="table-header">
-                <h2>All Employees</h2>
+                <h2>All Employees (<?php echo count($employees); ?>)</h2>
                 <div class="search-box">
                     <input type="text" placeholder="Search employees..." id="searchInput">
+                    <button class="btn-export btn-export-excel" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
+                    <button class="btn-export btn-export-pdf" onclick="exportToPDF()">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
                     <a href="add_employee.php" class="add-btn">
                         <i class="fas fa-plus"></i> Add Employee
                     </a>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label>Department</label>
+                    <select id="filterDepartment" name="department">
+                        <option value="">All Departments</option>
+                        <?php foreach ($departments as $dept): ?>
+                            <option value="<?php echo $dept['department_id']; ?>" <?php echo $filterDepartment == $dept['department_id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($dept['department_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Designation</label>
+                    <input type="text" id="filterDesignation" placeholder="e.g., Manager" value="<?php echo htmlspecialchars($filterDesignation); ?>">
+                </div>
+
+                <div class="filter-group">
+                    <label>Employment Type</label>
+                    <select id="filterEmploymentType" name="employment_type">
+                        <option value="">All Types</option>
+                        <option value="permanent" <?php echo $filterEmploymentType === 'permanent' ? 'selected' : ''; ?>>Permanent</option>
+                        <option value="contract" <?php echo $filterEmploymentType === 'contract' ? 'selected' : ''; ?>>Contract</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filterStatus" name="status">
+                        <option value="">All Status</option>
+                        <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active</option>
+                        <option value="inactive" <?php echo $filterStatus === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                        <option value="on_leave" <?php echo $filterStatus === 'on_leave' ? 'selected' : ''; ?>>On Leave</option>
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn-filter" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <button class="btn-filter btn-reset" onclick="resetFilters()">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
                 </div>
             </div>
 
@@ -517,7 +845,11 @@ $error = $_GET['error'] ?? '';
                         <?php foreach ($employees as $emp): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($emp['employee_id']); ?></td>
-                                <td><?php echo htmlspecialchars($emp['full_name']); ?></td>
+                                <td>
+                                    <a href="javascript:void(0)" class="employee-name-clickable" onclick='showEmployeeDetails(<?php echo json_encode($emp); ?>)'>
+                                        <?php echo htmlspecialchars($emp['full_name']); ?>
+                                    </a>
+                                </td>
                                 <td><?php echo htmlspecialchars($emp['email']); ?></td>
                                 <td><?php echo htmlspecialchars($emp['phone']); ?></td>
                                 <td><?php echo htmlspecialchars($emp['department_name'] ?? '—'); ?></td>
@@ -525,7 +857,14 @@ $error = $_GET['error'] ?? '';
                                 <td><?php echo htmlspecialchars($emp['address'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars(($emp['city'] ?? '') . (isset($emp['state']) && $emp['state'] !== '' ? ' / ' . $emp['state'] : '')); ?></td>
                                 <td><?php echo htmlspecialchars($emp['emergency_contact_phone'] ?? ''); ?></td>
-                                <td><span class="badge badge-active">Active</span></td>
+                                <td>
+                                    <?php 
+                                    $status = $emp['status'] ?? 'active';
+                                    $statusClass = 'badge-' . $status;
+                                    $statusText = ucwords(str_replace('_', ' ', $status));
+                                    ?>
+                                    <span class="badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
+                                </td>
                                 <td>
                                     <div class="action-btns">
                                         <a class="btn-sm btn-edit" href="edit_employee.php?id=<?php echo urlencode($emp['employee_id']); ?>">
@@ -545,6 +884,21 @@ $error = $_GET['error'] ?? '';
                     <?php endif; ?>
                 </tbody>
             </table>
+            </div>
+        </div>
+
+        <!-- Quick View Modal -->
+        <div id="employeeModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-user"></i> Employee Details</h2>
+                    <span class="close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="employee-details" id="modalEmployeeDetails">
+                        <!-- Details will be populated by JavaScript -->
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -607,6 +961,220 @@ $error = $_GET['error'] ?? '';
                     e.preventDefault();
                 }
             });
+        });
+
+        // Filter Functions
+        function applyFilters() {
+            const department = document.getElementById('filterDepartment').value;
+            const designation = document.getElementById('filterDesignation').value;
+            const employmentType = document.getElementById('filterEmploymentType').value;
+            const status = document.getElementById('filterStatus').value;
+
+            const params = new URLSearchParams();
+            if (department) params.append('department', department);
+            if (designation) params.append('designation', designation);
+            if (employmentType) params.append('employment_type', employmentType);
+            if (status) params.append('status', status);
+
+            window.location.href = 'employees.php' + (params.toString() ? '?' + params.toString() : '');
+        }
+
+        function resetFilters() {
+            window.location.href = 'employees.php';
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            const table = document.querySelector('table');
+            let html = '<table>';
+            
+            // Get headers
+            html += '<thead><tr>';
+            table.querySelectorAll('thead th').forEach((th, index) => {
+                if (index < table.querySelectorAll('thead th').length - 1) { // Skip Actions column
+                    html += '<th>' + th.textContent + '</th>';
+                }
+            });
+            html += '</tr></thead><tbody>';
+            
+            // Get visible rows only
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                if (tr.style.display !== 'none') {
+                    html += '<tr>';
+                    tr.querySelectorAll('td').forEach((td, index) => {
+                        if (index < tr.querySelectorAll('td').length - 1) { // Skip Actions column
+                            html += '<td>' + td.textContent.trim() + '</td>';
+                        }
+                    });
+                    html += '</tr>';
+                }
+            });
+            html += '</tbody></table>';
+            
+            const blob = new Blob(['\ufeff', html], {
+                type: 'application/vnd.ms-excel'
+            });
+            
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'employees_' + new Date().toISOString().split('T')[0] + '.xls';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Export to PDF
+        function exportToPDF() {
+            window.print();
+        }
+
+        // Print styles for PDF export
+        const style = document.createElement('style');
+        style.textContent = `
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                .employee-table, .employee-table * {
+                    visibility: visible;
+                }
+                .employee-table {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+                .theme-toggle, .search-box, .filters-section, .action-btns, .page-header {
+                    display: none !important;
+                }
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                }
+                th, td {
+                    border: 1px solid #000;
+                    padding: 8px;
+                    text-align: left;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Quick View Modal Functions
+        const modal = document.getElementById('employeeModal');
+
+        function showEmployeeDetails(employee) {
+            const detailsContainer = document.getElementById('modalEmployeeDetails');
+            const status = employee.status || 'active';
+            const statusClass = 'badge-' + status;
+            const statusText = status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            
+            detailsContainer.innerHTML = `
+                <div class="detail-item full-width">
+                    <label><i class="fas fa-id-badge"></i> Employee ID</label>
+                    <div class="value">${employee.employee_id}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-user"></i> Full Name</label>
+                    <div class="value">${employee.full_name}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <div class="value">${employee.email}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-phone"></i> Phone</label>
+                    <div class="value">${employee.phone}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-briefcase"></i> Designation</label>
+                    <div class="value">${employee.designation}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-building"></i> Department</label>
+                    <div class="value">${employee.department_name || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-id-card"></i> Employment Type</label>
+                    <div class="value">${employee.employment_type.charAt(0).toUpperCase() + employee.employment_type.slice(1)}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-toggle-on"></i> Status</label>
+                    <div class="value"><span class="badge ${statusClass}">${statusText}</span></div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-dollar-sign"></i> Basic Salary</label>
+                    <div class="value">₹${parseFloat(employee.basic_salary).toLocaleString('en-IN')}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-calendar-alt"></i> Join Date</label>
+                    <div class="value">${employee.join_date || '—'}</div>
+                </div>
+                <div class="detail-item full-width">
+                    <label><i class="fas fa-map-marker-alt"></i> Address</label>
+                    <div class="value">${employee.address || '—'}, ${employee.city || '—'}, ${employee.state || '—'} - ${employee.pincode || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-user-shield"></i> Emergency Contact</label>
+                    <div class="value">${employee.emergency_contact_name || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-phone-alt"></i> Emergency Phone</label>
+                    <div class="value">${employee.emergency_contact_phone || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-id-card"></i> Aadhaar Number</label>
+                    <div class="value">${employee.aadhaar_no || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-id-badge"></i> PAN Number</label>
+                    <div class="value">${employee.pan_no || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-university"></i> Bank Account</label>
+                    <div class="value">${employee.bank_account_no || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-barcode"></i> IFSC Code</label>
+                    <div class="value">${employee.ifsc_code || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-briefcase"></i> Experience</label>
+                    <div class="value">${employee.experience_years || '0'} years</div>
+                </div>
+                <div class="detail-item">
+                    <label><i class="fas fa-calendar-check"></i> Last Appraisal</label>
+                    <div class="value">${employee.last_appraisal_date || '—'}</div>
+                </div>
+                ${employee.remarks ? `
+                <div class="detail-item full-width">
+                    <label><i class="fas fa-comment-dots"></i> Remarks</label>
+                    <div class="value">${employee.remarks}</div>
+                </div>
+                ` : ''}
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal.style.display === 'block') {
+                closeModal();
+            }
         });
     </script>
 

@@ -295,6 +295,15 @@ $username = $_SESSION['username'] ?? 'Admin';
                     </div>
 
                     <div class="form-group">
+                        <label for="status"><i class="fas fa-toggle-on"></i> Status</label>
+                        <select id="status" name="status" required>
+                            <option value="active" <?php echo ($emp['status'] ?? 'active')==='active'?'selected':''; ?>>Active</option>
+                            <option value="inactive" <?php echo ($emp['status'] ?? 'active')==='inactive'?'selected':''; ?>>Inactive</option>
+                            <option value="on_leave" <?php echo ($emp['status'] ?? 'active')==='on_leave'?'selected':''; ?>>On Leave</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label for="basic_salary"><i class="fas fa-dollar-sign"></i> Basic Salary</label>
                         <input type="number" id="basic_salary" name="basic_salary" step="0.01" required value="<?php echo htmlspecialchars($emp['basic_salary']); ?>" data-original="<?php echo htmlspecialchars($emp['basic_salary']); ?>">
                         <p class="form-hint" style="color: #e74c3c; font-weight: 500; display: none;" id="salary_warning">

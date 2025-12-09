@@ -271,6 +271,15 @@ $username = $_SESSION['username'] ?? 'Admin';
                     </div>
 
                     <div class="form-group">
+                        <label for="status"><i class="fas fa-toggle-on"></i> Status</label>
+                        <select id="status" name="status" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="on_leave">On Leave</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label for="basic_salary"><i class="fas fa-dollar-sign"></i> Basic Salary</label>
                         <input type="number" id="basic_salary" name="basic_salary" step="0.01" required placeholder="0.00">
                     </div>
