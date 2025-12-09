@@ -1,0 +1,43 @@
+# Vendor directory (Composer dependencies)
+/vendor/
+
+# Environment and config files
+.env
+.env.local
+/app/Config/database.php
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+/storage/logs/*.txt
+/storage/logs/*.log
+*.log
+
+# Uploaded files and generated content
+/storage/payslips/*.pdf
+/public/uploads/
+
+# Composer lock (optional - uncomment if you want to ignore)
+# composer.lock
+
+# Session files
+/tmp/
+/temp/
+
+# Cache
+cache/
+*.cache

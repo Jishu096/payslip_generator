@@ -1,0 +1,80 @@
+ROLE CHANGE APPROVAL WORKFLOW (ASCII)
+====================================
+
+Actors
+- Administrator: initiates role changes in edit_employee.php
+- Director: reviews and approves/rejects in role_approvals.php
+
+Step 1: Admin initiates role change
+- Go to Employees -> Edit employee
+- Change User Role/Position dropdown (employee/accountant/director/administrator)
+- Role Change Request Details panel appears (role_change_reason required when role differs)
+- Submit form
+
+Step 2: EmployeeController processing
+- File: app/Controllers/EmployeeController.php -> updateEmployee()
+- Fetch current user role from users table
+- If new role != current role:
+  - Insert pending record into role_change_requests (employee_id, employee_name, old_role, new_role, change_reason, requested_by, requested_by_name, request_date NOW(), status pending)
+  - Do NOT change users.role yet (old role remains active)
+  - Redirect to employees.php?updated=1&role_pending=1 (or combined with salary_pending)
+- Salary change handling continues independently (existing logic)
+
+Step 3: Director sees pending requests
+- Director Dashboard shows stat card "Pending Role Changes" and sidebar badge
+- Quick Actions includes "Review Role Changes"
+- Click sidebar "Role Changes" -> public/director/role_approvals.php
+
+Step 4A: Director approves
+- role_approvals.php shows pending card with details (employee, dept, email, old->new role, reason, requested by, date)
+- Approve modal allows optional comments
+- POST to app/Controllers/RoleChangeApprovalController.php with action=approve, request_id, review_comments
+- Controller:
+  - Validates director role and pending status
+  - Updates role_change_requests to approved, sets reviewer info, review_date NOW, review_comments
+  - Updates users.role = new_role (applies role change)
+  - Sends email via NotificationHelper::sendRoleChangeApproved
+- Redirect back with ?approved=1 banner; card turns approved with audit info
+
+Step 4B: Director rejects
+- Reject modal requires rejection reason
+- POST action=reject with review_comments
+- Controller updates role_change_requests to rejected (keeps users.role unchanged)
+- Sends email via NotificationHelper::sendRoleChangeRejected with reason
+- Redirect back with ?rejected=1 banner; card turns rejected with audit info
+
+Final state examples
+- Approved: users.role updated to new role; request marked approved with comments and timestamp
+- Rejected: users.role unchanged; request marked rejected with reason
+
+Database
+- Table: role_change_requests (13 columns)
+  - request_id (PK), employee_id (FK employees.employee_id on delete cascade)
+  - employee_name, old_role, new_role, change_reason
+  - requested_by, requested_by_name, request_date (timestamp default now)
+  - status enum('pending','approved','rejected') default pending
+  - reviewed_by, reviewed_by_name, review_date (timestamp null), review_comments
+
+Files created/modified
+- Created: public/director/role_approvals.php (director UI)
+- Created: app/Controllers/RoleChangeApprovalController.php (approve/reject handler)
+- Modified: app/Controllers/EmployeeController.php (detect role changes, create requests)
+- Modified: public/admin/edit_employee.php (role dropdown, reason textarea, JS validation)
+- Modified: public/director/director_dashboard.php (pending role counts, link, stat card)
+- Modified: public/admin/employees.php (role_pending banners)
+
+User experience summary
+- Admin: change role -> provide reason -> sees banner that request sent to Director
+- Director: sees pending count -> reviews -> approves/rejects with comments -> emails sent
+- Employee role updates only after director approval
+
+Color legend (UI uses colors, text only here)
+- Role pending cards/badges: blue
+- Salary pending cards/badges: orange
+- Approved: green
+- Rejected: red
+
+Testing status
+- All modified PHP files pass php -l
+- role_change_requests table verified via DESCRIBE
+- Banners for salary_pending and role_pending combinations added on employees.php
