@@ -20,56 +20,157 @@ $role_pending = isset($_GET['role_pending']);
 $error = $_GET['error'] ?? '';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employees - Enterprise Payroll Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php include 'includes/admin_styles.php'; ?>
     <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #1a1f36;
+            --text-secondary: #555;
+            --text-tertiary: #7f8c8d;
+            --border-color: #e0e0e0;
+            --border-light: #f0f0f0;
+            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            --hover-bg: #f8f9fa;
+            --input-bg: #ffffff;
+            --input-border: #e0e0e0;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --badge-success-bg: #d4edda;
+            --badge-success-text: #155724;
+            --badge-danger-bg: #f8d7da;
+            --badge-danger-text: #721c24;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1f36;
+            --bg-secondary: #232946;
+            --bg-tertiary: #2d3250;
+            --text-primary: #fffffe;
+            --text-secondary: #b8c1ec;
+            --text-tertiary: #a0a8d4;
+            --border-color: #3d4263;
+            --border-light: #353a5c;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --hover-bg: #2d3250;
+            --input-bg: #232946;
+            --input-border: #3d4263;
+            --badge-success-bg: rgba(52, 211, 153, 0.15);
+            --badge-success-text: #34d399;
+            --badge-danger-bg: rgba(239, 68, 68, 0.15);
+            --badge-danger-text: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 15px;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .theme-toggle i {
+            font-size: 18px;
+            color: var(--text-primary);
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:hover i {
+            transform: rotate(20deg);
+        }
+
         .employee-table {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            background: var(--bg-primary);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
             overflow: hidden;
+            border: 1px solid var(--border-color);
         }
 
         .table-header {
-            padding: 20px 25px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 25px 30px;
+            border-bottom: 2px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 20px;
+            background: var(--bg-secondary);
         }
 
         .table-header h2 {
-            font-size: 20px;
-            color: #2c3e50;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
             flex: 1;
             min-width: 200px;
         }
 
         .search-box {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
             align-items: center;
         }
 
         .search-box input {
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            min-width: 200px;
+            padding: 12px 18px;
+            border: 2px solid var(--input-border);
+            border-radius: 10px;
+            min-width: 250px;
             flex: 1;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-family: 'Manrope', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
 
         .search-box input:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-tertiary);
         }
 
         .table-wrapper {
@@ -85,41 +186,58 @@ $error = $_GET['error'] ?? '';
         }
 
         thead {
-            background: #f8f9fa;
+            background: var(--bg-secondary);
             position: sticky;
             top: 0;
+            z-index: 10;
         }
 
         th {
-            padding: 15px 12px;
+            padding: 16px 14px;
             text-align: left;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-primary);
             font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             white-space: nowrap;
+            border-bottom: 2px solid var(--border-color);
         }
 
         td {
-            padding: 15px 12px;
-            border-top: 1px solid #f0f0f0;
-            color: #555;
+            padding: 16px 14px;
+            border-top: 1px solid var(--border-light);
+            color: var(--text-secondary);
             font-size: 14px;
         }
 
+        tr {
+            transition: background 0.2s ease;
+        }
+
         tr:hover {
-            background: #f8f9fa;
+            background: var(--hover-bg);
         }
 
         .badge {
-            padding: 5px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .badge-active { background: #d4edda; color: #155724; }
-        .badge-inactive { background: #f8d7da; color: #721c24; }
+        .badge-active { 
+            background: var(--badge-success-bg); 
+            color: var(--badge-success-text); 
+        }
+        
+        .badge-inactive { 
+            background: var(--badge-danger-bg); 
+            color: var(--badge-danger-text); 
+        }
 
         .action-btns {
             display: flex;
@@ -128,48 +246,145 @@ $error = $_GET['error'] ?? '';
         }
 
         .btn-sm {
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 36px;
-            height: 36px;
+            min-width: 38px;
+            height: 38px;
         }
 
         .btn-edit {
-            background: #3498db;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
         }
 
         .btn-delete {
-            background: #e74c3c;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
         }
 
         .btn-sm:hover {
             transform: translateY(-2px);
-            opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
         .btn-sm i {
             pointer-events: none;
         }
 
+        .add-btn {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .alert {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            border: 2px solid;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert i {
+            font-size: 18px;
+        }
+
+        .alert-success {
+            background: #e8f7ee;
+            border-color: #b6e0c5;
+            color: #1b6b3d;
+        }
+
+        [data-theme="dark"] .alert-success {
+            background: rgba(52, 211, 153, 0.15);
+            border-color: rgba(52, 211, 153, 0.3);
+            color: #34d399;
+        }
+
+        .alert-warning {
+            background: #fff8e1;
+            border-color: #ffb74d;
+            color: #e65100;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: rgba(251, 191, 36, 0.3);
+            color: #fbbf24;
+        }
+
+        .alert-info {
+            background: #e8f5ff;
+            border-color: #b3d9e8;
+            color: #0c5377;
+        }
+
+        [data-theme="dark"] .alert-info {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+        }
+
+        .alert-error {
+            background: #fff4e5;
+            border-color: #ffd8a8;
+            color: #b35c00;
+        }
+
+        [data-theme="dark"] .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
         @media (max-width: 1200px) {
             th, td {
-                padding: 12px 8px;
+                padding: 12px 10px;
                 font-size: 13px;
             }
             .btn-sm {
-                padding: 5px 8px;
-                min-width: 32px;
-                height: 32px;
+                padding: 6px 10px;
+                min-width: 34px;
+                height: 34px;
             }
         }
 
@@ -194,28 +409,19 @@ $error = $_GET['error'] ?? '';
                 width: 100%;
                 justify-content: center;
             }
-        }
-
-        .add-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .add-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
 <body>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
 
     <?php include 'includes/admin_navbar.php'; ?>
     <?php include 'includes/admin_sidebar.php'; ?>
@@ -227,44 +433,54 @@ $error = $_GET['error'] ?? '';
         </div>
 
         <?php if ($success): ?>
-            <div style="background:#e8f7ee;border:1px solid #b6e0c5;color:#1b6b3d;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-check-circle"></i> Employee added successfully.
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>Employee added successfully.</span>
             </div>
         <?php elseif ($updated && $salary_pending && $role_pending): ?>
-            <div style="background:#fff8e1;border:1px solid #ffb74d;color:#e65100;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-clock"></i> Employee updated successfully. <strong>Salary change and role change requests sent to Director for approval.</strong>
+            <div class="alert alert-warning">
+                <i class="fas fa-clock"></i>
+                <span>Employee updated successfully. <strong>Salary change and role change requests sent to Director for approval.</strong></span>
             </div>
         <?php elseif ($updated && $salary_pending): ?>
-            <div style="background:#fff8e1;border:1px solid #ffb74d;color:#e65100;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-clock"></i> Employee updated successfully. <strong>Salary change request sent to Director for approval.</strong>
+            <div class="alert alert-warning">
+                <i class="fas fa-clock"></i>
+                <span>Employee updated successfully. <strong>Salary change request sent to Director for approval.</strong></span>
             </div>
         <?php elseif ($updated && $role_pending): ?>
-            <div style="background:#e8f5ff;border:1px solid #b3d9e8;color:#0c5377;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-clock"></i> Employee updated successfully. <strong>Role change request sent to Director for approval.</strong>
+            <div class="alert alert-info">
+                <i class="fas fa-clock"></i>
+                <span>Employee updated successfully. <strong>Role change request sent to Director for approval.</strong></span>
             </div>
         <?php elseif ($updated): ?>
-            <div style="background:#e8f7ee;border:1px solid #b6e0c5;color:#1b6b3d;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-check-circle"></i> Employee updated successfully.
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>Employee updated successfully.</span>
             </div>
         <?php elseif ($deleted): ?>
-            <div style="background:#e8f7ee;border:1px solid #b6e0c5;color:#1b6b3d;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-check-circle"></i> Employee deleted successfully.
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>Employee deleted successfully.</span>
             </div>
         <?php elseif ($error === 'user_create_failed'): ?>
-            <div style="background:#fff4e5;border:1px solid #ffd8a8;color:#b35c00;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-exclamation-triangle"></i> Employee saved, but user account creation failed.
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Employee saved, but user account creation failed.</span>
             </div>
         <?php elseif ($error === 'delete_failed'): ?>
-            <div style="background:#fff4e5;border:1px solid #ffd8a8;color:#b35c00;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-exclamation-triangle"></i> Delete failed. Please try again.
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Delete failed. Please try again.</span>
             </div>
         <?php elseif ($error === 'update_failed'): ?>
-            <div style="background:#fff4e5;border:1px solid #ffd8a8;color:#b35c00;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-exclamation-triangle"></i> Update failed. Please review the inputs.
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Update failed. Please review the inputs.</span>
             </div>
         <?php elseif ($error === 'missing_id' || $error === 'not_found'): ?>
-            <div style="background:#fff4e5;border:1px solid #ffd8a8;color:#b35c00;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
-                <i class="fas fa-exclamation-triangle"></i> Employee not found.
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Employee not found.</span>
             </div>
         <?php endif; ?>
 
@@ -336,6 +552,35 @@ $error = $_GET['error'] ?? '';
     <?php include 'includes/admin_scripts.php'; ?>
 
     <script>
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('adminTheme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        }
+
         // Search functionality
         const searchInput = document.getElementById('searchInput');
         const table = document.querySelector('table tbody');
