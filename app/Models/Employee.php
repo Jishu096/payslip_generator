@@ -41,10 +41,10 @@ class Employee {
             }
 
         $sql = "INSERT INTO employees 
-            (full_name, email, phone, designation, department_id, employment_type, basic_salary, status, address,
+            (full_name, email, phone, designation, department_id, employment_type, basic_salary, address,
              city, state, pincode, emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
              aadhaar_no, pan_no, bank_account_no, ifsc_code, experience_years, last_appraisal_date, remarks, join_date)
-            VALUES (:full_name, :email, :phone, :designation, :department_id, :employment_type, :basic_salary, :status, :address,
+            VALUES (:full_name, :email, :phone, :designation, :department_id, :employment_type, :basic_salary, :address,
              :city, :state, :pincode, :emergency_contact_name, :emergency_contact_phone, :emergency_contact_relation,
              :aadhaar_no, :pan_no, :bank_account_no, :ifsc_code, :experience_years, :last_appraisal_date, :remarks, NOW())";
 
@@ -70,7 +70,6 @@ class Employee {
             ':department_id' => $data['department_id'],
             ':employment_type' => $data['employment_type'],
             ':basic_salary' => $data['basic_salary'],
-                ':status' => $data['status'] ?? 'active',
             ':address' => $data['address'] ?? null,
             ':city' => $data['city'] ?? null,
             ':state' => $data['state'] ?? null,
@@ -108,7 +107,7 @@ class Employee {
     public function updateEmployee($id, $data) {
         $sql = "UPDATE employees SET full_name=:full_name, email=:email, phone=:phone,
             designation=:designation, department_id=:department_id,
-                employment_type=:employment_type, basic_salary=:basic_salary, status=:status,
+            employment_type=:employment_type, basic_salary=:basic_salary,
             address=:address, city=:city, state=:state, pincode=:pincode,
             emergency_contact_name=:emergency_contact_name,
             emergency_contact_phone=:emergency_contact_phone,
@@ -130,7 +129,6 @@ class Employee {
             ':department_id' => $data['department_id'],
             ':employment_type' => $data['employment_type'],
             ':basic_salary' => $data['basic_salary'],
-                ':status' => $data['status'] ?? 'active',
             ':address' => $data['address'] ?? null,
             ':city' => $data['city'] ?? null,
             ':state' => $data['state'] ?? null,
