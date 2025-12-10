@@ -7,6 +7,7 @@ date_default_timezone_set('Asia/Kolkata');
 
 require_once __DIR__ . '/../../app/Config/database.php';
 require_once __DIR__ . '/../../app/Models/User.php';
+require_once __DIR__ . '/../../app/Models/Employee.php';
 require_once __DIR__ . '/../../app/Helpers/LoginAttemptHelper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
