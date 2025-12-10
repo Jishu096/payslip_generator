@@ -11,11 +11,11 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['all_roles'])) {
 if (count($_SESSION['all_roles']) === 1) {
     $role = $_SESSION['all_roles'][0];
     $redirect = match($role) {
-        'employee' => 'employee/dashboard.php',
-        'accountant' => 'accountant/accountant_dashboard.php',
-        'director' => 'director/director_dashboard.php',
-        'administrator' => 'admin/admin_dashboard.php',
-        default => 'login.php'
+        'employee' => '/payslip_generator/public/employee/dashboard.php',
+        'accountant' => '/payslip_generator/public/accountant/accountant_dashboard.php',
+        'director' => '/payslip_generator/public/director/director_dashboard.php',
+        'administrator' => '/payslip_generator/public/admin/admin_dashboard.php',
+        default => '/payslip_generator/public/auth/login.php'
     };
     header("Location: $redirect");
     exit;
@@ -30,11 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selected_role'])) {
         $_SESSION['current_role'] = $selectedRole;
         
         $redirect = match($selectedRole) {
-            'employee' => 'employee/dashboard.php',
-            'accountant' => 'accountant/accountant_dashboard.php',
-            'director' => 'director/director_dashboard.php',
-            'administrator' => 'admin/admin_dashboard.php',
-            default => 'login.php'
+            'employee' => '/payslip_generator/public/employee/dashboard.php',
+            'accountant' => '/payslip_generator/public/accountant/accountant_dashboard.php',
+            'director' => '/payslip_generator/public/director/director_dashboard.php',
+            'administrator' => '/payslip_generator/public/admin/admin_dashboard.php',
+            default => '/payslip_generator/public/auth/login.php'
         };
         
         header("Location: $redirect");
