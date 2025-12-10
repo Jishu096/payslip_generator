@@ -67,24 +67,9 @@ try {
         $baseURL = "/payslip_generator/public/";
         $primaryRole = $user['role'];
         
-        // If has multiple roles, prefer to go to dashboard that shows role selector
+        // If has multiple roles, show role selector page
         if ($_SESSION['has_multiple_roles']) {
-            // If has admin role, go to admin
-            if (in_array('administrator', $_SESSION['all_roles'])) {
-                $redirect = $baseURL . 'admin/admin_dashboard.php?multiRole=1';
-            }
-            // If has accountant role, go to accountant
-            elseif (in_array('accountant', $_SESSION['all_roles'])) {
-                $redirect = $baseURL . 'accountant/accountant_dashboard.php?multiRole=1';
-            }
-            // If has director role, go to director
-            elseif (in_array('director', $_SESSION['all_roles'])) {
-                $redirect = $baseURL . 'director/director_dashboard.php?multiRole=1';
-            }
-            // Otherwise go to employee
-            else {
-                $redirect = $baseURL . 'employee/dashboard.php?multiRole=1';
-            }
+            $redirect = $baseURL . 'auth/role_selector.php';
         } else {
             $redirect = match($primaryRole) {
                 'employee' => $baseURL . 'employee/dashboard.php',
