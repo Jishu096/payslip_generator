@@ -193,7 +193,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 ID: <strong><?= htmlspecialchars($employeeId) ?></strong>
             </span>
 
-            <a href="logout.php" class="btn btn-danger btn-sm">
+            <a href="../auth/logout.php" class="btn btn-danger btn-sm">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>
         </div>
