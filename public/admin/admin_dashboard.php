@@ -14,21 +14,17 @@ $db = new Database();
 $conn = $db->connect();
 
 // Fetch real statistics
-// Total Employees
 $stmt = $conn->query("SELECT COUNT(*) as count FROM employees");
 $totalEmployees = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
-// Total Departments
+$stmt = $conn->query("SELECT COUNT(*) as count FROM employees WHERE status = 'active'");
+$activeEmployees = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
 $stmt = $conn->query("SELECT COUNT(*) as count FROM departments");
 $totalDepartments = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
-// Active Users
 $stmt = $conn->query("SELECT COUNT(*) as count FROM users WHERE is_active = 1");
 $activeUsers = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-
-// Total Users
-$stmt = $conn->query("SELECT COUNT(*) as count FROM users");
-$totalUsers = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
 // Recent Employees (last 5)
 $stmt = $conn->query("SELECT e.*, d.department_name FROM employees e 
@@ -40,595 +36,470 @@ $recentEmployees = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $conn->query("SELECT d.department_name, COUNT(e.employee_id) as count 
                       FROM departments d 
                       LEFT JOIN employees e ON d.department_id = e.department_id 
-                      GROUP BY d.department_id 
+                      GROUP BY d.department_id, d.department_name 
                       ORDER BY count DESC LIMIT 5");
 $departmentStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get max count for progress bar calculation
+$maxCount = !empty($departmentStats) ? max(array_column($departmentStats, 'count')) : 1;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - <?php 
-        $stmtTitle = $conn->query("SELECT setting_value FROM settings WHERE setting_key = 'company_name'");
-        $companyTitle = $stmtTitle->fetch(PDO::FETCH_ASSOC);
-        echo htmlspecialchars($companyTitle['setting_value'] ?? 'Enterprise Payroll Solutions');
-    ?></title>
+    <title>Admin Dashboard - Payroll System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include 'includes/admin_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #1a1f36;
+            --text-secondary: #555;
+            --text-tertiary: #7f8c8d;
+            --border-color: #e0e0e0;
+            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            --gradient-green: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-orange: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1f36;
+            --bg-secondary: #232946;
+            --bg-tertiary: #2d3250;
+            --text-primary: #fffffe;
+            --text-secondary: #b8c1ec;
+            --text-tertiary: #a0a8d4;
+            --border-color: #3d4263;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            overflow-x: hidden;
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* Top Navbar */
-        .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 70px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .theme-toggle {
             position: fixed;
-            width: 100%;
-            top: 0;
+            top: 20px;
+            right: 20px;
             z-index: 1000;
-        }
-
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .navbar-brand i {
-            font-size: 28px;
-        }
-
-        .navbar-toggle {
-            font-size: 24px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 15px;
             cursor: pointer;
-            display: none;
-        }
-
-        .navbar-right {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .logout-btn {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 20px;
-            border-radius: 20px;
-            color: white;
-            text-decoration: none;
+            box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
+        .theme-toggle:hover {
+            transform: translateY(-2px);
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background: #2c3e50;
-            position: fixed;
-            left: 0;
-            top: 70px;
-            height: calc(100vh - 70px);
-            overflow-y: auto;
-            transition: all 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
-
-        .sidebar.collapsed {
-            left: -260px;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 20px 0;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 5px;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px 25px;
-            color: #ecf0f1;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: rgba(52, 152, 219, 0.2);
-            border-left: 4px solid #3498db;
-            padding-left: 21px;
-        }
-
-        .sidebar-menu i {
-            width: 20px;
+        .theme-toggle i {
             font-size: 18px;
+            color: var(--text-primary);
         }
 
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            margin-top: 70px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            min-height: calc(100vh - 70px);
-        }
-
-        .main-content.expanded {
-            margin-left: 0;
-        }
-
-        .page-header {
+        .dashboard-header {
             margin-bottom: 30px;
         }
 
-        .page-header h1 {
-            font-size: 28px;
-            color: #2c3e50;
-            margin-bottom: 5px;
+        .dashboard-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
         }
 
-        .page-header p {
-            color: #7f8c8d;
-            font-size: 14px;
+        .dashboard-header p {
+            color: var(--text-tertiary);
+            font-size: 16px;
         }
 
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
+            gap: 24px;
             margin-bottom: 30px;
         }
 
         .stat-card {
-            background: white;
+            background: var(--bg-primary);
+            border-radius: 16px;
             padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         }
 
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-card.purple::before { background: var(--gradient-primary); }
+        .stat-card.blue::before { background: var(--gradient-blue); }
+        .stat-card.green::before { background: var(--gradient-green); }
+        .stat-card.orange::before { background: var(--gradient-orange); }
+
+        .stat-header {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            color: white;
-        }
-
-        .stat-icon.blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .stat-icon.green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .stat-icon.orange { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .stat-icon.purple { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-
-        .stat-details h3 {
-            font-size: 32px;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .stat-details p {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-
-        /* Action Cards */
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-        }
-
-        .action-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-        }
-
-        .action-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        }
-
-        .action-card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 15px;
         }
 
-        .action-icon {
+        .stat-icon {
             width: 50px;
             height: 50px;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 24px;
             color: white;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .action-card h3 {
-            font-size: 18px;
-            color: #2c3e50;
+        .stat-card.purple .stat-icon { background: var(--gradient-primary); }
+        .stat-card.blue .stat-icon { background: var(--gradient-blue); }
+        .stat-card.green .stat-icon { background: var(--gradient-green); }
+        .stat-card.orange .stat-icon { background: var(--gradient-orange); }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
         }
 
-        .action-card p {
-            color: #7f8c8d;
+        .stat-label {
             font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            color: var(--text-tertiary);
+            font-weight: 500;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .card-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-link {
+            color: #667eea;
             text-decoration: none;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .card-link:hover {
+            color: #764ba2;
         }
 
-        /* Responsive */
+        .employee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .employee-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .employee-details {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .employee-dept {
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+
+        .dept-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dept-bar:last-child {
+            border-bottom: none;
+        }
+
+        .dept-name {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .dept-progress {
+            flex: 2;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .dept-progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .dept-count {
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 40px;
+            text-align: right;
+        }
+
         @media (max-width: 768px) {
-            .navbar-toggle {
-                display: block;
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
 
-            .sidebar {
-                left: -260px;
+            .content-grid {
+                grid-template-columns: 1fr;
             }
 
-            .sidebar.active {
-                left: 0;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .navbar-brand span {
-                display: none;
-            }
-
-            .user-info span {
-                display: none;
-            }
-
-            div[style*="grid-template-columns: 1fr 1fr"] {
-                grid-template-columns: 1fr !important;
-            }
-
-            div[style*="grid-template-columns: repeat(auto-fit"] {
-                grid-template-columns: 1fr !important;
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Navbar -->
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <i class="fas fa-bars navbar-toggle" id="sidebarToggle"></i>
-            <i class="fas fa-building"></i>
-            <span>Enterprise Payroll Solutions</span>
-        </div>
-        <div class="navbar-right">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <span><?php echo htmlspecialchars($username); ?></span>
-            </div>
-            <a href="../index.php?page=logout" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </a>
-        </div>
-    </nav>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
 
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <ul class="sidebar-menu">
-            <li><a href="admin_dashboard.php" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
-            <li><a href="employees.php"><i class="fas fa-users"></i> Employees</a></li>
-            <li><a href="create_user.php"><i class="fas fa-user-plus"></i> Create User</a></li>
-            <li><a href="manage_users.php"><i class="fas fa-users-cog"></i> Manage Users</a></li>
-            <li><a href="departments.php"><i class="fas fa-building"></i> Departments</a></li>
-            <li><a href="reports.php"><i class="fas fa-chart-bar"></i> Reports</a></li>
-            <li><a href="settings.php"><i class="fas fa-cog"></i> Settings</a></li>
-        </ul>
-    </aside>
+    <?php include 'includes/admin_navbar.php'; ?>
+    <?php include 'includes/admin_sidebar.php'; ?>
 
-    <!-- Main Content -->
     <main class="main-content" id="mainContent">
-        <div class="page-header">
-            <h1><i class="fas fa-tachometer-alt"></i> Administrator Dashboard</h1>
-            <p>Welcome back, <?php echo htmlspecialchars($username); ?>! Manage your organization efficiently.</p>
+        <div class="dashboard-header">
+            <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+            <p>Welcome back, <?php echo htmlspecialchars($username); ?>! Here's what's happening today.</p>
         </div>
 
-        <!-- Stats Cards -->
+        <!-- Statistics Cards -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon blue">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $totalEmployees; ?></h3>
-                    <p>Total Employees</p>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon green">
-                    <i class="fas fa-user-check"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $activeUsers; ?></h3>
-                    <p>Active Users</p>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon orange">
-                    <i class="fas fa-users-cog"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $totalUsers; ?></h3>
-                    <p>Total Users</p>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon purple">
-                    <i class="fas fa-building"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $totalDepartments; ?></h3>
-                    <p>Departments</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Cards -->
-        <div class="actions-grid">
-            <div class="action-card">
-                <div class="action-card-header">
-                    <div class="action-icon">
-                        <i class="fas fa-user-plus"></i>
+            <div class="stat-card purple">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?php echo $totalEmployees; ?></div>
+                        <div class="stat-label">Total Employees</div>
                     </div>
-                    <h3>Add New Employee</h3>
-                </div>
-                <p>Create a new employee record with complete details and automatically generate login credentials.</p>
-                <a href="add_employee.php" class="btn">
-                    <i class="fas fa-plus"></i> Add Employee
-                </a>
-            </div>
-
-            <div class="action-card">
-                <div class="action-card-header">
-                    <div class="action-icon">
+                    <div class="stat-icon">
                         <i class="fas fa-users"></i>
                     </div>
-                    <h3>Manage Employees</h3>
                 </div>
-                <p>View, edit, update, or remove employee details. Access complete employee information in one place.</p>
-                <a href="employees.php" class="btn">
-                    <i class="fas fa-cog"></i> Manage Employees
-                </a>
             </div>
 
-            <div class="action-card">
-                <div class="action-card-header">
-                    <div class="action-icon">
-                        <i class="fas fa-key"></i>
+            <div class="stat-card blue">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?php echo $activeEmployees; ?></div>
+                        <div class="stat-label">Active Employees</div>
                     </div>
-                    <h3>Create User Accounts</h3>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
                 </div>
-                <p>Create login credentials for employees, accountants, directors, and administrators with role-based access.</p>
-                <a href="create_user.php" class="btn">
-                    <i class="fas fa-user-plus"></i> Create User
-                </a>
             </div>
 
-            <div class="action-card">
-                <div class="action-card-header">
-                    <div class="action-icon">
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?php echo $totalDepartments; ?></div>
+                        <div class="stat-label">Departments</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?php echo $activeUsers; ?></div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-icon">
                         <i class="fas fa-user-shield"></i>
                     </div>
-                    <h3>Manage User Access</h3>
                 </div>
-                <p>Enable or disable user login access, reset passwords, and manage user permissions across the system.</p>
-                <a href="manage_users.php" class="btn">
-                    <i class="fas fa-users-cog"></i> Manage Users
-                </a>
             </div>
         </div>
 
-        <!-- Recent Activity Section -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 30px;">
+        <!-- Content Grid -->
+        <div class="content-grid">
             <!-- Recent Employees -->
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="color: #2c3e50; font-size: 18px;"><i class="fas fa-clock"></i> Recent Employees</h3>
-                    <a href="employees.php" style="color: #667eea; text-decoration: none; font-size: 14px;">View All →</a>
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-plus"></i> Recent Employees</h3>
+                    <a href="employees.php" class="card-link">View All <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <?php if (!empty($recentEmployees)): ?>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="employee-list">
+                    <?php if (!empty($recentEmployees)): ?>
                         <?php foreach ($recentEmployees as $emp): ?>
-                            <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-weight: 600; color: #2c3e50; margin-bottom: 4px;">
-                                        <?php echo htmlspecialchars($emp['full_name']); ?>
+                            <div class="employee-item">
+                                <div class="employee-info">
+                                    <div class="employee-avatar">
+                                        <?php echo strtoupper(substr($emp['full_name'], 0, 2)); ?>
                                     </div>
-                                    <div style="font-size: 13px; color: #7f8c8d;">
-                                        <?php echo htmlspecialchars($emp['designation']); ?> • 
-                                        <?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?>
+                                    <div class="employee-details">
+                                        <div class="employee-name"><?php echo htmlspecialchars($emp['full_name']); ?></div>
+                                        <div class="employee-dept"><?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?></div>
                                     </div>
-                                </div>
-                                <div style="font-size: 12px; color: #95a5a6;">
-                                    <?php echo date('M d, Y', strtotime($emp['created_at'])); ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <p style="text-align: center; color: #7f8c8d; padding: 20px;">No employees yet</p>
-                <?php endif; ?>
+                    <?php else: ?>
+                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No recent employees found.</p>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- Department Statistics -->
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="color: #2c3e50; font-size: 18px;"><i class="fas fa-chart-pie"></i> Department Overview</h3>
-                    <a href="departments.php" style="color: #667eea; text-decoration: none; font-size: 14px;">View All →</a>
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-bar"></i> Department Overview</h3>
+                    <a href="departments.php" class="card-link">Manage <i class="fas fa-cog"></i></a>
                 </div>
-                <?php if (!empty($departmentStats)): ?>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="dept-stats">
+                    <?php if (!empty($departmentStats)): ?>
                         <?php foreach ($departmentStats as $dept): ?>
-                            <div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                                    <span style="color: #2c3e50; font-weight: 500;">
-                                        <?php echo htmlspecialchars($dept['department_name']); ?>
-                                    </span>
-                                    <span style="color: #667eea; font-weight: 600;">
-                                        <?php echo $dept['count']; ?> employees
-                                    </span>
+                            <div class="dept-bar">
+                                <div class="dept-name"><?php echo htmlspecialchars($dept['department_name']); ?></div>
+                                <div class="dept-progress">
+                                    <div class="dept-progress-fill" style="width: <?php echo $maxCount > 0 ? ($dept['count'] / $maxCount * 100) : 0; ?>%"></div>
                                 </div>
-                                <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: <?php echo $totalEmployees > 0 ? ($dept['count'] / $totalEmployees * 100) : 0; ?>%; border-radius: 4px;"></div>
-                                </div>
+                                <div class="dept-count"><?php echo $dept['count']; ?></div>
                             </div>
                         <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <p style="text-align: center; color: #7f8c8d; padding: 20px;">No departments yet</p>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Quick Stats Summary -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px; margin-top: 30px; color: white;">
-            <h3 style="margin-bottom: 20px; font-size: 20px;"><i class="fas fa-info-circle"></i> Quick Summary</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; backdrop-filter: blur(10px);">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 5px;">Employee to Department Ratio</div>
-                    <div style="font-size: 24px; font-weight: 600;">
-                        <?php echo $totalDepartments > 0 ? number_format($totalEmployees / $totalDepartments, 1) : 0; ?>:1
-                    </div>
-                </div>
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; backdrop-filter: blur(10px);">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 5px;">User Account Coverage</div>
-                    <div style="font-size: 24px; font-weight: 600;">
-                        <?php echo $totalEmployees > 0 ? round(($totalUsers / $totalEmployees) * 100) : 0; ?>%
-                    </div>
-                </div>
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; backdrop-filter: blur(10px);">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 5px;">Active User Rate</div>
-                    <div style="font-size: 24px; font-weight: 600;">
-                        <?php echo $totalUsers > 0 ? round(($activeUsers / $totalUsers) * 100) : 0; ?>%
-                    </div>
-                </div>
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; backdrop-filter: blur(10px);">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 5px;">System Status</div>
-                    <div style="font-size: 24px; font-weight: 600;">
-                        <i class="fas fa-check-circle"></i> Operational
-                    </div>
+                    <?php else: ?>
+                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No department data available.</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // Sidebar Toggle
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        const sidebarToggle = document.getElementById('sidebarToggle');
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
 
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('adminTheme', newTheme);
+            updateThemeIcon(newTheme);
         });
 
-        // Close sidebar on mobile when clicking outside
-        document.addEventListener('click', function(event) {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
-                    sidebar.classList.remove('active');
-                }
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
             }
-        });
+        }
     </script>
 
 </body>
