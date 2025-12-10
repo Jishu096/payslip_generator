@@ -1,8 +1,12 @@
 <?php
 session_start();
 
+// Support both single-role and multi-role scenarios
 // Allow access if user is logged in as accountant, or if payslip_id is provided (for direct links)
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'accountant') {
+$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
+$hasAccountantRole = in_array('accountant', $userRoles);
+
+if (!isset($_SESSION['role']) && !$hasAccountantRole) {
     // Check if this is a direct link attempt without session
     if (empty($_GET['payslip_id'])) {
         header("Location: ../auth/login.php");

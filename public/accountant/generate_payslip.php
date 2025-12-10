@@ -1,7 +1,17 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'accountant') {
+// Support both single-role and multi-role scenarios
+if (!isset($_SESSION['role'])) {
+    header("Location: ../auth/login.php");
+    exit;
+}
+
+// Check if user has accountant role (either primary or in all_roles)
+$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role']];
+$hasAccountantRole = in_array('accountant', $userRoles);
+
+if (!$hasAccountantRole && $_SESSION['role'] !== 'accountant') {
     header("Location: ../auth/login.php");
     exit;
 }

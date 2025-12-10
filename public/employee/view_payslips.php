@@ -4,7 +4,11 @@ ini_set('display_errors', 1);
 
 session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'employee') {
+// Support both single-role and multi-role scenarios
+$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
+$hasEmployeeRole = in_array('employee', $userRoles);
+
+if (!isset($_SESSION['role']) || (!$hasEmployeeRole && $_SESSION['role'] !== 'employee')) {
     header("Location: login.php");
     exit;
 }
