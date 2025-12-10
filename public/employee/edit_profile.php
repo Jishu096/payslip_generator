@@ -17,7 +17,7 @@ if (!isset($_SESSION['employee_id'])) {
 $employeeId = $_SESSION['employee_id'];
 
 // Database
-require_once __DIR__ . "/../../backend/config/database.php";
+require_once __DIR__ . "/../../app/Config/database.php";
 
 $db = new Database();
 $conn = $db->connect();

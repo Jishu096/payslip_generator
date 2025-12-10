@@ -8,9 +8,9 @@ $hasEmployeeRole = in_array('employee', $userRoles);
 if (!isset($_SESSION['role']) || (!$hasEmployeeRole && $_SESSION['role'] !== 'employee')) {
 header("Location: login.php"); exit;
 }
-require_once "../../backend/models/Attendance.php";
-a$ = new Attendance();
-$rows = $a$->getAttendanceByEmployee($_SESSION['employee_id']);
+require_once "../../app/Models/Attendance.php";
+$attendance = new Attendance();
+$rows = $attendance->getAttendanceByEmployee($_SESSION['employee_id']);
 ?>
 <!DOCTYPE html>
 <html><head><title>Attendance</title></head><body>

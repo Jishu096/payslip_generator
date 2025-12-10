@@ -13,7 +13,7 @@ if (!isset($_SESSION['role']) || (!$hasEmployeeRole && $_SESSION['role'] !== 'em
     exit;
 }
 
-require_once "../../backend/models/Payslip.php";
+require_once "../../app/Models/Payslip.php";
 
 $payslipModel = new Payslip();
 $payslips = $payslipModel->getPayslipsByEmployee($_SESSION['employee_id']);
