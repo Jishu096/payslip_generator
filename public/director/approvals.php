@@ -29,35 +29,31 @@ $stmt = $db->prepare("
         scr.employee_id,
         scr.status,
         scr.request_date,
-        e.full_name,
-        e.email,
-        d.department_name,
+        scr.employee_name as full_name,
+        NULL as email,
+        NULL as department_name,
+        scr.current_salary as old_salary,
         scr.new_salary,
-        scr.old_salary,
-        NULL as requested_role,
-        NULL as current_role
+        NULL as old_role,
+        NULL as new_role
     FROM salary_change_requests scr
-    JOIN employees e ON scr.employee_id = e.employee_id
-    LEFT JOIN departments d ON e.department_id = d.department_id
     
     UNION ALL
     
     SELECT 
         'role' as type,
-        rcr.role_change_request_id as id,
+        rcr.request_id as id,
         rcr.employee_id,
         rcr.status,
         rcr.request_date,
-        e.full_name,
-        e.email,
-        d.department_name,
-        NULL as new_salary,
+        rcr.employee_name as full_name,
+        NULL as email,
+        NULL as department_name,
         NULL as old_salary,
-        rcr.requested_role,
-        rcr.current_role
+        NULL as new_salary,
+        rcr.old_role,
+        rcr.new_role
     FROM role_change_requests rcr
-    JOIN employees e ON rcr.employee_id = e.employee_id
-    LEFT JOIN departments d ON e.department_id = d.department_id
     
     ORDER BY status ASC, request_date DESC
 ");
@@ -414,19 +410,23 @@ foreach ($allApprovals as $approval) {
                                     </td>
                                     <td>
                                         <strong><?php echo htmlspecialchars($approval['full_name']); ?></strong><br>
-                                        <small style="color: var(--text-tertiary);"><?php echo htmlspecialchars($approval['email']); ?></small>
+                                        <small style="color: var(--text-tertiary);">Employee ID: <?php echo $approval['employee_id']; ?></small>
                                     </td>
-                                    <td><?php echo htmlspecialchars($approval['department_name'] ?? 'N/A'); ?></td>
+                                    <td>—</td>
                                     <td>
                                         <?php if ($approval['type'] === 'salary'): ?>
                                             <small>
-                                                Old: <strong><?php echo number_format($approval['old_salary'], 2); ?></strong><br>
+                                                <?php if ($approval['old_salary']): ?>
+                                                    Old: <strong><?php echo number_format($approval['old_salary'], 2); ?></strong><br>
+                                                <?php endif; ?>
                                                 New: <strong><?php echo number_format($approval['new_salary'], 2); ?></strong>
                                             </small>
                                         <?php else: ?>
                                             <small>
-                                                Current: <strong><?php echo htmlspecialchars($approval['current_role']); ?></strong><br>
-                                                Requested: <strong><?php echo htmlspecialchars($approval['requested_role']); ?></strong>
+                                                <?php if ($approval['old_role']): ?>
+                                                    Current: <strong><?php echo htmlspecialchars($approval['old_role']); ?></strong><br>
+                                                <?php endif; ?>
+                                                Requested: <strong><?php echo htmlspecialchars($approval['new_role']); ?></strong>
                                             </small>
                                         <?php endif; ?>
                                     </td>
