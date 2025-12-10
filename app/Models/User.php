@@ -133,4 +133,115 @@ class User {
         return $stmt->execute([':id' => $id]);
     }
 
+    /**
+     * Get all roles for a user from the new RBAC system
+     */
+    public function getUserRoles($userId) {
+        $sql = "SELECT r.role_id, r.role_name, r.description 
+                FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.role_id
+                WHERE ur.user_id = :user_id
+                ORDER BY r.role_name";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Assign a role to a user
+     */
+    public function assignRoleToUser($userId, $roleName) {
+        // Get role_id from role_name
+        $roleQuery = "SELECT role_id FROM roles WHERE role_name = :role_name LIMIT 1";
+        $roleStmt = $this->conn->prepare($roleQuery);
+        $roleStmt->bindParam(':role_name', $roleName);
+        $roleStmt->execute();
+        $role = $roleStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$role) {
+            return false;
+        }
+
+        $sql = "INSERT INTO user_roles (user_id, role_id) 
+                VALUES (:user_id, :role_id)
+                ON DUPLICATE KEY UPDATE assigned_at = NOW()";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':user_id' => $userId,
+            ':role_id' => $role['role_id']
+        ]);
+    }
+
+    /**
+     * Remove a role from a user
+     */
+    public function removeRoleFromUser($userId, $roleName) {
+        $roleQuery = "SELECT role_id FROM roles WHERE role_name = :role_name LIMIT 1";
+        $roleStmt = $this->conn->prepare($roleQuery);
+        $roleStmt->bindParam(':role_name', $roleName);
+        $roleStmt->execute();
+        $role = $roleStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$role) {
+            return false;
+        }
+
+        $sql = "DELETE FROM user_roles WHERE user_id = :user_id AND role_id = :role_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':user_id' => $userId,
+            ':role_id' => $role['role_id']
+        ]);
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole($userId, $roleName) {
+        $sql = "SELECT COUNT(*) as count FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.role_id
+                WHERE ur.user_id = :user_id AND r.role_name = :role_name";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':user_id' => $userId,
+            ':role_name' => $roleName
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] > 0;
+    }
+
+    /**
+     * Check if user has a specific permission
+     */
+    public function hasPermission($userId, $permissionName) {
+        $sql = "SELECT COUNT(*) as count FROM user_roles ur
+                JOIN role_permissions rp ON ur.role_id = rp.role_id
+                JOIN permissions p ON rp.permission_id = p.permission_id
+                WHERE ur.user_id = :user_id AND p.permission_name = :permission_name";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':user_id' => $userId,
+            ':permission_name' => $permissionName
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] > 0;
+    }
+
+    /**
+     * Get all permissions for a user
+     */
+    public function getUserPermissions($userId) {
+        $sql = "SELECT DISTINCT p.permission_id, p.permission_name, p.description, p.resource, p.action
+                FROM user_roles ur
+                JOIN role_permissions rp ON ur.role_id = rp.role_id
+                JOIN permissions p ON rp.permission_id = p.permission_id
+                WHERE ur.user_id = :user_id
+                ORDER BY p.permission_name";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }

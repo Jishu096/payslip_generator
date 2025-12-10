@@ -47,9 +47,14 @@ try {
         // Successful login
         $_SESSION['user_id']  = $user['user_id'];
         $_SESSION['username'] = $user['username'];
-        $_SESSION['role']     = $user['role'];
+        $_SESSION['role']     = $user['role']; // Keep primary role for backward compatibility
 
-        if ($user['role'] === 'employee') {
+        // Get all roles from RBAC system
+        $userRoles = $userModel->getUserRoles($user['user_id']);
+        $_SESSION['all_roles'] = array_column($userRoles, 'role_name'); // Array of all role names
+        $_SESSION['has_multiple_roles'] = count($_SESSION['all_roles']) > 1;
+
+        if ($user['role'] === 'employee' || in_array('employee', $_SESSION['all_roles'])) {
             $_SESSION['employee_id'] = $user['employee_id'];
             $empModel = new Employee();
             $emp = $empModel->getEmployeeById($user['employee_id']);
@@ -58,15 +63,37 @@ try {
 
         $attemptHelper->recordSuccessfulAttempt($username);
 
-        // Determine redirect based on role
+        // Determine primary redirect based on primary role or first role
         $baseURL = "/payslip_generator/public/";
-        $redirect = match($user['role']) {
-            'employee' => $baseURL . 'employee/employee_dashboard.php',
-            'accountant' => $baseURL . 'accountant/accountant_dashboard.php',
-            'director' => $baseURL . 'director/director_dashboard.php',
-            'administrator' => $baseURL . 'admin/admin_dashboard.php',
-            default => $baseURL . 'admin/admin_dashboard.php'
-        };
+        $primaryRole = $user['role'];
+        
+        // If has multiple roles, prefer to go to dashboard that shows role selector
+        if ($_SESSION['has_multiple_roles']) {
+            // If has admin role, go to admin
+            if (in_array('administrator', $_SESSION['all_roles'])) {
+                $redirect = $baseURL . 'admin/admin_dashboard.php?multiRole=1';
+            }
+            // If has accountant role, go to accountant
+            elseif (in_array('accountant', $_SESSION['all_roles'])) {
+                $redirect = $baseURL . 'accountant/accountant_dashboard.php?multiRole=1';
+            }
+            // If has director role, go to director
+            elseif (in_array('director', $_SESSION['all_roles'])) {
+                $redirect = $baseURL . 'director/director_dashboard.php?multiRole=1';
+            }
+            // Otherwise go to employee
+            else {
+                $redirect = $baseURL . 'employee/dashboard.php?multiRole=1';
+            }
+        } else {
+            $redirect = match($primaryRole) {
+                'employee' => $baseURL . 'employee/dashboard.php',
+                'accountant' => $baseURL . 'accountant/accountant_dashboard.php',
+                'director' => $baseURL . 'director/director_dashboard.php',
+                'administrator' => $baseURL . 'admin/admin_dashboard.php',
+                default => $baseURL . 'admin/admin_dashboard.php'
+            };
+        }
 
         echo json_encode(['success' => true, 'redirect' => $redirect]);
     } else {
