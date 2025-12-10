@@ -1,7 +1,17 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'director') {
+// Support both single-role and multi-role scenarios
+if (!isset($_SESSION['role'])) {
+    header("Location: ../auth/login.php");
+    exit;
+}
+
+// Check if user has director role (either primary or in all_roles)
+$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role']];
+$hasDirectorRole = in_array('director', $userRoles);
+
+if (!$hasDirectorRole && $_SESSION['role'] !== 'director') {
     header("Location: ../auth/login.php");
     exit;
 }
