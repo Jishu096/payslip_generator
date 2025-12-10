@@ -429,7 +429,7 @@ $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
                     <div><span style="color: #7f8c8d;">Above ₹100K:</span> <strong><?php echo $salaryRanges['above_100k'] ?? 0; ?></strong></div>
                 </div>
                 <div class="report-actions">
-                    <button class="btn-view"><i class="fas fa-eye"></i> View</button>
+                    <a href="salary_distribution.php" class="btn-view" style="text-decoration: none; color: #2c3e50;"><i class="fas fa-eye"></i> View</a>
                     <a href="reports.php?export=salary_ranges" class="btn-download" style="text-decoration: none; color: #2c3e50;"><i class="fas fa-download"></i> CSV</a>
                 </div>
             </div>
