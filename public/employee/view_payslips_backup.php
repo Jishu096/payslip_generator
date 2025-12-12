@@ -90,75 +90,105 @@ $payslips = $payslipModel->getPayslipsByEmployee($_SESSION['employee_id']);
             border: 1px solid #e2e8f0;
             overflow: hidden;
         }
+        }
 
-        .card-header {
-            padding: 20px 25px;
-            background: #f7fafc;
-            border-bottom: 2px solid #e2e8f0;
+        .back-btn:hover {
+            transform: translateX(-2px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .payslips-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .card-title {
+            font-family: "Roboto", sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            color: var(--text-primary);
         }
 
-        .card-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin: 0;
+        .card-title i {
+            font-size: 24px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .card-header i {
-            color: #667eea;
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
             font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
         }
 
-        table {
+        .payslips-table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
 
-        th {
-            background: #f7fafc;
-            padding: 18px 20px;
+        .payslips-table thead {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .payslips-table th {
+            padding: 16px;
             text-align: left;
             font-weight: 600;
-            font-size: 13px;
-            color: #718096;
+            font-size: 14px;
+            color: var(--text-primary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid #e2e8f0;
         }
 
-        td {
-            padding: 20px;
-            border-bottom: 1px solid #e2e8f0;
+        .payslips-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
         }
 
-        tr:hover {
-            background: #f7fafc;
+        .payslips-table tbody tr:hover {
+            background-color: var(--bg-secondary);
         }
 
         .month-badge {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
             display: inline-block;
-        }
-
-        .date-text {
-            color: #718096;
-            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--gradient-primary);
+            color: white;
         }
 
         .btn-download {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 8px 16px;
+            background: var(--gradient-primary);
             color: white;
             border: none;
             border-radius: 8px;
@@ -174,97 +204,58 @@ $payslips = $payslipModel->getPayslipsByEmployee($_SESSION['employee_id']);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #a0aec0;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .empty-state h3 {
-            font-size: 22px;
-            font-weight: 600;
-            color: #718096;
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            font-size: 14px;
-        }
-
-        .back-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .back-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        .date-text {
+            color: var(--text-secondary);
+            font-size: 13px;
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
+            .payslips-container {
+                padding: 20px 15px;
             }
 
-            .header h1 {
+            .payslips-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .payslips-header h1 {
                 font-size: 24px;
             }
 
-            table {
-                font-size: 13px;
+            .payslips-card {
+                padding: 20px;
             }
 
-            th, td {
-                padding: 12px;
+            .payslips-table {
+                font-size: 12px;
             }
 
-            .back-btn {
-                width: 50px;
-                height: 50px;
-                bottom: 15px;
-                right: 15px;
+            .payslips-table th,
+            .payslips-table td {
+                padding: 10px 8px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="payslips-container">
         <!-- Header -->
-        <div class="header">
-            <div class="breadcrumb">
-                <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
-                <i class="fas fa-chevron-right"></i>
-                <span>My Payslips</span>
+        <div class="payslips-header">
+            <div>
+                <h1><i class="fas fa-file-invoice"></i> My Payslips</h1>
             </div>
-            <h1><i class="fas fa-file-invoice"></i> My Payslips</h1>
+            <div class="header-controls">
+                <a href="dashboard.php" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
         </div>
 
         <!-- Payslips Card -->
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-history"></i>
-                <h2>Payslip History</h2>
+        <div class="payslips-card">
+            <div class="card-title">
+                <i class="fas fa-history"></i> Payslip History
             </div>
 
             <?php if (empty($payslips)): ?>
@@ -274,7 +265,7 @@ $payslips = $payslipModel->getPayslipsByEmployee($_SESSION['employee_id']);
                     <p>Your payslips will appear here once they are generated.</p>
                 </div>
             <?php else: ?>
-                <table>
+                <table class="payslips-table">
                     <thead>
                         <tr>
                             <th>Period</th>
@@ -309,7 +300,7 @@ $payslips = $payslipModel->getPayslipsByEmployee($_SESSION['employee_id']);
                                         <i class="fas fa-download"></i> Download PDF
                                     </a>
                                 <?php else: ?>
-                                    <span style="color: #a0aec0;">Not available</span>
+                                    <span style="color: var(--text-tertiary);">Not available</span>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -320,9 +311,7 @@ $payslips = $payslipModel->getPayslipsByEmployee($_SESSION['employee_id']);
         </div>
     </div>
 
-    <!-- Back Button -->
-    <a href="dashboard.php" class="back-btn" title="Back to Dashboard">
-        <i class="fas fa-arrow-left"></i>
-    </a>
+    <script>
+    </script>
 </body>
 </html>
