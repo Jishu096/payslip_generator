@@ -86,8 +86,10 @@ foreach ($allUsers as $user) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage User Roles - Admin</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -95,111 +97,101 @@ foreach ($allUsers as $user) {
             box-sizing: border-box;
         }
 
-        :root[data-theme="light"] {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --text-primary: #1a1f36;
-            --text-secondary: #4a5568;
-            --text-tertiary: #8b92a7;
-            --border-color: #e2e8f0;
-            --accent: #667eea;
-            --accent-dark: #764ba2;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --shadow: rgba(0, 0, 0, 0.1);
-        }
-
-        :root
-
         body {
             font-family: "Roboto", sans-serif;
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            background: #ffffff;
+            color: #2d3748;
+            line-height: 1.6;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 30px;
         }
 
         .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .header h1 {
-            font-family: "Roboto", sans-serif;
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
         }
 
         .breadcrumb {
-            display: flex;
-            gap: 8px;
-            align-items: center;
             font-size: 14px;
-            color: var(--text-tertiary);
+            margin-bottom: 10px;
+            opacity: 0.9;
         }
 
         .breadcrumb a {
-            color: var(--accent);
+            color: white;
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: opacity 0.3s;
         }
 
         .breadcrumb a:hover {
-            color: var(--accent-dark);
+            opacity: 0.8;
+        }
+
+        .breadcrumb i {
+            margin: 0 8px;
+            font-size: 10px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
         }
 
         .message {
-            padding: 16px 20px;
+            padding: 15px 20px;
             border-radius: 10px;
-            margin-bottom: 24px;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
             gap: 12px;
             font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .message.success {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border-left: 4px solid var(--success);
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
         }
 
         .message.warning {
-            background-color: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-            border-left: 4px solid var(--warning);
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
         }
 
         .message.error {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--error);
-            border-left: 4px solid var(--error);
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
         }
 
         .card {
-            background: var(--bg-primary);
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 2px 10px var(--shadow);
-            margin-bottom: 24px;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
         }
 
         table {
@@ -208,95 +200,103 @@ foreach ($allUsers as $user) {
         }
 
         th {
-            background: var(--bg-secondary);
-            padding: 16px;
+            background: #f7fafc;
+            padding: 18px 20px;
             text-align: left;
             font-weight: 600;
-            font-size: 14px;
-            color: var(--text-secondary);
-            border-bottom: 2px solid var(--border-color);
-            font-family: "Roboto", sans-serif;
+            font-size: 13px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
         }
 
         td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         tr:hover {
-            background-color: var(--bg-secondary);
+            background: #f7fafc;
         }
 
         .user-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            background: linear-gradient(135deg, #667eea, #764ba2);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-weight: 600;
-            font-size: 16px;
+            font-weight: 700;
+            font-size: 18px;
         }
 
         .user-details h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
             margin-bottom: 4px;
-            font-size: 14px;
         }
 
         .user-details p {
-            font-size: 12px;
-            color: var(--text-tertiary);
+            font-size: 13px;
+            color: #718096;
         }
 
         .roles-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
 
         .role-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            padding: 6px 12px;
+            gap: 8px;
+            padding: 8px 14px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
-            border: 1px solid var(--border-color);
+            font-weight: 600;
+            border: 2px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .role-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .role-badge.employee {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
+            background: #ede9fe;
+            color: #7c3aed;
+            border-color: #7c3aed;
         }
 
         .role-badge.accountant {
-            border-color: #f59e0b;
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
+            background: #fef3c7;
+            color: #d97706;
+            border-color: #d97706;
         }
 
         .role-badge.director {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.1);
-            color: #8b5cf6;
+            background: #ddd6fe;
+            color: #6d28d9;
+            border-color: #6d28d9;
         }
 
         .role-badge.administrator {
-            border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #dc2626;
         }
 
         .role-badge .remove-btn {
@@ -305,7 +305,6 @@ foreach ($allUsers as $user) {
             color: inherit;
             cursor: pointer;
             padding: 0;
-            margin-left: 4px;
             font-size: 14px;
             transition: transform 0.2s ease;
         }
@@ -314,48 +313,39 @@ foreach ($allUsers as $user) {
             transform: scale(1.2);
         }
 
-        .actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
         .btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            text-decoration: none;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .btn-secondary {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            background: #f7fafc;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
         }
 
         .btn-secondary:hover {
-            background: var(--border-color);
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
+            background: #edf2f7;
         }
 
         .modal {
@@ -382,8 +372,8 @@ foreach ($allUsers as $user) {
         }
 
         .modal-content {
-            background: var(--bg-primary);
-            padding: 30px;
+            background: white;
+            padding: 35px;
             border-radius: 15px;
             max-width: 500px;
             width: 90%;
@@ -406,13 +396,13 @@ foreach ($allUsers as $user) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .modal-header h2 {
-            font-family: "Roboto", sans-serif;
             font-size: 24px;
             font-weight: 700;
+            color: #2d3748;
         }
 
         .close-btn {
@@ -420,12 +410,12 @@ foreach ($allUsers as $user) {
             border: none;
             font-size: 28px;
             cursor: pointer;
-            color: var(--text-tertiary);
+            color: #a0aec0;
             transition: color 0.3s ease;
         }
 
         .close-btn:hover {
-            color: var(--text-primary);
+            color: #2d3748;
         }
 
         .form-group {
@@ -437,23 +427,24 @@ foreach ($allUsers as $user) {
             margin-bottom: 8px;
             font-weight: 600;
             font-size: 14px;
+            color: #2d3748;
         }
 
         .form-group select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
             border-radius: 8px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
+            background: white;
+            color: #2d3748;
             font-family: "Roboto", sans-serif;
             font-size: 14px;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .form-group select:focus {
             outline: none;
-            border-color: var(--accent);
+            border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
@@ -461,33 +452,58 @@ foreach ($allUsers as $user) {
             display: flex;
             gap: 12px;
             justify-content: flex-end;
-            margin-top: 24px;
+            margin-top: 30px;
         }
 
         .no-data {
             text-align: center;
-            padding: 40px;
-            color: var(--text-tertiary);
+            padding: 60px 20px;
+            color: #a0aec0;
         }
 
         .no-data i {
-            font-size: 48px;
-            margin-bottom: 16px;
+            font-size: 64px;
+            margin-bottom: 20px;
             opacity: 0.5;
         }
 
+        .no-data p {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .back-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
+            .container {
+                padding: 15px;
             }
 
             .header h1 {
                 font-size: 24px;
-            }
-
-            .card {
-                padding: 20px;
             }
 
             table {
@@ -500,123 +516,128 @@ foreach ($allUsers as $user) {
 
             .user-info {
                 flex-direction: column;
-                gap: 8px;
+                align-items: flex-start;
             }
 
             .user-avatar {
-                width: 35px;
-                height: 35px;
-                font-size: 14px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
             }
 
-            .actions {
+            .roles-container {
                 flex-direction: column;
+                gap: 6px;
+            }
+
+            .role-badge {
+                width: 100%;
+                justify-content: space-between;
             }
 
             .btn {
                 width: 100%;
                 justify-content: center;
             }
+
+            .back-btn {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
         }
     </style>
 </head>
 <body>
-
-    <!-- Theme Toggle -->
-
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div>
-                <div class="breadcrumb">
-                    <a href="/payslip_generator/public/admin/admin_dashboard.php">Admin</a>
-                    <i class="fas fa-chevron-right"></i>
-                    <span>Manage User Roles</span>
-                </div>
-                <h1>Manage User Roles</h1>
+            <div class="breadcrumb">
+                <a href="/payslip_generator/public/admin/admin_dashboard.php"><i class="fas fa-home"></i> Admin Dashboard</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Manage User Roles</span>
             </div>
+            <h1><i class="fas fa-user-shield"></i> Manage User Roles</h1>
         </div>
 
         <!-- Message -->
         <?php if ($message): ?>
             <div class="message <?= $messageType ?>">
                 <i class="fas fa-<?= $messageType === 'success' ? 'check-circle' : ($messageType === 'warning' ? 'exclamation-circle' : 'times-circle') ?>"></i>
-                <?= htmlspecialchars($message) ?>
+                <span><?= htmlspecialchars($message) ?></span>
             </div>
         <?php endif; ?>
 
         <!-- Users Table Card -->
         <div class="card">
-            <div class="table-responsive">
-                <?php if (count($allUsers) > 0): ?>
-                    <table>
-                        <thead>
+            <?php if (count($allUsers) > 0): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Assigned Roles</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($allUsers as $user): ?>
                             <tr>
-                                <th>User</th>
-                                <th>Current Roles</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($allUsers as $user): ?>
-                                <tr>
-                                    <td>
-                                        <div class="user-info">
-                                            <div class="user-avatar">
-                                                <?= strtoupper(substr($user['username'], 0, 1)) ?>
-                                            </div>
-                                            <div class="user-details">
-                                                <h4><?= htmlspecialchars($user['username']) ?></h4>
-                                                <p><?= htmlspecialchars($user['email']) ?></p>
-                                            </div>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar">
+                                            <?= strtoupper(substr($user['username'], 0, 1)) ?>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <div class="roles-container">
-                                            <?php
-                                            $userRoles = $userRolesMap[$user['user_id']] ?? [];
-                                            if (count($userRoles) > 0):
-                                                foreach ($userRoles as $role):
-                                                    ?>
-                                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Remove <?= htmlspecialchars($role['role_name']) ?> role?');">
-                                                        <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
-                                                        <input type="hidden" name="role_id" value="<?= $role['role_id'] ?>">
-                                                        <input type="hidden" name="action" value="remove">
-                                                        <button type="submit" class="role-badge <?= htmlspecialchars($role['role_name']) ?>">
-                                                            <?= htmlspecialchars(ucfirst($role['role_name'])) ?>
-                                                            <span class="remove-btn" title="Remove role">
-                                                                <i class="fas fa-times"></i>
-                                                            </span>
-                                                        </button>
-                                                    </form>
-                                                    <?php
-                                                endforeach;
-                                            else:
+                                        <div class="user-details">
+                                            <h4><?= htmlspecialchars($user['username']) ?></h4>
+                                            <p><?= htmlspecialchars($user['email']) ?></p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="roles-container">
+                                        <?php
+                                        $userRoles = $userRolesMap[$user['user_id']] ?? [];
+                                        if (count($userRoles) > 0):
+                                            foreach ($userRoles as $role):
                                                 ?>
-                                                <span class="role-badge">No roles assigned</span>
+                                                <form method="POST" style="display: inline; margin: 0;" onsubmit="return confirm('Remove <?= htmlspecialchars($role['role_name']) ?> role from <?= htmlspecialchars($user['username']) ?>?');">
+                                                    <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
+                                                    <input type="hidden" name="role_id" value="<?= $role['role_id'] ?>">
+                                                    <input type="hidden" name="action" value="remove">
+                                                    <button type="submit" class="role-badge <?= htmlspecialchars($role['role_name']) ?>">
+                                                        <i class="fas fa-user-tag"></i>
+                                                        <?= htmlspecialchars(ucfirst($role['role_name'])) ?>
+                                                        <span class="remove-btn" title="Remove role">
+                                                            <i class="fas fa-times"></i>
+                                                        </span>
+                                                    </button>
+                                                </form>
                                                 <?php
-                                            endif;
+                                            endforeach;
+                                        else:
                                             ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <button class="btn btn-primary btn-small" onclick="openAssignModal(<?= $user['user_id'] ?>, '<?= htmlspecialchars($user['username']) ?>')">
-                                                <i class="fas fa-plus"></i> Assign Role
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php else: ?>
-                    <div class="no-data">
-                        <i class="fas fa-users"></i>
-                        <p>No users found</p>
-                    </div>
-                <?php endif; ?>
-            </div>
+                                            <span style="color: #a0aec0; font-style: italic;">No roles assigned</span>
+                                            <?php
+                                        endif;
+                                        ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary" onclick="openAssignModal(<?= $user['user_id'] ?>, '<?= htmlspecialchars($user['username']) ?>')">
+                                        <i class="fas fa-plus-circle"></i> Assign Role
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <div class="no-data">
+                    <i class="fas fa-users-slash"></i>
+                    <p>No users found in the system</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -624,21 +645,24 @@ foreach ($allUsers as $user) {
     <div id="assignModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Assign Role</h2>
-                <button class="close-btn" onclick="closeAssignModal()">&times;</button>
+                <h2><i class="fas fa-user-plus"></i> Assign Role</h2>
+                <button class="close-btn" onclick="closeAssignModal()" type="button">&times;</button>
             </div>
             <form method="POST">
                 <input type="hidden" name="user_id" id="modalUserId">
                 <input type="hidden" name="action" value="assign">
 
                 <div class="form-group">
-                    <label>User: <strong id="modalUserName"></strong></label>
+                    <label><i class="fas fa-user"></i> User:</label>
+                    <div style="padding: 12px; background: #f7fafc; border-radius: 8px; font-weight: 600; color: #667eea;">
+                        <span id="modalUserName"></span>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="modalRoleId">Select Role:</label>
+                    <label for="modalRoleId"><i class="fas fa-user-shield"></i> Select Role:</label>
                     <select id="modalRoleId" name="role_id" required>
-                        <option value="">-- Choose a role --</option>
+                        <option value="">-- Choose a role to assign --</option>
                         <?php foreach ($allRoles as $role): ?>
                             <option value="<?= $role['role_id'] ?>">
                                 <?= htmlspecialchars(ucfirst($role['role_name'])) ?> - <?= htmlspecialchars($role['description']) ?>
@@ -648,12 +672,40 @@ foreach ($allUsers as $user) {
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Assign Role</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAssignModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Assign Role
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Back Button -->
+    <a href="/payslip_generator/public/admin/admin_dashboard.php" class="back-btn" title="Back to Dashboard">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <script>
+        function openAssignModal(userId, userName) {
+            document.getElementById('modalUserId').value = userId;
+            document.getElementById('modalUserName').textContent = userName;
+            document.getElementById('assignModal').classList.add('active');
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').classList.remove('active');
+            document.getElementById('modalRoleId').value = '';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('assignModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAssignModal();
+            }
+        });
+    </script>
 </body>
 </html>
