@@ -78,7 +78,7 @@ $stmt = $conn->query("SELECT d.department_name, AVG(e.basic_salary) as avg_salar
 $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -99,17 +99,6 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             --border-color: #e0e0e0;
             --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        [data-theme="dark"] {
-            --bg-primary: #1a1f36;
-            --bg-secondary: #252d3d;
-            --bg-tertiary: #2a3350;
-            --text-primary: #fffffe;
-            --text-secondary: #ccc;
-            --text-tertiary: #999;
-            --border-color: #3d4263;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
 
         * {
@@ -174,24 +163,6 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .back-btn:hover {
             transform: translateX(-2px);
             box-shadow: var(--card-shadow);
-        }
-
-        .theme-toggle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--bg-tertiary);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1);
         }
 
         /* Statistics Cards */
@@ -398,30 +369,18 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #166534;
         }
 
-        [data-theme="dark"] .salary-badge.high {
-            background-color: rgba(16, 185, 129, 0.2);
-            color: #86efac;
-        }
 
         .salary-badge.medium {
             background-color: #fef3c7;
             color: #92400e;
         }
 
-        [data-theme="dark"] .salary-badge.medium {
-            background-color: rgba(245, 158, 11, 0.2);
-            color: #fcd34d;
-        }
 
         .salary-badge.low {
             background-color: #fee2e2;
             color: #991b1b;
         }
 
-        [data-theme="dark"] .salary-badge.low {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-        }
 
         /* Department Salary Comparison */
         .dept-comparison {
@@ -617,9 +576,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <button class="back-btn" onclick="window.history.back()">
                     <i class="fas fa-arrow-left"></i> Back
                 </button>
-                <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
-                    <i class="fas fa-moon"></i>
-                </button>
+                
             </div>
         </div>
 
@@ -822,33 +779,6 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const html = document.documentElement;
-
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-
-        function updateThemeIcon(theme) {
-            const icon = themeToggle.querySelector('i');
-            if (theme === 'dark') {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-            }
-        }
     </script>
 </body>
 </html>

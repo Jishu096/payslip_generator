@@ -81,7 +81,7 @@ foreach ($allUsers as $user) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -110,51 +110,13 @@ foreach ($allUsers as $user) {
             --shadow: rgba(0, 0, 0, 0.1);
         }
 
-        :root[data-theme="dark"] {
-            --bg-primary: #1a1f36;
-            --bg-secondary: #232946;
-            --text-primary: #e0e7ff;
-            --text-secondary: #c7d2e0;
-            --text-tertiary: #a0aec0;
-            --border-color: #374151;
-            --accent: #667eea;
-            --accent-dark: #764ba2;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --shadow: rgba(0, 0, 0, 0.3);
-        }
+        :root
 
         body {
             font-family: 'Manrope', sans-serif;
             background-color: var(--bg-secondary);
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            box-shadow: 0 4px 15px var(--shadow);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px var(--shadow);
         }
 
         .container {
@@ -561,9 +523,6 @@ foreach ($allUsers as $user) {
 <body>
 
     <!-- Theme Toggle -->
-    <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
 
     <div class="container">
         <!-- Header -->
@@ -695,53 +654,6 @@ foreach ($allUsers as $user) {
             </form>
         </div>
     </div>
-
-    <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
-
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        });
-
-        // Modal Functions
-        const assignModal = document.getElementById('assignModal');
-
-        function openAssignModal(userId, username) {
-            document.getElementById('modalUserId').value = userId;
-            document.getElementById('modalUserName').textContent = username;
-            document.getElementById('modalRoleId').value = '';
-            assignModal.classList.add('active');
-        }
-
-        function closeAssignModal() {
-            assignModal.classList.remove('active');
-        }
-
-        // Close modal when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target === assignModal) {
-                closeAssignModal();
-            }
-        });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeAssignModal();
-            }
-        });
-    </script>
 
 </body>
 </html>

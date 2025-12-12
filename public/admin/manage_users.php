@@ -17,7 +17,7 @@ $deleted = isset($_GET['deleted']);
 $error = $_GET['error'] ?? '';
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,40 +40,11 @@ $error = $_GET['error'] ?? '';
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        [data-theme="dark"] {
-            --bg-primary: #1a1f36;
-            --bg-secondary: #232946;
-            --bg-tertiary: #2d3250;
-            --text-primary: #fffffe;
-            --text-secondary: #b8c1ec;
-            --text-tertiary: #a0a8d4;
-            --border-color: #3d4263;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-
         body {
             font-family: 'Manrope', sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 15px;
-            cursor: pointer;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: translateY(-2px);
         }
 
         .page-header h1 {
@@ -110,17 +81,7 @@ $error = $_GET['error'] ?? '';
             color: #b35c00;
         }
 
-        [data-theme="dark"] .alert-success {
-            background: rgba(39, 174, 96, 0.15);
-            border-color: rgba(39, 174, 96, 0.3);
-            color: #6ee7b7;
-        }
 
-        [data-theme="dark"] .alert-warning {
-            background: rgba(255, 152, 0, 0.15);
-            border-color: rgba(255, 152, 0, 0.3);
-            color: #ffb74d;
-        }
 
         .users-card {
             background: var(--bg-primary);
@@ -244,8 +205,6 @@ $error = $_GET['error'] ?? '';
         .badge-active { background: #d4edda; color: #155724; }
         .badge-inactive { background: #f8d7da; color: #721c24; }
 
-        [data-theme="dark"] .badge-active { background: rgba(39, 174, 96, 0.2); color: #6ee7b7; }
-        [data-theme="dark"] .badge-inactive { background: rgba(231, 76, 60, 0.2); color: #ff6b6b; }
 
         .role-badge {
             padding: 6px 14px;
@@ -259,10 +218,6 @@ $error = $_GET['error'] ?? '';
         .role-director { background: #fff3e0; color: #e65100; }
         .role-administrator { background: #fce4ec; color: #c2185b; }
 
-        [data-theme="dark"] .role-employee { background: rgba(33, 150, 243, 0.2); color: #64b5f6; }
-        [data-theme="dark"] .role-accountant { background: rgba(156, 39, 176, 0.2); color: #ce93d8; }
-        [data-theme="dark"] .role-director { background: rgba(255, 152, 0, 0.2); color: #ffb74d; }
-        [data-theme="dark"] .role-administrator { background: rgba(233, 30, 99, 0.2); color: #f48fb1; }
 
         .action-btns {
             display: flex;
@@ -329,10 +284,6 @@ $error = $_GET['error'] ?? '';
     </style>
 </head>
 <body>
-
-    <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
 
     <?php include 'includes/admin_navbar.php'; ?>
     <?php include 'includes/admin_sidebar.php'; ?>
@@ -433,48 +384,6 @@ $error = $_GET['error'] ?? '';
     </main>
 
     <?php include 'includes/admin_scripts.php'; ?>
-
-    <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
-
-        const savedTheme = localStorage.getItem('adminTheme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('adminTheme', newTheme);
-            themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        });
-
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        const table = document.getElementById('userTable');
-        const rows = table.querySelectorAll('tr');
-
-        searchInput.addEventListener('keyup', function() {
-            const query = this.value.toLowerCase();
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            });
-        });
-
-        // Delete confirmation
-        document.querySelectorAll('.confirm-delete').forEach(link => {
-            link.addEventListener('click', function(e) {
-                const name = this.getAttribute('data-name') || 'this user';
-                if (!confirm(`Are you sure you want to delete user "${name}"? This action cannot be undone.`)) {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
 
 </body>
 </html>

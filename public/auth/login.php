@@ -12,17 +12,6 @@ session_start();
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0b1221;
-            --card: #0f172a;
-            --accent: #0ea5e9;
-            --accent-2: #22d3ee;
-            --text: #e5e7eb;
-            --muted: #9ca3af;
-            --border: #1f2937;
-            --success: #34d399;
-        }
-
-        body.light-theme {
             --bg: #f8fafc;
             --card: #ffffff;
             --accent: #0284c7;
@@ -41,8 +30,8 @@ session_start();
 
         body {
             font-family: 'Manrope', sans-serif;
-            background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.08), transparent 25%),
-                        radial-gradient(circle at 80% 0%, rgba(14,165,233,0.06), transparent 30%),
+            background: radial-gradient(circle at 20% 20%, rgba(2,132,199,0.05), transparent 25%),
+                        radial-gradient(circle at 80% 0%, rgba(2,132,199,0.04), transparent 30%),
                         var(--bg);
             min-height: 100vh;
             display: flex;
@@ -50,64 +39,18 @@ session_start();
             align-items: center;
             padding: 20px;
             overflow: hidden;
-            transition: background 0.4s ease;
-        }
-
-        body.light-theme {
-            background: radial-gradient(circle at 20% 20%, rgba(2,132,199,0.05), transparent 25%),
-                        radial-gradient(circle at 80% 0%, rgba(2,132,199,0.04), transparent 30%),
-                        var(--bg);
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.3s ease;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .theme-toggle:hover {
-            background: var(--accent);
-            color: var(--bg);
-            transform: scale(1.1);
-        }
-
-        .theme-toggle i {
-            color: var(--accent);
-            transition: color 0.3s ease;
-        }
-
-        .theme-toggle:hover i {
-            color: var(--bg);
         }
 
         .login-wrapper {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 100px rgba(14,165,233,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             max-width: 480px;
             width: 100%;
             animation: slideUp 0.6s ease-out;
             position: relative;
-            transition: box-shadow 0.3s ease;
-        }
-
-        body.light-theme .login-wrapper {
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         }
 
         .login-wrapper::before {
@@ -659,10 +602,6 @@ session_start();
     </style>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
-        <i class="fas fa-moon"></i>
-    </button>
-
     <div class="login-wrapper">
         <div class="login-header">
             <h2>PaySlip Generator</h2>
@@ -730,32 +669,6 @@ session_start();
     </div>
 
     <script>
-        // Theme toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        const body = document.body;
-
-        // Load saved theme preference
-        const savedTheme = localStorage.getItem('loginTheme') || 'dark';
-        if (savedTheme === 'light') {
-            body.classList.add('light-theme');
-            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        }
-
-        // Theme toggle handler
-        themeToggle.addEventListener('click', function() {
-            body.classList.toggle('light-theme');
-            const isLight = body.classList.contains('light-theme');
-            
-            // Save preference
-            localStorage.setItem('loginTheme', isLight ? 'light' : 'dark');
-            
-            // Update icon
-            themeToggle.innerHTML = isLight ? 
-                '<i class="fas fa-sun"></i>' : 
-                '<i class="fas fa-moon"></i>';
-        });
-
         // Forgot Password Modal
         const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
         const forgotPasswordModal = document.getElementById('forgotPasswordModal');

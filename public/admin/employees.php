@@ -65,7 +65,7 @@ $role_pending = isset($_GET['role_pending']);
 $error = $_GET['error'] ?? '';
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -96,25 +96,6 @@ $error = $_GET['error'] ?? '';
             --badge-danger-text: #721c24;
         }
 
-        [data-theme="dark"] {
-            --bg-primary: #1a1f36;
-            --bg-secondary: #232946;
-            --bg-tertiary: #2d3250;
-            --text-primary: #fffffe;
-            --text-secondary: #b8c1ec;
-            --text-tertiary: #a0a8d4;
-            --border-color: #3d4263;
-            --border-light: #353a5c;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            --hover-bg: #2d3250;
-            --input-bg: #232946;
-            --input-border: #3d4263;
-            --badge-success-bg: rgba(52, 211, 153, 0.15);
-            --badge-success-text: #34d399;
-            --badge-danger-bg: rgba(239, 68, 68, 0.15);
-            --badge-danger-text: #ef4444;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -126,38 +107,6 @@ $error = $_GET['error'] ?? '';
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 15px;
-            cursor: pointer;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .theme-toggle:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .theme-toggle i {
-            font-size: 18px;
-            color: var(--text-primary);
-            transition: transform 0.3s ease;
-        }
-
-        .theme-toggle:hover i {
-            transform: rotate(20deg);
         }
 
         .employee-table {
@@ -289,10 +238,6 @@ $error = $_GET['error'] ?? '';
             color: #f59e0b;
         }
 
-        [data-theme="dark"] .badge-on_leave {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
-        }
 
         .filters-section {
             padding: 20px 30px;
@@ -616,11 +561,6 @@ $error = $_GET['error'] ?? '';
             color: #1b6b3d;
         }
 
-        [data-theme="dark"] .alert-success {
-            background: rgba(52, 211, 153, 0.15);
-            border-color: rgba(52, 211, 153, 0.3);
-            color: #34d399;
-        }
 
         .alert-warning {
             background: #fff8e1;
@@ -628,11 +568,6 @@ $error = $_GET['error'] ?? '';
             color: #e65100;
         }
 
-        [data-theme="dark"] .alert-warning {
-            background: rgba(251, 191, 36, 0.15);
-            border-color: rgba(251, 191, 36, 0.3);
-            color: #fbbf24;
-        }
 
         .alert-info {
             background: #e8f5ff;
@@ -640,11 +575,6 @@ $error = $_GET['error'] ?? '';
             color: #0c5377;
         }
 
-        [data-theme="dark"] .alert-info {
-            background: rgba(59, 130, 246, 0.15);
-            border-color: rgba(59, 130, 246, 0.3);
-            color: #3b82f6;
-        }
 
         .alert-error {
             background: #fff4e5;
@@ -652,11 +582,6 @@ $error = $_GET['error'] ?? '';
             color: #b35c00;
         }
 
-        [data-theme="dark"] .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #ef4444;
-        }
 
         @media (max-width: 1200px) {
             th, td {
@@ -691,19 +616,10 @@ $error = $_GET['error'] ?? '';
                 width: 100%;
                 justify-content: center;
             }
-            .theme-toggle {
-                top: 10px;
-                right: 10px;
-                padding: 8px 12px;
-            }
         }
     </style>
 </head>
 <body>
-
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
 
     <?php include 'includes/admin_navbar.php'; ?>
     <?php include 'includes/admin_sidebar.php'; ?>
@@ -917,28 +833,9 @@ $error = $_GET['error'] ?? '';
     <?php include 'includes/admin_scripts.php'; ?>
 
     <script>
-        // Theme Toggle Functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
+        );
 
-        // Load saved theme
-        const savedTheme = localStorage.getItem('adminTheme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('adminTheme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-
-        function updateThemeIcon(theme) {
-            if (theme === 'dark') {
-                themeIcon.classList.remove('fa-moon');
+        function 
                 themeIcon.classList.add('fa-sun');
             } else {
                 themeIcon.classList.remove('fa-sun');
@@ -1057,7 +954,7 @@ $error = $_GET['error'] ?? '';
                     top: 0;
                     width: 100%;
                 }
-                .theme-toggle, .search-box, .filters-section, .action-btns, .page-header {
+                .search-box, .filters-section, .action-btns, .page-header {
                     display: none !important;
                 }
                 table {

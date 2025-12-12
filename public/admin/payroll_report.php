@@ -49,7 +49,7 @@ arsort($departmentPayroll);
 
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,42 +75,13 @@ arsort($departmentPayroll);
             --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
-        :root[data-theme="dark"] {
-            --bg-primary: #1a1f36;
-            --bg-secondary: #232946;
-            --text-primary: #fffffe;
-            --text-secondary: #b8c1ec;
-            --text-tertiary: #a0a8d4;
-            --border-color: #3d4263;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
+        :root
 
         body {
             font-family: 'Manrope', sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 15px;
-            cursor: pointer;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .theme-toggle:hover {
-            transform: translateY(-2px);
         }
 
         .container {
@@ -294,7 +265,7 @@ arsort($departmentPayroll);
         }
 
         @media print {
-            .theme-toggle, .back-btn, .print-btn {
+            .back-btn, .print-btn {
                 display: none;
             }
             body {
@@ -338,9 +309,6 @@ arsort($departmentPayroll);
 <body>
 
     <!-- Theme Toggle -->
-    <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
 
     <div class="container">
         <a href="reports.php" class="back-btn">
@@ -465,25 +433,6 @@ arsort($departmentPayroll);
             </p>
         </div>
     </div>
-
-    <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
-
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        });
-    </script>
 
 </body>
 </html>

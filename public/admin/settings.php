@@ -73,7 +73,7 @@ while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
 date_default_timezone_set($settings['time_zone']);
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -98,42 +98,11 @@ date_default_timezone_set($settings['time_zone']);
             --input-border: #e0e0e0;
         }
 
-        [data-theme="dark"] {
-            --bg-primary: #1a1f36;
-            --bg-secondary: #232946;
-            --bg-tertiary: #2d3250;
-            --text-primary: #fffffe;
-            --text-secondary: #b8c1ec;
-            --text-tertiary: #a0a8d4;
-            --border-color: #3d4263;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            --input-bg: #2d3250;
-            --input-border: #3d4263;
-        }
-
         body {
             font-family: 'Manrope', sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 15px;
-            cursor: pointer;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: translateY(-2px);
         }
 
         .page-header h1 {
@@ -287,10 +256,6 @@ date_default_timezone_set($settings['time_zone']);
     </style>
 </head>
 <body>
-
-    <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
 
     <?php include 'includes/admin_navbar.php'; ?>
     <?php include 'includes/admin_sidebar.php'; ?>
@@ -485,38 +450,6 @@ date_default_timezone_set($settings['time_zone']);
     </main>
 
     <?php include 'includes/admin_scripts.php'; ?>
-
-    <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
-
-        const savedTheme = localStorage.getItem('adminTheme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('adminTheme', newTheme);
-            themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        });
-
-        function sendTestEmail() {
-            const email = document.getElementById('testEmail').value;
-            if (!email) {
-                alert('Please enter an email address');
-                return;
-            }
-            if (!email.includes('@')) {
-                alert('Please enter a valid email address');
-                return;
-            }
-            window.location.href = 'settings.php?test_email=' + encodeURIComponent(email);
-        }
-    </script>
 
 </body>
 </html>

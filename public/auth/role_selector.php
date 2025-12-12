@@ -46,7 +46,7 @@ $userName = $_SESSION['username'] ?? 'User';
 $allRoles = $_SESSION['all_roles'] ?? [];
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,19 +69,6 @@ $allRoles = $_SESSION['all_roles'] ?? [];
             --accent-2: #764ba2;
         }
 
-        [data-theme="dark"] {
-            --bg-primary: #1a1f36;
-            --bg-secondary: #232946;
-            --bg-tertiary: #2d3250;
-            --text-primary: #fffffe;
-            --text-secondary: #b8c1ec;
-            --text-tertiary: #a0a8d4;
-            --border-color: #3d4263;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            --accent: #667eea;
-            --accent-2: #764ba2;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -97,27 +84,6 @@ $allRoles = $_SESSION['all_roles'] ?? [];
             align-items: center;
             justify-content: center;
             padding: 20px;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        /* Theme Toggle */
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 15px;
-            cursor: pointer;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            font-size: 20px;
-            z-index: 100;
-        }
-
-        .theme-toggle:hover {
-            transform: translateY(-2px);
         }
 
         .container {
@@ -360,12 +326,6 @@ $allRoles = $_SESSION['all_roles'] ?? [];
     </style>
 </head>
 <body>
-
-    <!-- Theme Toggle -->
-    <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
-
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -425,23 +385,6 @@ $allRoles = $_SESSION['all_roles'] ?? [];
     </div>
 
     <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
-
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        });
-
         // Enable Continue button when role is selected
         const radioButtons = document.querySelectorAll('input[name="selected_role"]');
         const continueBtn = document.getElementById('continueBtn');
