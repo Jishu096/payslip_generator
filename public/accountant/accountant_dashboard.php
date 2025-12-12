@@ -7,7 +7,7 @@ if (!isset($_SESSION['role'])) {
     exit;
 }
 
-// Check if user has accountant role (either primary or in all_roles)
+// Check if user has accountant role
 $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role']];
 $hasAccountantRole = in_array('accountant', $userRoles);
 
@@ -63,348 +63,407 @@ $monthLabel = date('F Y');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accountant Dashboard - Enterprise Payroll</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Accountant Dashboard - Payroll System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg: #0b1221;
-            --card: #0f172a;
-            --muted: #9ca3af;
-            --text: #e5e7eb;
-            --accent: #0ea5e9;
-            --accent-2: #22d3ee;
-            --border: #1f2937;
-            --success: #34d399;
-            --warn: #fbbf24;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: "Roboto", sans-serif;
-            background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.06), transparent 25%),
-                        radial-gradient(circle at 80% 0%, rgba(14,165,233,0.08), transparent 30%),
-                        var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+            background: #ffffff;
+            color: #2d3748;
+            line-height: 1.6;
         }
 
-        a { color: inherit; text-decoration: none; }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            background: linear-gradient(180deg, #0f172a 0%, #0b1221 100%);
-            border-right: 1px solid var(--border);
-            padding: 24px;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            letter-spacing: 0.4px;
-            margin-bottom: 28px;
-        }
-
-        .brand-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            display: grid;
-            place-items: center;
-            color: #0b1221;
-            font-weight: 800;
-        }
-
-        .nav {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .nav a {
-            padding: 12px 14px;
-            border-radius: 10px;
-            color: var(--muted);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .nav a:hover,
-        .nav a.active {
-            background: rgba(14,165,233,0.1);
-            color: var(--text);
-        }
-
-        .main {
-            padding: 32px;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
         }
 
         .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .user-info {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 22px;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .title {
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
         }
 
-        .title h1 {
-            font-family: "Roboto", sans-serif;
-            font-size: 26px;
-            letter-spacing: 0.2px;
-        }
-
-        .subtitle { color: var(--muted); margin-top: 4px; }
-
-        .user { display: flex; align-items: center; gap: 12px; }
-
-        .avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        .stats-grid {
             display: grid;
-            place-items: center;
-            color: #0b1221;
-            font-weight: 800;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        .badge { color: var(--muted); font-size: 12px; }
-
-        .grid { display: grid; gap: 16px; }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
         }
 
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px 18px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         }
 
-        .stat-label { color: var(--muted); font-size: 13px; letter-spacing: 0.3px; }
-        .stat-value { font-size: 28px; font-weight: 700; margin-top: 6px; }
-        .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
-        .pill.accent { background: rgba(14,165,233,0.15); color: var(--accent); }
-        .pill.success { background: rgba(52,211,153,0.15); color: var(--success); }
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-        .panel-title {
-            font-size: 15px;
-            letter-spacing: 0.3px;
-            color: var(--text);
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .stat-info {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: #e6fffa;
+            color: #0f766e;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .actions-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 12px;
         }
 
-        .quick-actions {
+        .actions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
         }
 
-        .action {
-            background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(34,211,238,0.12));
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 14px;
-            border-radius: 12px;
+        .action-btn {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.2s ease;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
 
-        .action:hover { transform: translateY(-2px); border-color: rgba(34,211,238,0.4); }
+        .action-btn:hover {
+            border-color: #667eea;
+            background: white;
+            transform: translateX(5px);
+        }
 
-        .table {
+        .action-btn i {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        .action-text {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .action-text h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .action-text p {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .table-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 4px;
         }
 
-        .table th, .table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid var(--border);
+        th, td {
+            padding: 15px;
             text-align: left;
-            color: var(--text);
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        .table th { color: var(--muted); font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase; }
+        th {
+            font-size: 13px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-        .muted { color: var(--muted); font-size: 13px; }
+        td {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #e6fffa;
+            color: #0f766e;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
 
         .logout-btn {
-            margin-top: 18px;
-            display: inline-flex;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.2);
-            transition: all 0.2s ease;
+            padding: 12px 24px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+            transition: all 0.3s ease;
         }
 
-        .logout-btn:hover { transform: translateY(-1px); border-color: rgba(239,68,68,0.35); }
+        .logout-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .logout-btn {
+                bottom: 15px;
+                right: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-icon"><i class="fas fa-calculator"></i></div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-calculator"></i> Accountant Dashboard</h1>
+            <p>Payroll Control Center - <?php echo htmlspecialchars($monthLabel); ?></p>
+            <div class="user-info">
+                <div class="user-avatar"><?php echo strtoupper(substr($username, 0, 1)); ?></div>
                 <div>
-                    <div style="font-family: "Roboto", sans-serif;">Accountant</div>
-                    <div class="badge">Payroll Control Center</div>
+                    <div style="font-weight: 600; font-size: 16px;"><?php echo htmlspecialchars($username); ?></div>
+                    <div style="opacity: 0.9; font-size: 14px;">Accountant</div>
                 </div>
             </div>
-            <nav class="nav">
-                <a href="accountant_dashboard.php" class="active"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="payroll_management.php"><i class="fas fa-money-bill-wave"></i> Payroll Management</a>
-                <a href="generate_payslip.php"><i class="fas fa-file-invoice-dollar"></i> Generate Payslip</a>
-                <a href="financial_reports.php"><i class="fas fa-chart-pie"></i> Financial Reports</a>
-                <a href="../admin/employees.php"><i class="fas fa-users"></i> Employees</a>
-            </nav>
-            <a href="../index.php?page=logout" class="logout-btn" style="margin-top: 30px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </aside>
+        </div>
 
-        <main class="main">
-            <div class="header">
-                <div>
-                    <div class="title">
-                        <i class="fas fa-bolt" style="color: var(--accent);"></i>
-                        <div>
-                            <h1>Accountant Dashboard</h1>
-                            <div class="subtitle">Operational snapshot for <?php echo htmlspecialchars($monthLabel); ?></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="user">
-                    <div>
-                        <div style="font-weight: 700;"><?php echo htmlspecialchars($username); ?></div>
-                        <div class="badge">Accountant</div>
-                    </div>
-                    <div class="avatar"><?php echo strtoupper(substr($username, 0, 1)); ?></div>
-                </div>
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label"><i class="fas fa-users"></i> Total Employees</div>
+                <div class="stat-value"><?php echo $totalEmployees; ?></div>
+                <div class="stat-info">Active headcount</div>
             </div>
 
-            <div class="grid" style="gap: 18px;">
-                <div class="stats">
-                    <div class="card">
-                        <div class="stat-label"><i class="fas fa-users"></i> Active Employees</div>
-                        <div class="stat-value"><?php echo $totalEmployees; ?></div>
-                        <div class="pill accent"><i class="fas fa-level-up-alt"></i> Headcount stable</div>
-                    </div>
-                    <div class="card">
-                        <div class="stat-label"><i class="fas fa-indian-rupee-sign"></i> Monthly Payroll (Base)</div>
-                        <div class="stat-value">₹<?php echo number_format($totalPayroll, 0); ?></div>
-                        <div class="muted">Based on employee basic salary</div>
-                    </div>
-                    <div class="card">
-                        <div class="stat-label"><i class="fas fa-file-invoice-dollar"></i> Payslips (All)</div>
-                        <div class="stat-value"><?php echo $payslipCount; ?></div>
-                        <div class="pill success"><i class="fas fa-check"></i> <?php echo $payslipMonthCount; ?> this month</div>
-                    </div>
-                    <div class="card">
-                        <div class="stat-label"><i class="fas fa-calendar-alt"></i> Current Period</div>
-                        <div class="stat-value"><?php echo date('M Y'); ?></div>
-                        <div class="muted"><?php echo date('l, d M'); ?></div>
-                    </div>
-                </div>
+            <div class="stat-card">
+                <div class="stat-label"><i class="fas fa-rupee-sign"></i> Monthly Payroll</div>
+                <div class="stat-value">₹<?php echo number_format($totalPayroll, 0); ?></div>
+                <div class="stat-info">Base salary total</div>
+            </div>
 
-                <div class="card">
-                    <div class="panel-title"><i class="fas fa-bolt"></i> Quick Actions</div>
-                    <div class="quick-actions">
-                        <a class="action" href="generate_payslip.php">
-                            <div>
-                                <div style="font-weight: 700;">Generate Payslip</div>
-                                <div class="muted">Auto-calc with new rates</div>
-                            </div>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a class="action" href="payroll_management.php">
-                            <div>
-                                <div style="font-weight: 700;">Manage Payroll</div>
-                                <div class="muted">Adjust payouts & bonuses</div>
-                            </div>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a class="action" href="financial_reports.php">
-                            <div>
-                                <div style="font-weight: 700;">View Reports</div>
-                                <div class="muted">Cash flow & summaries</div>
-                            </div>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a class="action" href="../admin/employees.php">
-                            <div>
-                                <div style="font-weight: 700;">Employee Directory</div>
-                                <div class="muted">Update profiles & CTC</div>
-                            </div>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
+            <div class="stat-card">
+                <div class="stat-label"><i class="fas fa-file-invoice"></i> Total Payslips</div>
+                <div class="stat-value"><?php echo $payslipCount; ?></div>
+                <div class="stat-badge"><i class="fas fa-check-circle"></i> <?php echo $payslipMonthCount; ?> this month</div>
+            </div>
 
-                <div class="card">
-                    <div class="panel-title"><i class="fas fa-clock"></i> Recent Payslips</div>
-                    <table class="table">
-                        <thead>
+            <div class="stat-card">
+                <div class="stat-label"><i class="fas fa-calendar"></i> Current Period</div>
+                <div class="stat-value"><?php echo date('M Y'); ?></div>
+                <div class="stat-info"><?php echo date('l, d M Y'); ?></div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="actions-section">
+            <div class="section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+            <div class="actions-grid">
+                <a href="generate_payslip.php" class="action-btn">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <div class="action-text">
+                        <h3>Generate Payslip</h3>
+                        <p>Create new payslips</p>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+
+                <a href="payroll_management.php" class="action-btn">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <div class="action-text">
+                        <h3>Manage Payroll</h3>
+                        <p>Adjust salary & bonuses</p>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+
+                <a href="financial_reports.php" class="action-btn">
+                    <i class="fas fa-chart-pie"></i>
+                    <div class="action-text">
+                        <h3>Financial Reports</h3>
+                        <p>View analytics</p>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+
+                <a href="../admin/employees.php" class="action-btn">
+                    <i class="fas fa-users-cog"></i>
+                    <div class="action-text">
+                        <h3>Employee Directory</h3>
+                        <p>Manage profiles</p>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Payslips -->
+        <div class="table-section">
+            <div class="section-title"><i class="fas fa-clock"></i> Recent Payslips</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Designation</th>
+                        <th>Department</th>
+                        <th>Net Salary</th>
+                        <th>Generated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (count($recentPayslips) === 0): ?>
+                        <tr><td colspan="5" style="text-align: center; color: #a0aec0;">No payslips generated yet.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($recentPayslips as $row): ?>
                             <tr>
-                                <th>Employee</th>
-                                <th>Designation</th>
-                                <th>Department</th>
-                                <th>Net</th>
-                                <th>Generated</th>
+                                <td><strong><?php echo htmlspecialchars($row['full_name']); ?></strong></td>
+                                <td><?php echo htmlspecialchars($row['designation']); ?></td>
+                                <td><?php echo htmlspecialchars($row['department_name'] ?? 'N/A'); ?></td>
+                                <td><span class="badge">₹<?php echo number_format($row['net_salary'], 2); ?></span></td>
+                                <td style="color: #718096;"><?php echo date('d M Y, H:i', strtotime($row['generated_at'])); ?></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (count($recentPayslips) === 0): ?>
-                                <tr><td colspan="5" class="muted">No payslips generated yet.</td></tr>
-                            <?php else: ?>
-                                <?php foreach ($recentPayslips as $row): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['full_name']); ?></td>
-                                        <td class="muted"><?php echo htmlspecialchars($row['designation']); ?></td>
-                                        <td class="muted"><?php echo htmlspecialchars($row['department_name'] ?? 'N/A'); ?></td>
-                                        <td><span class="pill accent">₹<?php echo number_format($row['net_salary'], 2); ?></span></td>
-                                        <td class="muted"><?php echo date('d M, H:i', strtotime($row['generated_at'])); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <!-- Logout Button -->
+    <a href="../auth/logout.php" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
 </body>
 </html>
