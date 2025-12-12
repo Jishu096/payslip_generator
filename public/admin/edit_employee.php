@@ -383,16 +383,6 @@ $username = $_SESSION['username'] ?? 'Admin';
     <?php include 'includes/admin_scripts.php'; ?>
 
     <script>
-        );
-
-        function 
-                themeIcon.classList.add('fa-sun');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-        }
-
         // Show/hide salary change fields when salary is modified
         const salaryInput = document.getElementById('basic_salary');
         const originalSalary = salaryInput.dataset.original;

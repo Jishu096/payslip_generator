@@ -399,11 +399,6 @@ $error = $_GET['error'] ?? '';
     <?php include 'includes/admin_scripts.php'; ?>
 
     <script>
-        );
-
-        function 
-        }
-
         // Form validation
         const form = document.getElementById('userForm');
         const password = document.getElementById('password');
