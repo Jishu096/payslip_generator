@@ -42,6 +42,21 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #1a1f36;
+            --text-secondary: #555;
+            --text-tertiary: #7f8c8d;
+            --border-color: #e0e0e0;
+            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --color-present: #10b981;
+            --color-absent: #ef4444;
+            --color-leave: #f59e0b;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -49,77 +64,62 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
         }
 
         body {
-            font-family: 'Roboto', sans-serif;
-            background: #ffffff;
-            color: #2d3748;
-            line-height: 1.6;
+            font-family: "Roboto", sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
         }
 
         .attendance-container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 30px;
+            padding: 30px 20px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
+        .attendance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        .breadcrumb {
-            font-size: 14px;
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-
-        .breadcrumb a {
-            color: white;
-            text-decoration: none;
-            transition: opacity 0.3s;
-        }
-
-        .breadcrumb a:hover {
-            opacity: 0.8;
-        }
-
-        .breadcrumb i {
-            margin: 0 8px;
-            font-size: 10px;
-        }
-
-        .header h1 {
+        .attendance-header h1 {
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
             font-weight: 700;
-            margin: 0;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
 
         .back-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            padding: 10px 18px;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
             border: none;
-            font-size: 24px;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-weight: 500;
+            font-size: 14px;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
             text-decoration: none;
         }
 
         .back-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+            transform: translateX(-2px);
+            box-shadow: var(--card-shadow);
         }
 
         /* Summary Cards */
@@ -131,28 +131,28 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
         }
 
         .summary-card {
-            background: white;
-            border: 1px solid #e2e8f0;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
         }
 
         .summary-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         }
 
         .summary-card.gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-primary);
             color: white;
             border: none;
         }
 
         .summary-label {
             font-size: 14px;
-            color: #718096;
+            color: var(--text-tertiary);
             font-weight: 500;
             margin-bottom: 8px;
             text-transform: uppercase;
@@ -164,7 +164,7 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
         }
 
         .summary-value {
-            font-family: 'Roboto', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 8px;
@@ -177,27 +177,27 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
 
         /* Attendance Table */
         .attendance-card {
-            background: white;
-            border: 1px solid #e2e8f0;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: var(--card-shadow);
         }
 
         .card-title {
-            font-family: 'Roboto', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 22px;
             font-weight: 700;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            color: #2d3748;
+            color: var(--text-primary);
         }
 
         .card-title i {
             font-size: 24px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -321,13 +321,15 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
 <body>
     <div class="attendance-container">
         <!-- Header -->
-        <div class="header">
-            <div class="breadcrumb">
-                <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
-                <i class="fas fa-chevron-right"></i>
-                <span>Attendance</span>
+        <div class="attendance-header">
+            <div>
+                <h1><i class="fas fa-calendar-check"></i> My Attendance</h1>
             </div>
-            <h1><i class="fas fa-calendar-check"></i> My Attendance</h1>
+            <div class="header-controls">
+                <a href="dashboard.php" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -415,11 +417,6 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
             <?php endif; ?>
         </div>
     </div>
-
-    <!-- Back Button -->
-    <a href="dashboard.php" class="back-btn" title="Back to Dashboard">
-        <i class="fas fa-arrow-left"></i>
-    </a>
 
     <script>
     </script>
