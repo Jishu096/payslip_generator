@@ -162,7 +162,7 @@ $avatarLetter = strtoupper(substr($emp['full_name'], 0, 1));
 <div class="sidebar">
     <h3><i class="fas fa-file-invoice-dollar"></i> Payslip</h3>
 
-    <a href="employee_dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
     <a href="employee_profile.php" class="active-link"><i class="fas fa-user"></i> My Profile</a>
     <a href="view_payslips.php"><i class="fas fa-file-invoice"></i> Payslips</a>
     <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>

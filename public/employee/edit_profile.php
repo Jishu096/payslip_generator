@@ -82,7 +82,7 @@ function val($key){
 <div class="sidebar">
     <h3><i class="fas fa-file-invoice-dollar"></i> Payslip</h3>
 
-    <a href="employee_dashboard.php"><i class="fa fa-home"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-home"></i> Dashboard</a>
     <a href="employee_profile.php"><i class="fa fa-user"></i> My Profile</a>
     <a href="edit_profile.php" class="active-link"><i class="fa fa-edit"></i> Edit Profile</a>
     <a href="view_payslips.php"><i class="fa fa-file"></i> Payslips</a>
