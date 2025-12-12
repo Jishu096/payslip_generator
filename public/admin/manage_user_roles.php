@@ -87,7 +87,7 @@ foreach ($allUsers as $user) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage User Roles - Admin</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -113,7 +113,7 @@ foreach ($allUsers as $user) {
         :root
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background-color: var(--bg-secondary);
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
@@ -135,7 +135,7 @@ foreach ($allUsers as $user) {
         }
 
         .header h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -215,7 +215,7 @@ foreach ($allUsers as $user) {
             font-size: 14px;
             color: var(--text-secondary);
             border-bottom: 2px solid var(--border-color);
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
         }
 
         td {
@@ -410,7 +410,7 @@ foreach ($allUsers as $user) {
         }
 
         .modal-header h2 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 24px;
             font-weight: 700;
         }
@@ -446,7 +446,7 @@ foreach ($allUsers as $user) {
             border-radius: 8px;
             background: var(--bg-secondary);
             color: var(--text-primary);
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 14px;
             transition: border-color 0.3s ease;
         }

@@ -53,7 +53,7 @@ $allRoles = $_SESSION['all_roles'] ?? [];
     <title>Choose Dashboard - Payroll System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -76,7 +76,7 @@ $allRoles = $_SESSION['all_roles'] ?? [];
         }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             min-height: 100vh;
@@ -97,7 +97,7 @@ $allRoles = $_SESSION['all_roles'] ?? [];
         }
 
         .header h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 36px;
             font-weight: 700;
             margin-bottom: 10px;
@@ -233,7 +233,7 @@ $allRoles = $_SESSION['all_roles'] ?? [];
         }
 
         .role-title {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 22px;
             font-weight: 700;
             margin-bottom: 10px;

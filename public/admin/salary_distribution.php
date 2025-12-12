@@ -85,7 +85,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Salary Distribution Analysis - Payroll System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php include 'includes/admin_styles.php'; ?>
     <style>
@@ -108,7 +108,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background-color: var(--bg-secondary);
             color: var(--text-primary);
             transition: all 0.3s ease;
@@ -130,7 +130,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .salary-header h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
             font-weight: 700;
             background: var(--gradient-primary);
@@ -207,7 +207,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .stat-value {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 28px;
             font-weight: 700;
             margin-bottom: 8px;
@@ -229,7 +229,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .section-title {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 22px;
             font-weight: 700;
             margin-bottom: 25px;
@@ -269,7 +269,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .range-label {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 12px;
@@ -295,7 +295,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .range-stat-value {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 18px;
             font-weight: 700;
         }
@@ -439,7 +439,7 @@ $deptSalaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .dept-salary {
             min-width: 100px;
             text-align: right;
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-weight: 600;
         }
 

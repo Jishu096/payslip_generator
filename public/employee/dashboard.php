@@ -54,7 +54,7 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
     <title>Employee Dashboard - Payroll System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -78,7 +78,7 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
@@ -105,7 +105,7 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         }
 
         .sidebar-header h3 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 5px;
@@ -170,7 +170,7 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         }
 
         .top-bar-left h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 28px;
             margin-bottom: 5px;
             color: var(--text-primary);
@@ -298,7 +298,7 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         .stat-card.orange .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
 
         .stat-value {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
             font-weight: 700;
             color: var(--text-primary);
@@ -327,7 +327,7 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         }
 
         .content-card h3 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 20px;
             color: var(--text-primary);
             margin-bottom: 20px;

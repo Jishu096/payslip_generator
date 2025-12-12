@@ -29,7 +29,7 @@ session_start();
         }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: radial-gradient(circle at 20% 20%, rgba(2,132,199,0.05), transparent 25%),
                         radial-gradient(circle at 80% 0%, rgba(2,132,199,0.04), transparent 30%),
                         var(--bg);
@@ -219,7 +219,7 @@ session_start();
         }
 
         .login-header h2 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 26px;
             font-weight: 700;
             margin-bottom: 8px;
@@ -284,7 +284,7 @@ session_start();
             color: var(--text);
             position: relative;
             z-index: 1;
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
         }
 
         .form-group input:focus {
@@ -435,7 +435,7 @@ session_start();
         }
 
         .modal-header h3 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 20px;
             margin-bottom: 8px;
             color: var(--text);
@@ -468,7 +468,7 @@ session_start();
             background: rgba(255, 255, 255, 0.02);
             color: var(--text);
             font-size: 13px;
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             transition: all 0.3s ease;
         }
 

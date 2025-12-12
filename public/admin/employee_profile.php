@@ -39,7 +39,7 @@ $username = $_SESSION['username'] ?? 'Admin';
     <title>Employee Profile - <?php echo htmlspecialchars($emp['full_name']); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php include 'includes/admin_styles.php'; ?>
     <style>
@@ -56,7 +56,7 @@ $username = $_SESSION['username'] ?? 'Admin';
         }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
@@ -94,7 +94,7 @@ $username = $_SESSION['username'] ?? 'Admin';
 
         .profile-details h1 {
             margin: 0 0 8px 0;
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
         }
 

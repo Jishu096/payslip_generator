@@ -130,7 +130,7 @@ $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
     <title>Reports & Analytics - Payroll System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php include 'includes/admin_styles.php'; ?>
     <style>
@@ -147,14 +147,14 @@ $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
         }
 
         .page-header h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
             margin-bottom: 8px;
             color: var(--text-primary);
@@ -207,7 +207,7 @@ $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
         .report-icon.purple { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
 
         .report-card h3 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 20px;
             color: var(--text-primary);
             margin-bottom: 10px;
@@ -264,7 +264,7 @@ $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
         .chart-card h3 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 22px;
             color: var(--text-primary);
             margin-bottom: 25px;

@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             --danger: #f87171;
         }
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.08), transparent 25%),
                         radial-gradient(circle at 80% 0%, rgba(14,165,233,0.06), transparent 30%),
                         var(--bg);
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 24px 50px rgba(0,0,0,0.4);
         }
         h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             color: var(--text);
             margin-bottom: 8px;
         }

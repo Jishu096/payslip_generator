@@ -79,7 +79,7 @@ foreach ($allApprovals as $approval) {
     <title>All Approvals - Director</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -102,7 +102,7 @@ foreach ($allApprovals as $approval) {
         :root
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
@@ -119,7 +119,7 @@ foreach ($allApprovals as $approval) {
         }
 
         .header h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 32px;
             margin-bottom: 8px;
         }
@@ -189,7 +189,7 @@ foreach ($allApprovals as $approval) {
         }
 
         .card-header h2 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 20px;
             display: flex;
             align-items: center;

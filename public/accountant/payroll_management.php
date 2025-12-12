@@ -80,7 +80,7 @@ $error = $_GET['error'] ?? '';
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.06), transparent 25%),
                         radial-gradient(circle at 80% 0%, rgba(14,165,233,0.08), transparent 30%),
                         var(--bg);
@@ -94,7 +94,7 @@ $error = $_GET['error'] ?? '';
             margin-left: 260px;
         }
 
-        .page-header h1 { font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.2px; }
+        .page-header h1 { font-family: "Roboto", sans-serif; letter-spacing: 0.2px; }
         .page-header p { color: var(--muted); }
 
         .total-summary {

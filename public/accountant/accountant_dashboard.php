@@ -84,7 +84,7 @@ $monthLabel = date('F Y');
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Manrope', sans-serif;
+            font-family: "Roboto", sans-serif;
             background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.06), transparent 25%),
                         radial-gradient(circle at 80% 0%, rgba(14,165,233,0.08), transparent 30%),
                         var(--bg);
@@ -169,7 +169,7 @@ $monthLabel = date('F Y');
         }
 
         .title h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: "Roboto", sans-serif;
             font-size: 26px;
             letter-spacing: 0.2px;
         }
@@ -282,7 +282,7 @@ $monthLabel = date('F Y');
             <div class="brand">
                 <div class="brand-icon"><i class="fas fa-calculator"></i></div>
                 <div>
-                    <div style="font-family: 'Space Grotesk', sans-serif;">Accountant</div>
+                    <div style="font-family: "Roboto", sans-serif;">Accountant</div>
                     <div class="badge">Payroll Control Center</div>
                 </div>
             </div>
