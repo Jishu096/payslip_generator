@@ -670,7 +670,7 @@ session_start();
     <div class="login-wrapper">
         <div class="login-header">
             <div class="logo-container">
-                <img src="../assets/images/NIELIT-Preview.png" alt="NIELIT Logo">
+                <img src="../assets/images/e-HRMS logo.png" alt="e-HRMS Logo">
             </div>
             <h2>NIELIT Bhubaneswar</h2>
             <p>Enterprise Payroll Management System</p>
