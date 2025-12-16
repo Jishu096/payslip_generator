@@ -619,20 +619,21 @@ session_start();
             z-index: 1;
             text-align: center;
             margin-top: 20px;
-            color: rgba(255, 255, 255, 0.9);
+            color: #64748b;
             font-size: 13px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
         }
 
         .footer a {
-            color: rgba(255, 255, 255, 0.95);
+            color: #667eea;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s ease;
         }
 
         .footer a:hover {
-            color: #667eea;
+            color: #764ba2;
+            text-decoration: underline;
         }
 
         @media (max-width: 480px) {
@@ -702,13 +703,14 @@ session_start();
                 <div class="forgot-password-link">
                     <a href="#" id="forgotPasswordBtn"><i class="fas fa-key"></i> Forgot Password?</a>
                 </div>
+
+                <!-- Footer -->
+                <div class="footer">
+                    © 2025 NIELIT Bhubaneswar<br>
+                    Designed by <a href="#">Jishu Sahoo</a>
+                </div>
             </form>
         </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        © 2025 NIELIT Bhubaneswar | Designed by <a href="#">Jishu Sahoo</a>
     </div>
 
     <!-- Forgot Password Modal -->
