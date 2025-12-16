@@ -9,18 +9,13 @@ session_start();
     <title>Login - PaySlip Generator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    
-    <!-- tsParticles CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #f8fafc;
             --card: #ffffff;
-            --accent: #667eea;
-            --accent-2: #764ba2;
+            --accent: #0284c7;
+            --accent-2: #0ea5e9;
             --text: #1e293b;
             --muted: #64748b;
             --border: #e2e8f0;
@@ -34,8 +29,10 @@ session_start();
         }
 
         body {
-            font-family: 'Roboto', sans-serif;
-            background: #f8fafc;
+            font-family: "Roboto", sans-serif;
+            background: radial-gradient(circle at 20% 20%, rgba(2,132,199,0.05), transparent 25%),
+                        radial-gradient(circle at 80% 0%, rgba(2,132,199,0.04), transparent 30%),
+                        var(--bg);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -44,25 +41,16 @@ session_start();
             overflow: hidden;
         }
 
-        /* Particle canvas */
-        #tsparticles {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-        }
-
         .login-wrapper {
-            position: relative;
-            z-index: 1;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             max-width: 480px;
             width: 100%;
             animation: slideUp 0.6s ease-out;
+            position: relative;
         }
 
         .login-wrapper::before {
@@ -72,7 +60,7 @@ session_start();
             left: 0;
             right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent);
+            background: linear-gradient(90deg, transparent, rgba(34,211,238,0.5), transparent);
         }
 
         @keyframes slideUp {
@@ -87,7 +75,7 @@ session_start();
         }
 
         .login-header {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.05));
+            background: linear-gradient(135deg, rgba(14,165,233,0.1), rgba(34,211,238,0.05));
             padding: 50px 30px;
             text-align: center;
             border-bottom: 1px solid var(--border);
@@ -106,7 +94,7 @@ session_start();
         .nielit-logo {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #1e40af, #0284c7);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -302,8 +290,8 @@ session_start();
         .form-group input:focus {
             outline: none;
             border-color: var(--accent);
-            background: rgba(102, 126, 234, 0.05);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), inset 0 0 0 1px rgba(118, 75, 162, 0.2);
+            background: rgba(14,165,233,0.05);
+            box-shadow: 0 0 0 3px rgba(14,165,233,0.1), inset 0 0 0 1px rgba(34,211,238,0.2);
         }
 
         .form-group input::placeholder {
@@ -487,8 +475,8 @@ session_start();
         .form-group-modal input:focus {
             outline: none;
             border-color: var(--accent);
-            background: rgba(102, 126, 234, 0.05);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(14,165,233,0.05);
+            box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
         }
 
         .btn-reset {
@@ -556,8 +544,8 @@ session_start();
         .credentials-info {
             margin-top: 28px;
             padding: 16px;
-            background: rgba(102, 126, 234, 0.05);
-            border: 1px solid rgba(102, 126, 234, 0.15);
+            background: rgba(34,211,238,0.05);
+            border: 1px solid rgba(34,211,238,0.15);
             border-radius: 12px;
             font-size: 12px;
             color: var(--muted);
@@ -583,7 +571,7 @@ session_start();
         .role-badge {
             display: inline-block;
             padding: 2px 8px;
-            background: rgba(102, 126, 234, 0.15);
+            background: rgba(14,165,233,0.15);
             color: var(--accent);
             border-radius: 4px;
             margin: 0 2px;
@@ -614,9 +602,6 @@ session_start();
     </style>
 </head>
 <body>
-    <!-- Particles Background -->
-    <div id="tsparticles"></div>
-
     <div class="login-wrapper">
         <div class="login-header">
             <h2>PaySlip Generator</h2>
@@ -841,72 +826,6 @@ session_start();
             input.addEventListener('focus', function() {
                 this.style.transition = 'all 0.3s ease';
             });
-        });
-    </script>
-
-    <!-- Particle Background Script -->
-    <script>
-        tsParticles.load("tsparticles", {
-            particles: {
-                number: {
-                    value: 60,
-                    density: {
-                        enable: true,
-                        area: 800
-                    }
-                },
-                color: {
-                    value: "#667eea"
-                },
-                shape: {
-                    type: "circle"
-                },
-                opacity: {
-                    value: 0.5,
-                    random: true
-                },
-                size: {
-                    value: 3,
-                    random: true
-                },
-                links: {
-                    enable: true,
-                    distance: 150,
-                    color: "#764ba2",
-                    opacity: 0.4,
-                    width: 1
-                },
-                move: {
-                    enable: true,
-                    speed: 1.5,
-                    direction: "none",
-                    outModes: "out"
-                }
-            },
-            interactivity: {
-                events: {
-                    onHover: {
-                        enable: true,
-                        mode: "grab"
-                    },
-                    onClick: {
-                        enable: true,
-                        mode: "push"
-                    }
-                },
-                modes: {
-                    grab: {
-                        distance: 140,
-                        links: {
-                            opacity: 0.6
-                        }
-                    },
-                    push: {
-                        quantity: 4
-                    }
-                }
-            },
-            detectRetina: true
         });
     </script>
 </body>
