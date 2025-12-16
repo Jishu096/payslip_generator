@@ -674,7 +674,7 @@ session_start();
                 <img src="../assets/images/e-HRMS logo.png" alt="e-HRMS Logo">
             </div>
             <h2>NIELIT Bhubaneswar</h2>
-            <p>Enterprise Payroll Management System</p>
+            <p>Electronic Human Resource Management System</p>
         </div>
         
         <div class="login-container">
