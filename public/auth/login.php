@@ -60,8 +60,9 @@ session_start();
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            max-width: 480px;
-            width: 100%;
+            max-width: 420px;
+            width: 420px;
+            height: 620px;
             animation: slideUp 0.6s ease-out;
         }
 
@@ -88,7 +89,7 @@ session_start();
 
         .login-header {
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.05));
-            padding: 50px 30px;
+            padding: 30px 25px;
             text-align: center;
             border-bottom: 1px solid var(--border);
             position: relative;
@@ -101,7 +102,7 @@ session_start();
         }
 
         .logo-container img {
-            max-width: 150px;
+            max-width: 100px;
             height: auto;
             border-radius: 20px;
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
@@ -257,9 +258,9 @@ session_start();
 
         .login-header h2 {
             font-family: "Roboto", sans-serif;
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             letter-spacing: 0.3px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             -webkit-background-clip: text;
@@ -268,26 +269,26 @@ session_start();
         }
 
         .login-header p {
-            font-size: 13px;
+            font-size: 11px;
             color: var(--muted);
             letter-spacing: 0.1px;
         }
 
         .login-container {
-            padding: 40px 30px;
+            padding: 25px 25px;
         }
 
         .form-group {
-            margin-bottom: 22px;
+            margin-bottom: 16px;
             position: relative;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: var(--text);
             font-weight: 600;
-            font-size: 13px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -312,10 +313,10 @@ session_start();
 
         .form-group input {
             width: 100%;
-            padding: 14px 50px 14px 48px;
+            padding: 12px 45px 12px 42px;
             border: 1px solid var(--border);
             border-radius: 12px;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: rgba(255, 255, 255, 0.02);
             color: var(--text);
@@ -355,16 +356,16 @@ session_start();
 
         .btn-login {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: var(--bg);
             border: none;
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-top: 8px;
+            margin-top: 6px;
             letter-spacing: 0.3px;
             display: flex;
             align-items: center;
