@@ -94,6 +94,29 @@ session_start();
             position: relative;
         }
 
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            max-width: 150px;
+            height: auto;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .header-top {
             display: flex;
             align-items: center;
@@ -619,6 +642,9 @@ session_start();
 
     <div class="login-wrapper">
         <div class="login-header">
+            <div class="logo-container">
+                <img src="../assets/images/NIELIT-Preview.png" alt="NIELIT Logo">
+            </div>
             <h2>PaySlip Generator</h2>
             <p>Enterprise Payroll Management System</p>
         </div>
