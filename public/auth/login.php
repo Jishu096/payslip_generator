@@ -646,7 +646,7 @@ session_start();
             <div class="logo-container">
                 <img src="../assets/images/NIELIT-Preview.png" alt="NIELIT Logo">
             </div>
-            <h2>PaySlip Generator</h2>
+            <h2>NIELIT Bhubaneswar</h2>
             <p>Enterprise Payroll Management System</p>
         </div>
         
