@@ -89,7 +89,7 @@ session_start();
 
         .login-header {
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.05));
-            padding: 30px 25px;
+            padding: 25px 20px 20px 20px;
             text-align: center;
             border-bottom: 1px solid var(--border);
             position: relative;
@@ -98,14 +98,14 @@ session_start();
         .logo-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .logo-container img {
-            max-width: 100px;
+            max-width: 90px;
             height: auto;
-            border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            border-radius: 18px;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
             animation: fadeIn 0.8s ease-out;
         }
 
@@ -258,10 +258,10 @@ session_start();
 
         .login-header h2 {
             font-family: "Roboto", sans-serif;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 6px;
-            letter-spacing: 0.3px;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -271,15 +271,16 @@ session_start();
         .login-header p {
             font-size: 11px;
             color: var(--muted);
-            letter-spacing: 0.1px;
+            letter-spacing: 0.3px;
+            font-weight: 400;
         }
 
         .login-container {
-            padding: 25px 25px;
+            padding: 30px 28px;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             position: relative;
         }
 
@@ -290,7 +291,7 @@ session_start();
             font-weight: 600;
             font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
         }
 
         .input-wrapper {
@@ -313,16 +314,17 @@ session_start();
 
         .form-group input {
             width: 100%;
-            padding: 12px 45px 12px 42px;
-            border: 1px solid var(--border);
+            padding: 13px 45px 13px 44px;
+            border: 1.5px solid var(--border);
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 14px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: rgba(255, 255, 255, 0.02);
             color: var(--text);
             position: relative;
             z-index: 1;
             font-family: "Roboto", sans-serif;
+            font-weight: 400;
         }
 
         .form-group input:focus {
@@ -356,17 +358,18 @@ session_start();
 
         .btn-login {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: var(--bg);
             border: none;
             border-radius: 12px;
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-top: 6px;
-            letter-spacing: 0.3px;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             display: flex;
             align-items: center;
             justify-content: center;
