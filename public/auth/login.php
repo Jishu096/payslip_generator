@@ -103,6 +103,7 @@ session_start();
         .logo-container img {
             max-width: 150px;
             height: auto;
+            border-radius: 12px;
             animation: fadeIn 0.8s ease-out;
         }
 
