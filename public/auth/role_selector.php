@@ -345,43 +345,91 @@ $allRoles = $_SESSION['all_roles'] ?? [];
             padding-top: 30px;
             border-top: 1px solid var(--border);
             margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
         }
 
         .btn-continue {
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: white;
             border: none;
-            padding: 14px 48px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
+            padding: 18px 64px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            letter-spacing: 1px;
+            justify-content: center;
+            gap: 14px;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 4px 12px rgba(118, 75, 162, 0.3);
             position: relative;
             overflow: hidden;
+            min-width: 260px;
+            font-family: 'Roboto', sans-serif;
+            border: 2px solid transparent;
         }
 
         .btn-continue::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--accent-2), var(--accent));
+            background: linear-gradient(135deg, #764ba2, #667eea);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
+            z-index: 0;
+        }
+
+        .btn-continue::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+            z-index: 0;
+        }
+
+        .btn-continue::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+            z-index: 0;
         }
 
         .btn-continue:hover::before {
             opacity: 1;
         }
 
+        .btn-continue:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
         .btn-continue:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 16px 40px rgba(102, 126, 234, 0.5), 0 8px 20px rgba(118, 75, 162, 0.4);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-continue:active {
+            transform: translateY(-1px) scale(0.98);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
@@ -389,40 +437,77 @@ $allRoles = $_SESSION['all_roles'] ?? [];
         .btn-continue span {
             position: relative;
             z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-continue i {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 18px;
+        }
+
+        .btn-continue:hover i {
+            transform: translateX(6px) scale(1.1);
+            animation: arrowBounce 0.8s infinite;
+        }
+
+        @keyframes arrowBounce {
+            0%, 100% { transform: translateX(6px) scale(1.1); }
+            50% { transform: translateX(10px) scale(1.1); }
         }
 
         .btn-continue:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
+            animation: none;
         }
 
         .btn-continue:disabled:hover {
             transform: none;
-            box-shadow: none;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            border-color: transparent;
         }
 
-        .btn-continue:disabled::before {
+        .btn-continue:disabled:hover i {
+            transform: none;
+            animation: none;
+        }
+
+        .btn-continue:disabled::before,
+        .btn-continue:disabled::after {
             opacity: 0;
         }
 
         .logout-link {
-            display: inline-block;
-            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             color: var(--muted);
             text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s ease;
+            font-size: 14px;
             font-weight: 500;
+            padding: 10px 24px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: transparent;
         }
 
         .logout-link:hover {
             color: var(--accent);
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
         }
 
         .logout-link i {
-            margin-right: 6px;
+            transition: transform 0.3s ease;
+            font-size: 14px;
+        }
+
+        .logout-link:hover i {
+            transform: translateX(-2px);
         }
 
         @media (max-width: 768px) {
@@ -458,8 +543,19 @@ $allRoles = $_SESSION['all_roles'] ?? [];
             }
 
             .btn-continue {
-                padding: 13px 40px;
+                padding: 16px 48px;
+                font-size: 14px;
+                min-width: 220px;
+                letter-spacing: 1px;
+            }
+
+            .btn-continue i {
+                font-size: 16px;
+            }
+
+            .logout-link {
                 font-size: 13px;
+                padding: 8px 20px;
             }
         }
 
@@ -480,6 +576,17 @@ $allRoles = $_SESSION['all_roles'] ?? [];
             .user-badge {
                 font-size: 12px;
                 padding: 8px 16px;
+            }
+
+            .btn-continue {
+                padding: 14px 40px;
+                font-size: 13px;
+                min-width: 200px;
+                letter-spacing: 0.8px;
+            }
+
+            .btn-continue i {
+                font-size: 15px;
             }
         }
     </style>
@@ -541,9 +648,9 @@ $allRoles = $_SESSION['all_roles'] ?? [];
                         <span>Continue</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
-                    <br>
                     <a href="logout.php" class="logout-link">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
                     </a>
                 </div>
             </form>
