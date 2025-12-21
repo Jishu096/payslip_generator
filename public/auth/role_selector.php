@@ -489,12 +489,7 @@ $allRoles = $_SESSION['all_roles'] ?? [];
     <div id="tsparticles"></div>
 
     <div class="container">
-        <div class="selector-wrapper"
-    <div class="container">
         <div class="selector-wrapper">
-        <!-- Header -->
-        <div class="header">
-            <h1><i class="fas fa-user>
             <!-- Header -->
             <div class="header">
                 <h1><i class="fas fa-user-circle"></i> Choose Your Dashboard</h1>
@@ -507,46 +502,51 @@ $allRoles = $_SESSION['all_roles'] ?? [];
 
             <!-- Role Selection Form -->
             <form method="POST">
-                        'director' => ['icon' => 'fas fa-chart-line', 'title' => 'Director', 'color' => '#667eea', 'description' => 'Approve salary changes and review role requests', 'features' => ['Approve salaries', 'Review requests', 'View reports']],
-                    'administrator' => ['icon' => 'fas fa-cogs', 'title' => 'Administrator', 'color' => '#667eea', 'description' => 'Full system access and administration capabilities', 'features' => ['Manage users', 'Manage employees', 'System settings']],
-                ];
-
-                foreach ($allRoles as $role) {
-                    $roleInfo = $roleIcons[$role] ?? [];
-                    if (empty($roleInfo)) continue;
-                    ?>
-                    <label class="role-card">
-                        <input type="radio" name="selected_role" value="<?= $role ?>" required>
-                        <div class="checkmark"></div>
-                        <div class="role-content">
-                            <div class="role-icon">
-                                <i class="<?= $roleInfo['icon'] ?>"></i>
-                            </div>
-                            <div class="role-title"><?= $roleInfo['title'] ?></div>
-                            <div class="role-description"><?= $roleInfo['description'] ?></div>
-                            <ul class="role-features">
-                                <?php foreach ($roleInfo['features'] as $feature): ?>
-                                    <li><?= $feature ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    </label>
+                <div class="roles-grid">
                     <?php
-                }
-                ?>
-            </div>
+                    $roleIcons = [
+                        'employee' => ['icon' => 'fas fa-user', 'title' => 'Employee', 'color' => '#667eea', 'description' => 'View your payslips, attendance, and personal information', 'features' => ['View payslips', 'Check attendance', 'Edit profile']],
+                        'accountant' => ['icon' => 'fas fa-calculator', 'title' => 'Accountant', 'color' => '#667eea', 'description' => 'Manage payroll, generate payslips, and view financial reports', 'features' => ['Manage payroll', 'Generate payslips', 'View reports']],
+                        'director' => ['icon' => 'fas fa-chart-line', 'title' => 'Director', 'color' => '#667eea', 'description' => 'Approve salary changes and review role requests', 'features' => ['Approve salaries', 'Review requests', 'View reports']],
+                        'administrator' => ['icon' => 'fas fa-cogs', 'title' => 'Administrator', 'color' => '#667eea', 'description' => 'Full system access and administration capabilities', 'features' => ['Manage users', 'Manage employees', 'System settings']],
+                    ];
 
-            <div class="submit-section">
-                <button type="submit" class="btn-continue" id="continueBtn" disabled>
-                    <span>Continue</span>
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-                <br>
-                <a href="logout.php" class="logout-link">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </form>
+                    foreach ($allRoles as $role) {
+                        $roleInfo = $roleIcons[$role] ?? [];
+                        if (empty($roleInfo)) continue;
+                        ?>
+                        <label class="role-card">
+                            <input type="radio" name="selected_role" value="<?= $role ?>" required>
+                            <div class="checkmark"></div>
+                            <div class="role-content">
+                                <div class="role-icon">
+                                    <i class="<?= $roleInfo['icon'] ?>"></i>
+                                </div>
+                                <div class="role-title"><?= $roleInfo['title'] ?></div>
+                                <div class="role-description"><?= $roleInfo['description'] ?></div>
+                                <ul class="role-features">
+                                    <?php foreach ($roleInfo['features'] as $feature): ?>
+                                        <li><?= $feature ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        </label>
+                        <?php
+                    }
+                    ?>
+                </div>
+
+                <div class="submit-section">
+                    <button type="submit" class="btn-continue" id="continueBtn" disabled>
+                        <span>Continue</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <br>
+                    <a href="logout.php" class="logout-link">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 
