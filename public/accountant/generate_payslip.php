@@ -395,8 +395,9 @@ $error = $_GET['error'] ?? '';
                                         data-salary="<?php echo $emp['basic_salary']; ?>"
                                         data-designation="<?php echo htmlspecialchars($emp['designation']); ?>"
                                         data-department="<?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?>"
-                                        data-email="<?php echo htmlspecialchars($emp['email']); ?>">
-                                    <?php echo htmlspecialchars($emp['full_name']); ?> - <?php echo htmlspecialchars($emp['designation']); ?>
+                                        data-email="<?php echo htmlspecialchars($emp['email']); ?>"
+                                        data-employment-type="<?php echo $emp['employment_type']; ?>">
+                                    <?php echo htmlspecialchars($emp['full_name']); ?> - <?php echo htmlspecialchars($emp['designation']); ?> (<?php echo ucfirst($emp['employment_type']); ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -714,6 +715,9 @@ $error = $_GET['error'] ?? '';
                 document.getElementById('emp_designation').textContent = 'Designation: -';
                 document.getElementById('emp_department').textContent = 'Department: -';
                 document.getElementById('emp_email').textContent = 'Email: -';
+                
+                // Show all fields
+                showAllFields();
                 updateCalculations();
                 return;
             }
@@ -722,6 +726,7 @@ $error = $_GET['error'] ?? '';
             const designation = selectedOption.dataset.designation || '-';
             const department = selectedOption.dataset.department || '-';
             const email = selectedOption.dataset.email || '-';
+            const employmentType = selectedOption.dataset.employmentType || 'permanent';
             
             // Update employee info display
             document.getElementById('emp_designation').innerHTML = '<i class="fas fa-briefcase"></i> Designation: <strong>' + designation + '</strong>';
@@ -731,28 +736,77 @@ $error = $_GET['error'] ?? '';
             // Set basic salary
             basicSalaryInput.value = salary.toFixed(2);
 
-            // Transport Allowance default (highest slab); user can change
-            const taVal = parseFloat(taSelect.value) || 0;
+            // Check if employee is an intern
+            if (employmentType === 'intern') {
+                // For interns: Only stipend (10,000), no allowances, no deductions
+                // But allow manual bonus/DA/TA if needed
+                hraInput.value = 0;
+                daInput.value = 0;
+                taSelect.value = '0';
+                daTaInput.value = 0;
+                pfInput.value = 0;
+                npsInput.value = 0;
+                document.getElementById('tax_deduction').value = 0;
+                professionalTaxInput.value = 0;
+                document.getElementById('other_deductions').value = 0;
+                document.getElementById('bonus').value = 0;
+                
+                // Disable automatic allowances for interns (but keep them editable if needed)
+                basicSalaryInput.readOnly = true;
+                basicSalaryInput.style.background = '#f8f9fa';
+                
+                // Show info message
+                const earningsHeader = document.querySelector('.section-header');
+                let internNote = document.getElementById('intern-note');
+                if (!internNote) {
+                    internNote = document.createElement('div');
+                    internNote.id = 'intern-note';
+                    internNote.style.cssText = 'background: #fff8e1; border: 2px solid #ffd54f; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #f57c00;';
+                    internNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Intern:</strong> Fixed stipend of ₹10,000. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
+                    earningsHeader.parentNode.insertBefore(internNote, earningsHeader.nextSibling);
+                }
+            } else {
+                // For permanent and contract employees: Full breakdown
+                basicSalaryInput.readOnly = false;
+                basicSalaryInput.style.background = '#ffffff';
+                
+                // Remove intern note if exists
+                const internNote = document.getElementById('intern-note');
+                if (internNote) internNote.remove();
 
-            // Auto-calculate components based on rules
-            hraInput.value = (salary * rates.hra / 100).toFixed(2);
-            daInput.value = (salary * rates.da / 100).toFixed(2);
-            daTaInput.value = (taVal * rates.daOnTa / 100).toFixed(2);
-            pfInput.value = (salary * rates.epf / 100).toFixed(2);
-            npsInput.value = (salary * rates.nps / 100).toFixed(2);
+                // Transport Allowance default (highest slab); user can change
+                const taVal = parseFloat(taSelect.value) || 0;
 
-            // Calculate gross to get tax
-            const gross = salary +
-                         parseFloat(hraInput.value) +
-                         parseFloat(daInput.value) +
-                         taVal +
-                         parseFloat(daTaInput.value);
+                // Auto-calculate components based on rules
+                hraInput.value = (salary * rates.hra / 100).toFixed(2);
+                daInput.value = (salary * rates.da / 100).toFixed(2);
+                taSelect.value = '3600';
+                daTaInput.value = (3600 * rates.daOnTa / 100).toFixed(2);
+                pfInput.value = (salary * rates.epf / 100).toFixed(2);
+                npsInput.value = (salary * rates.nps / 100).toFixed(2);
 
-            document.getElementById('tax_deduction').value = (gross * rates.tax / 100).toFixed(2);
-            professionalTaxInput.value = <?php echo $standardRates['professional_tax']; ?>;
+                // Calculate gross to get tax
+                const gross = salary +
+                             parseFloat(hraInput.value) +
+                             parseFloat(daInput.value) +
+                             3600 +
+                             parseFloat(daTaInput.value);
 
+                document.getElementById('tax_deduction').value = (gross * rates.tax / 100).toFixed(2);
+                professionalTaxInput.value = <?php echo $standardRates['professional_tax']; ?>;
+            }
+
+            showAllFields();
             updateCalculations();
         });
+
+        function showAllFields() {
+            // Show all fields (in case they were hidden before)
+            const allInputs = document.querySelectorAll('.form-group');
+            allInputs.forEach(group => {
+                group.style.display = '';
+            });
+        }
 
         // Update calculations in real-time
         const numericInputs = [
