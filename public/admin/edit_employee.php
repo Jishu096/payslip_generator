@@ -240,6 +240,7 @@ $username = $_SESSION['username'] ?? 'Admin';
                             <option value="">Select Type</option>
                             <option value="permanent" <?php echo $emp['employment_type']==='permanent'?'selected':''; ?>>Permanent</option>
                             <option value="contract" <?php echo $emp['employment_type']==='contract'?'selected':''; ?>>Contract</option>
+                            <option value="intern" <?php echo $emp['employment_type']==='intern'?'selected':''; ?>>Intern</option>
                         </select>
                     </div>
 
@@ -383,6 +384,40 @@ $username = $_SESSION['username'] ?? 'Admin';
     <?php include 'includes/admin_scripts.php'; ?>
 
     <script>
+        // Handle salary based on employment type
+        const employmentTypeSelect = document.getElementById('employment_type');
+        const salaryLabel = document.getElementById('salary_label');
+        
+        function handleEmploymentTypeSalary() {
+            const salaryInput = document.getElementById('basic_salary');
+            if (employmentTypeSelect.value === 'intern') {
+                // Interns: Fixed stipend of 10,000
+                salaryInput.value = '10000.00';
+                salaryInput.readOnly = true;
+                salaryInput.placeholder = '10000.00 (Fixed)';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Stipend (Fixed for Interns)';
+            } else if (employmentTypeSelect.value === 'contract') {
+                // Contract: Manual entry (contractual basis)
+                salaryInput.readOnly = false;
+                salaryInput.placeholder = 'Enter contractual amount';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Contractual Pay (Manual Entry)';
+            } else if (employmentTypeSelect.value === 'permanent') {
+                // Permanent: Standard basic salary
+                salaryInput.readOnly = false;
+                salaryInput.placeholder = 'Enter basic salary';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+            } else {
+                // Default
+                salaryInput.readOnly = false;
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+            }
+        }
+        
+        // Check on page load
+        handleEmploymentTypeSalary();
+        
+        employmentTypeSelect.addEventListener('change', handleEmploymentTypeSalary);
+        
         // Show/hide salary change fields when salary is modified
         const salaryInput = document.getElementById('basic_salary');
         const originalSalary = salaryInput.dataset.original;

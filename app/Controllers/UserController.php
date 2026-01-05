@@ -77,9 +77,12 @@ require_once __DIR__ . "/../Models/User.php";
         }
 
         public function resetPassword() {
-            // Security check
+            // Security check - support multi-role
             session_start();
-            if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'administrator') {
+            $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
+            $hasAdminRole = in_array('administrator', $userRoles);
+            
+            if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
                 header("Location: /payslip_generator/public/auth/login.php");
                 exit;
             }
@@ -105,9 +108,12 @@ require_once __DIR__ . "/../Models/User.php";
         }
 
         public function deleteUser() {
-            // Security check
+            // Security check - support multi-role
             session_start();
-            if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'administrator') {
+            $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
+            $hasAdminRole = in_array('administrator', $userRoles);
+            
+            if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
                 header("Location: /payslip_generator/public/auth/login.php");
                 exit;
             }

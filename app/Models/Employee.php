@@ -98,10 +98,79 @@ class Employee {
     }
 
     public function deleteEmployeeById($id) {
-        $sql = "DELETE FROM employees WHERE employee_id = :id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
+        try {
+            // Start transaction
+            $this->conn->beginTransaction();
+            
+            // 1. Delete payslips first (references payroll and employee)
+            $sql = "DELETE FROM payslips WHERE employee_id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            // 2. Delete payroll records
+            $sql = "DELETE FROM payroll WHERE employee_id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            // 3. Delete attendance records (if table exists)
+            $sql = "DELETE FROM attendance WHERE employee_id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            // 4. Delete role change requests (if table exists)
+            $sql = "DELETE FROM role_change_requests WHERE employee_id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            // 5. Delete salary change requests (if table exists)
+            $sql = "DELETE FROM salary_change_requests WHERE employee_id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            // 6. Get associated user_id (if any)
+            $sql = "SELECT user_id FROM users WHERE employee_id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                $userId = $user['user_id'];
+                
+                // 7. Delete user_roles
+                $sql = "DELETE FROM user_roles WHERE user_id = :user_id";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bindParam(':user_id', $userId);
+                $stmt->execute();
+                
+                // 8. Delete user account
+                $sql = "DELETE FROM users WHERE user_id = :user_id";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bindParam(':user_id', $userId);
+                $stmt->execute();
+            }
+            
+            // 9. Finally, delete the employee
+            $sql = "DELETE FROM employees WHERE employee_id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            // Commit transaction
+            $this->conn->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            // Rollback on error
+            $this->conn->rollBack();
+            error_log("Error deleting employee: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function updateEmployee($id, $data) {
@@ -119,6 +188,10 @@ class Employee {
             WHERE employee_id=:id";
 
         $stmt = $this->conn->prepare($sql);
+
+        // Handle empty date strings - convert to NULL
+        $last_appraisal_date = isset($data['last_appraisal_date']) && $data['last_appraisal_date'] !== '' ? $data['last_appraisal_date'] : null;
+        $experience_years = isset($data['experience_years']) && $data['experience_years'] !== '' ? $data['experience_years'] : null;
 
         return $stmt->execute([
             ':id' => $id,
@@ -140,8 +213,8 @@ class Employee {
             ':pan_no' => $data['pan_no'] ?? null,
             ':bank_account_no' => $data['bank_account_no'] ?? null,
             ':ifsc_code' => $data['ifsc_code'] ?? null,
-            ':experience_years' => $data['experience_years'] ?? null,
-            ':last_appraisal_date' => $data['last_appraisal_date'] ?? null,
+            ':experience_years' => $experience_years,
+            ':last_appraisal_date' => $last_appraisal_date,
             ':remarks' => $data['remarks'] ?? null
         ]);
     }

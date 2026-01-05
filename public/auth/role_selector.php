@@ -186,13 +186,12 @@ $allRoles = $_SESSION['all_roles'] ?? [];
         .user-badge i {
             margin-right: 6px;
         }
-        .user-badge i {
-            margin-right: 6px;
-        }
 
         .roles-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
 
         .role-card {
             background: rgba(255, 255, 255, 0.9);
@@ -232,6 +231,11 @@ $allRoles = $_SESSION['all_roles'] ?? [];
             transform: translateY(-6px);
             box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
             background: rgba(255, 255, 255, 0.95);
+        }
+
+        .role-card:focus-within {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
         }
 
         .role-card input[type="radio"] {
@@ -321,18 +325,19 @@ $allRoles = $_SESSION['all_roles'] ?? [];
         .role-features {
             font-size: 12px;
             color: var(--text);
-            padding-left: 0;
-        }
-        .role-features {
-            font-size: 12px;
-            color: var(--text);
             list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .role-features li {
             display: flex;
             align-items: center;
+            margin-bottom: 6px;
             font-weight: 500;
         }
 
-        .role-features li:before {
+        .role-features li::before {
             content: '✓';
             color: var(--success);
             font-weight: bold;
@@ -355,129 +360,30 @@ $allRoles = $_SESSION['all_roles'] ?? [];
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: white;
             border: none;
-            padding: 18px 64px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 16px;
+            padding: 14px 48px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 14px;
-            letter-spacing: 1.5px;
+            gap: 10px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 4px 12px rgba(118, 75, 162, 0.3);
-            position: relative;
-            overflow: hidden;
-            min-width: 260px;
-            font-family: 'Roboto', sans-serif;
-            border: 2px solid transparent;
-        }
-
-        .btn-continue::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, #764ba2, #667eea);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            z-index: 0;
-        }
-
-        .btn-continue::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-            z-index: 0;
-        }
-
-        .btn-continue::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-            z-index: 0;
-        }
-
-        .btn-continue:hover::before {
-            opacity: 1;
-        }
-
-        .btn-continue:hover::after {
-            width: 300px;
-            height: 300px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
         }
 
         .btn-continue:hover {
-            transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 16px 40px rgba(102, 126, 234, 0.5), 0 8px 20px rgba(118, 75, 162, 0.4);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-continue:active {
-            transform: translateY(-1px) scale(0.98);
+            transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-continue i,
-        .btn-continue span {
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-continue i {
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-size: 18px;
-        }
-
-        .btn-continue:hover i {
-            transform: translateX(6px) scale(1.1);
-            animation: arrowBounce 0.8s infinite;
-        }
-
-        @keyframes arrowBounce {
-            0%, 100% { transform: translateX(6px) scale(1.1); }
-            50% { transform: translateX(10px) scale(1.1); }
         }
 
         .btn-continue:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-            background: linear-gradient(135deg, #9ca3af, #6b7280);
-            animation: none;
-        }
-
-        .btn-continue:disabled:hover {
-            transform: none;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-            border-color: transparent;
-        }
-
-        .btn-continue:disabled:hover i {
-            transform: none;
-            animation: none;
-        }
-
-        .btn-continue:disabled::before,
-        .btn-continue:disabled::after {
-            opacity: 0;
+            box-shadow: none;
         }
 
         .logout-link {
@@ -623,7 +529,13 @@ $allRoles = $_SESSION['all_roles'] ?? [];
                         if (empty($roleInfo)) continue;
                         ?>
                         <label class="role-card">
-                            <input type="radio" name="selected_role" value="<?= $role ?>" required>
+                            <input
+                                type="radio"
+                                name="selected_role"
+                                value="<?= $role ?>"
+                                required
+                                aria-label="Select <?= $roleInfo['title'] ?> dashboard"
+                            >
                             <div class="checkmark"></div>
                             <div class="role-content">
                                 <div class="role-icon">

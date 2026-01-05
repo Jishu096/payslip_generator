@@ -36,3 +36,7 @@ CREATE TABLE IF NOT EXISTS `payslips` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Note: Existing databases already altered to include new payroll component columns.
+
+-- ALTER TABLE to add 'intern' employment type (January 2026)
+-- Run this if your database was created before intern type was added:
+-- ALTER TABLE employees MODIFY COLUMN employment_type ENUM('permanent', 'contract', 'intern') DEFAULT 'permanent';

@@ -82,13 +82,7 @@ foreach ($allApprovals as $approval) {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root[data-theme="light"] {
+        :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f8f9fa;
             --text-primary: #1a1f36;
@@ -99,34 +93,47 @@ foreach ($allApprovals as $approval) {
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        :root
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: "Roboto", sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 30px 20px;
         }
 
         .header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
             margin-bottom: 30px;
         }
 
         .header h1 {
-            font-family: "Roboto", sans-serif;
-            font-size: 32px;
+            font-size: 28px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             margin-bottom: 8px;
         }
 
         .header p {
-            color: var(--text-tertiary);
-            font-size: 16px;
+            opacity: 0.9;
+            font-size: 15px;
         }
 
         .breadcrumb {
@@ -134,46 +141,87 @@ foreach ($allApprovals as $approval) {
             gap: 8px;
             align-items: center;
             font-size: 14px;
-            color: var(--text-tertiary);
-            margin-bottom: 20px;
+            margin-top: 10px;
+            opacity: 0.9;
         }
 
         .breadcrumb a {
-            color: #667eea;
+            color: white;
             text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 1;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
 
         .stat-card {
             background: var(--bg-primary);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 25px;
             box-shadow: var(--card-shadow);
-            border-left: 4px solid #667eea;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .stat-card .icon {
+            font-size: 36px;
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-card.pending .icon {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .stat-card.approved .icon {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .stat-card.rejected .icon {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
             margin-bottom: 5px;
+            color: var(--text-primary);
         }
 
         .stat-label {
             font-size: 14px;
-            color: var(--text-tertiary);
+            color: var(--text-secondary);
         }
 
         .card {
             background: var(--bg-primary);
-            border-radius: 12px;
-            padding: 25px;
+            border-radius: 16px;
+            padding: 30px;
             box-shadow: var(--card-shadow);
             border: 1px solid var(--border-color);
             margin-bottom: 24px;
@@ -190,10 +238,12 @@ foreach ($allApprovals as $approval) {
 
         .card-header h2 {
             font-family: "Roboto", sans-serif;
-            font-size: 20px;
+            font-size: 22px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 10px;
+            color: var(--text-primary);
         }
 
         .table-responsive {
@@ -207,63 +257,74 @@ foreach ($allApprovals as $approval) {
 
         th {
             background: var(--bg-secondary);
-            padding: 16px;
+            padding: 18px;
             text-align: left;
-            font-weight: 600;
-            font-size: 14px;
+            font-weight: 700;
+            font-size: 13px;
             color: var(--text-secondary);
             border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         td {
-            padding: 16px;
+            padding: 18px;
             border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
 
         tr:hover {
             background: var(--bg-secondary);
+            transition: background 0.2s ease;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
         }
 
         .badge {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .badge-pending {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
         }
 
         .badge-approved {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
         }
 
         .badge-rejected {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
         }
 
         .badge-salary {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
         }
 
         .badge-role {
-            background: rgba(168, 85, 247, 0.1);
-            color: #a855f7;
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+            color: white;
         }
 
         .type-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .no-data {
@@ -281,16 +342,21 @@ foreach ($allApprovals as $approval) {
         .back-btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             color: #667eea;
             text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 24px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.05);
             transition: all 0.3s ease;
         }
 
         .back-btn:hover {
-            transform: translateX(-3px);
+            transform: translateX(-4px);
+            background: rgba(102, 126, 234, 0.1);
         }
 
         @media (max-width: 768px) {

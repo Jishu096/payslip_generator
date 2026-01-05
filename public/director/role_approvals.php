@@ -63,9 +63,21 @@ $error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Role Change Approvals - Director Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #1a1f36;
+            --text-secondary: #555;
+            --border-color: #e0e0e0;
+            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -73,8 +85,9 @@ $error = $_GET['error'] ?? '';
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: "Roboto", sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             min-height: 100vh;
             padding: 20px;
         }
@@ -85,10 +98,11 @@ $error = $_GET['error'] ?? '';
         }
 
         .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            background: var(--gradient-primary);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
             margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
@@ -96,9 +110,11 @@ $error = $_GET['error'] ?? '';
         }
 
         .header h1 {
-            color: #667eea;
             font-size: 28px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .header .user-info {
@@ -115,70 +131,78 @@ $error = $_GET['error'] ?? '';
         }
 
         .stat-card {
-            background: white;
+            background: var(--bg-primary);
             padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
             display: flex;
             align-items: center;
             gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
 
         .stat-card .icon {
-            font-size: 40px;
+            font-size: 36px;
             width: 70px;
             height: 70px;
-            border-radius: 50%;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .stat-card.pending .icon {
-            background: #fff3cd;
-            color: #ff9800;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
         }
 
         .stat-card.approved .icon {
-            background: #d4edda;
-            color: #28a745;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
         }
 
         .stat-card.rejected .icon {
-            background: #f8d7da;
-            color: #dc3545;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
         }
 
         .stat-card .content h3 {
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 5px;
+            color: var(--text-primary);
         }
 
         .stat-card .content p {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 14px;
             margin: 0;
         }
 
         .requests-section {
-            background: white;
+            background: var(--bg-primary);
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
         }
 
         .requests-section h2 {
-            color: #333;
-            font-size: 24px;
+            color: var(--text-primary);
+            font-size: 22px;
+            font-weight: 600;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .request-card {
-            background: #f8f9fa;
-            border-radius: 10px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 15px;
             border-left: 4px solid #667eea;
@@ -294,35 +318,38 @@ $error = $_GET['error'] ?? '';
         }
 
         .btn-approve, .btn-reject {
-            padding: 8px 20px;
+            padding: 12px 28px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-approve {
-            background: #28a745;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
 
         .btn-approve:hover {
-            background: #218838;
             transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
         }
 
         .btn-reject {
-            background: #dc3545;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
         }
 
         .btn-reject:hover {
-            background: #c82333;
             transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
 
         .empty-state {
@@ -586,7 +613,7 @@ $error = $_GET['error'] ?? '';
             const comments = document.getElementById('approveComments').value;
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '../../app/Controllers/RoleChangeApprovalController.php';
+            form.action = '/payslip_generator/public/index.php?page=approve-role-change';
             
             const actionInput = document.createElement('input');
             actionInput.type = 'hidden';
@@ -632,7 +659,7 @@ $error = $_GET['error'] ?? '';
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '../../app/Controllers/RoleChangeApprovalController.php';
+            form.action = '/payslip_generator/public/index.php?page=reject-role-change';
             
             const actionInput = document.createElement('input');
             actionInput.type = 'hidden';

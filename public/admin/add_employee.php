@@ -216,6 +216,7 @@ $username = $_SESSION['username'] ?? 'Admin';
                             <option value="">Select Type</option>
                             <option value="permanent">Permanent</option>
                             <option value="contract">Contract</option>
+                            <option value="intern">Intern</option>
                         </select>
                     </div>
 
@@ -229,7 +230,7 @@ $username = $_SESSION['username'] ?? 'Admin';
                     </div>
 
                     <div class="form-group">
-                        <label for="basic_salary"><i class="fas fa-dollar-sign"></i> Basic Salary</label>
+                        <label for="basic_salary" id="salary_label"><i class="fas fa-dollar-sign"></i> Basic Salary</label>
                         <input type="number" id="basic_salary" name="basic_salary" step="0.01" required placeholder="0.00">
                     </div>
 
@@ -319,6 +320,38 @@ $username = $_SESSION['username'] ?? 'Admin';
     <?php include 'includes/admin_scripts.php'; ?>
 
     <script>
+        // Handle salary based on employment type
+        const employmentTypeSelect = document.getElementById('employment_type');
+        const salaryInput = document.getElementById('basic_salary');
+        const salaryLabel = document.getElementById('salary_label');
+        
+        employmentTypeSelect.addEventListener('change', function() {
+            if (this.value === 'intern') {
+                // Interns: Fixed stipend of 10,000
+                salaryInput.value = '10000.00';
+                salaryInput.readOnly = true;
+                salaryInput.placeholder = '10000.00 (Fixed)';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Stipend (Fixed for Interns)';
+            } else if (this.value === 'contract') {
+                // Contract: Manual entry (contractual basis)
+                salaryInput.readOnly = false;
+                salaryInput.value = '';
+                salaryInput.placeholder = 'Enter contractual amount';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Contractual Pay (Manual Entry)';
+            } else if (this.value === 'permanent') {
+                // Permanent: Standard basic salary
+                salaryInput.readOnly = false;
+                salaryInput.value = '';
+                salaryInput.placeholder = 'Enter basic salary';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+            } else {
+                // Default
+                salaryInput.readOnly = false;
+                salaryInput.value = '';
+                salaryInput.placeholder = '0.00';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+            }
+        });
     </script>
 
 </body>

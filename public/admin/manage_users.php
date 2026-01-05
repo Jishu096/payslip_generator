@@ -1,7 +1,11 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'administrator') {
+// Support both single-role and multi-role
+$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
+$hasAdminRole = in_array('administrator', $userRoles);
+
+if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
     header("Location: ../auth/login.php");
     exit;
 }

@@ -79,6 +79,18 @@ switch ($request) {
         $controller->deleteDepartment();
         break;
 
+    case 'approve-salary-change':
+    case 'reject-salary-change':
+        require_once __DIR__ . "/../Controllers/SalaryApprovalController.php";
+        // Controller handles approval/rejection based on POST action
+        break;
+
+    case 'approve-role-change':
+    case 'reject-role-change':
+        require_once __DIR__ . "/../Controllers/RoleChangeApprovalController.php";
+        // Controller handles approval/rejection based on POST action
+        break;
+
     case 'logout':
         session_start();
         session_destroy();
