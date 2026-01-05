@@ -309,7 +309,9 @@ $payslips = $payslipModel->getPayslipsByEmployee($_SESSION['employee_id']);
                                         <i class="fas fa-download"></i> Download PDF
                                     </a>
                                 <?php else: ?>
-                                    <span style="color: #a0aec0;">Not available</span>
+                                    <a class="btn-download" href="../accountant/generate_payslip_pdf.php?payslip_id=<?= $row['payslip_id'] ?>" target="_blank">
+                                        <i class="fas fa-file-pdf"></i> View Payslip
+                                    </a>
                                 <?php endif; ?>
                             </td>
                         </tr>
