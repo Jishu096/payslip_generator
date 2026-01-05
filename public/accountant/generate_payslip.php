@@ -755,16 +755,17 @@ $error = $_GET['error'] ?? '';
                 basicSalaryInput.readOnly = true;
                 basicSalaryInput.style.background = '#f8f9fa';
                 
-                // Show info message
+                // Remove any existing employment note first
+                const existingNote = document.getElementById('employment-note');
+                if (existingNote) existingNote.remove();
+                
+                // Show info message for intern
                 const earningsHeader = document.querySelector('.section-header');
-                let employmentNote = document.getElementById('employment-note');
-                if (!employmentNote) {
-                    employmentNote = document.createElement('div');
-                    employmentNote.id = 'employment-note';
-                    employmentNote.style.cssText = 'background: #fff8e1; border: 2px solid #ffd54f; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #f57c00;';
-                    employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Intern:</strong> Fixed stipend of ₹10,000. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
-                    earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
-                }
+                const employmentNote = document.createElement('div');
+                employmentNote.id = 'employment-note';
+                employmentNote.style.cssText = 'background: #fff8e1; border: 2px solid #ffd54f; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #f57c00;';
+                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Intern:</strong> Fixed stipend of ₹10,000. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
+                earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
             } else if (employmentType === 'contract') {
                 // For contract employees: Only basic salary, no allowances or deductions
                 // But allow manual bonus/DA/TA if needed
@@ -782,16 +783,17 @@ $error = $_GET['error'] ?? '';
                 basicSalaryInput.readOnly = false;
                 basicSalaryInput.style.background = '#ffffff';
                 
-                // Show info message
+                // Remove any existing employment note first
+                const existingNote = document.getElementById('employment-note');
+                if (existingNote) existingNote.remove();
+                
+                // Show info message for contract
                 const earningsHeader = document.querySelector('.section-header');
-                let employmentNote = document.getElementById('employment-note');
-                if (!employmentNote) {
-                    employmentNote = document.createElement('div');
-                    employmentNote.id = 'employment-note';
-                    employmentNote.style.cssText = 'background: #e3f2fd; border: 2px solid #64b5f6; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #1976d2;';
-                    employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Contract Employee:</strong> Only basic salary. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
-                    earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
-                }
+                const employmentNote = document.createElement('div');
+                employmentNote.id = 'employment-note';
+                employmentNote.style.cssText = 'background: #e3f2fd; border: 2px solid #64b5f6; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #1976d2;';
+                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Contract Employee:</strong> Only basic salary. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
+                earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
             } else {
                 // For permanent employees: Full breakdown with HRA, DA, TA, etc.
                 basicSalaryInput.readOnly = false;
