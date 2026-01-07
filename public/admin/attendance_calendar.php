@@ -36,6 +36,44 @@ $monthName = date('F Y', $firstDay);
 // Get attendance data for the month
 $db = getDBConnection();
 
+// Get holidays for the month
+$holidayStmt = $db->prepare("SELECT holiday_date, holiday_name, holiday_type 
+                              FROM holidays 
+                              WHERE YEAR(holiday_date) = :year 
+                              AND MONTH(holiday_date) = :month 
+                              AND is_active = 1");
+$holidayStmt->execute([':year' => $year, ':month' => $month]);
+$holidays = [];
+while ($holiday = $holidayStmt->fetch(PDO::FETCH_ASSOC)) {
+    $holidays[$holiday['holiday_date']] = $holiday;
+}
+
+// Get leave requests for the month with day counts
+$leaveStmt = $db->prepare("SELECT lr.employee_id, 
+                                  lr.start_date, 
+                                  lr.end_date,
+                                  lr.leave_type,
+                                  lr.status,
+                                  e.full_name as employee_name,
+                                  DATEDIFF(lr.end_date, lr.start_date) + 1 as leave_days
+                           FROM leave_requests lr
+                           JOIN employees e ON lr.employee_id = e.employee_id
+                           WHERE lr.status = 'approved'
+                           AND ((YEAR(lr.start_date) = :year AND MONTH(lr.start_date) = :month)
+                                OR (YEAR(lr.end_date) = :year AND MONTH(lr.end_date) = :month)
+                                OR (lr.start_date <= :month_start AND lr.end_date >= :month_end))");
+$leaveStmt->execute([
+    ':year' => $year, 
+    ':month' => $month,
+    ':month_start' => sprintf('%04d-%02d-01', $year, $month),
+    ':month_end' => date('Y-m-t', $firstDay)
+]);
+
+$leaveRequests = [];
+while ($leave = $leaveStmt->fetch(PDO::FETCH_ASSOC)) {
+    $leaveRequests[] = $leave;
+}
+
 if ($filterEmployee) {
     $sql = "SELECT 
                 DATE(a.date) as attendance_date,
@@ -85,7 +123,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 $totalPresent = 0;
 $totalAbsent = 0;
 $totalLeave = 0;
-$totalHoliday = 0;
+$totalHoliday = count($holidays);
 
 foreach ($attendanceData as $date => $records) {
     foreach ($records as $record) {
@@ -431,6 +469,53 @@ foreach ($attendanceData as $date => $records) {
             margin-top: 4px;
         }
 
+        /* Holiday and Leave styles */
+        .calendar-day.has-holiday {
+            background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 100%);
+            border-color: #f39c12;
+        }
+
+        .holiday-badge {
+            font-size: 9px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 3px 5px;
+            border-radius: 4px;
+            margin: 3px 0;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .holiday-badge i {
+            font-size: 10px;
+        }
+
+        .leave-info {
+            margin-top: 4px;
+        }
+
+        .leave-badge {
+            font-size: 9px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin: 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 600;
+        }
+
+        .leave-badge i {
+            font-size: 9px;
+        }
+
         .legend {
             display: flex;
             gap: 20px;
@@ -677,6 +762,16 @@ foreach ($attendanceData as $date => $records) {
                         $currentDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
                         $isToday = $currentDate === date('Y-m-d');
                         $dayRecords = $attendanceData[$currentDate] ?? [];
+                        $isHoliday = isset($holidays[$currentDate]);
+                        $holidayInfo = $isHoliday ? $holidays[$currentDate] : null;
+                        
+                        // Check if any approved leave falls on this date
+                        $leavesOnDate = [];
+                        foreach ($leaveRequests as $leave) {
+                            if ($currentDate >= $leave['start_date'] && $currentDate <= $leave['end_date']) {
+                                $leavesOnDate[] = $leave;
+                            }
+                        }
                         
                         // Group by status
                         $statusCounts = ['present' => 0, 'absent' => 0, 'leave' => 0, 'holiday' => 0];
@@ -689,9 +784,28 @@ foreach ($attendanceData as $date => $records) {
                             }
                         }
                     ?>
-                        <div class="calendar-day <?= $isToday ? 'today' : '' ?>" 
+                        <div class="calendar-day <?= $isToday ? 'today' : '' ?> <?= $isHoliday ? 'has-holiday' : '' ?>" 
                              title="<?= date('l, F j, Y', strtotime($currentDate)) ?>">
                             <div class="day-number"><?= $day ?></div>
+                            
+                            <?php if ($isHoliday): ?>
+                                <div class="holiday-badge" title="<?= htmlspecialchars($holidayInfo['holiday_name']) ?> (<?= ucfirst($holidayInfo['holiday_type']) ?>)">
+                                    <i class="fas fa-gift"></i> <?= htmlspecialchars($holidayInfo['holiday_name']) ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if (!empty($leavesOnDate)): ?>
+                                <div class="leave-info">
+                                    <?php foreach ($leavesOnDate as $leave): ?>
+                                        <div class="leave-badge" title="<?= htmlspecialchars($leave['employee_name']) ?>: <?= $leave['leave_days'] ?> days (<?= ucfirst($leave['leave_type']) ?>)">
+                                            <i class="fas fa-umbrella-beach"></i> 
+                                            <?= $filterEmployee ? '' : substr($leave['employee_name'], 0, 15) . ': ' ?>
+                                            <?= $leave['leave_days'] ?> day<?= $leave['leave_days'] > 1 ? 's' : '' ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                            
                             <?php if (!empty($dayRecords)): ?>
                                 <div class="day-status">
                                     <?php if ($statusCounts['present'] > 0): ?>
@@ -739,7 +853,36 @@ foreach ($attendanceData as $date => $records) {
                         <div style="width: 16px; height: 16px; border: 2px solid #667eea; border-radius: 4px;"></div>
                         <span>Today</span>
                     </div>
+                    <div class="legend-item">
+                        <i class="fas fa-gift" style="color: #f39c12; font-size: 14px;"></i>
+                        <span>Govt Holiday</span>
+                    </div>
+                    <div class="legend-item">
+                        <i class="fas fa-umbrella-beach" style="color: #4299e1; font-size: 14px;"></i>
+                        <span>Approved Leave</span>
+                    </div>
                 </div>
+                
+                <!-- Holidays List for Current Month -->
+                <?php if (!empty($holidays)): ?>
+                    <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #f39c12;">
+                        <h4 style="margin: 0 0 10px 0; color: #2d3748; font-size: 14px; font-weight: 600;">
+                            <i class="fas fa-calendar-star"></i> Central Government Holidays (<?= $monthName ?>)
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
+                            <?php foreach ($holidays as $holiday): ?>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                    <i class="fas fa-gift" style="color: #f39c12;"></i>
+                                    <strong><?= date('M d', strtotime($holiday['holiday_date'])) ?>:</strong>
+                                    <span><?= htmlspecialchars($holiday['holiday_name']) ?></span>
+                                    <?php if ($holiday['holiday_type'] === 'optional'): ?>
+                                        <span style="font-size: 10px; background: #e2e8f0; padding: 1px 4px; border-radius: 3px;">optional</span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
