@@ -16,9 +16,10 @@ require_once "../../app/Models/Employee.php";
 require_once "../../app/Models/Attendance.php";
 require_once "../../app/Models/Department.php";
 
+$db = getDBConnection();
 $employeeModel = new Employee();
 $attendanceModel = new Attendance();
-$departmentModel = new Department();
+$departmentModel = new Department($db);
 
 // Get filter parameters
 $filterEmployee = $_GET['employee_id'] ?? '';
@@ -35,8 +36,6 @@ $startDate = $filterMonth . '-01';
 $endDate = date('Y-m-t', strtotime($startDate));
 
 // Build query for attendance report
-$db = getDBConnection();
-
 $sql = "SELECT 
             a.attendance_id,
             a.employee_id,
