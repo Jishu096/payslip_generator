@@ -41,7 +41,7 @@ $sql = "SELECT
             a.employee_id,
             a.date,
             a.status,
-            CONCAT(e.first_name, ' ', e.last_name) as employee_name,
+            e.full_name as employee_name,
             e.designation,
             e.employment_type,
             d.department_name

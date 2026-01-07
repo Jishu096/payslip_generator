@@ -40,7 +40,7 @@ if ($filterEmployee) {
     $sql = "SELECT 
                 DATE(a.date) as attendance_date,
                 a.status,
-                CONCAT(e.first_name, ' ', e.last_name) as employee_name
+                e.full_name as employee_name
             FROM attendance a
             JOIN employees e ON a.employee_id = e.employee_id
             WHERE a.employee_id = :employee_id
@@ -57,7 +57,7 @@ if ($filterEmployee) {
     $sql = "SELECT 
                 DATE(a.date) as attendance_date,
                 a.status,
-                CONCAT(e.first_name, ' ', e.last_name) as employee_name,
+                e.full_name as employee_name,
                 COUNT(*) as count
             FROM attendance a
             JOIN employees e ON a.employee_id = e.employee_id
