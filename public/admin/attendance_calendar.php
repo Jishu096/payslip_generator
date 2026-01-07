@@ -692,11 +692,9 @@ foreach ($attendanceData as $date => $records) {
                         <i class="fas fa-chevron-left"></i> Previous
                     </a>
                     <span class="month-title"><?= $monthName ?></span>
-                    <?php if ($nextMonth <= $currentMonth): ?>
                     <a href="?month=<?= $nextMonth ?><?= $filterEmployee ? '&employee_id=' . $filterEmployee : '' ?>">
                         Next <i class="fas fa-chevron-right"></i>
                     </a>
-                    <?php endif; ?>
                 </div>
             </div>
 
@@ -711,8 +709,7 @@ foreach ($attendanceData as $date => $records) {
                             <input type="month" 
                                    id="month" 
                                    name="month" 
-                                   value="<?= htmlspecialchars($filterMonth) ?>"
-                                   max="<?= date('Y-m') ?>">
+                                   value="<?= htmlspecialchars($filterMonth) ?>">
                         </div>
 
                         <div class="form-group">
