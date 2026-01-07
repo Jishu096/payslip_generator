@@ -122,11 +122,6 @@ foreach ($attendanceData as $date => $records) {
         }
     }
 }
-        case 'holiday':
-            $totalHoliday++;
-            break;
-    }
-}
 
 // Previous and next month navigation
 $prevMonth = date('Y-m', strtotime($filterMonth . '-01 -1 month'));
