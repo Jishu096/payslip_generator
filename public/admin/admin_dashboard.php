@@ -382,6 +382,35 @@ $maxCount = !empty($departmentStats) ? max(array_column($departmentStats, 'count
             </div>
         </div>
 
+        <!-- Quick Actions for Attendance -->
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">
+                <h3><i class="fas fa-calendar-check"></i> Attendance & Leave Management</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; padding: 20px;">
+                <a href="manage_attendance.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fas fa-user-check" style="font-size: 32px;"></i>
+                    <div style="font-weight: 600; font-size: 18px;">Mark Attendance</div>
+                    <div style="font-size: 13px; opacity: 0.9;">Manage daily employee attendance</div>
+                </a>
+                <a href="attendance_reports.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fas fa-chart-bar" style="font-size: 32px;"></i>
+                    <div style="font-weight: 600; font-size: 18px;">Attendance Reports</div>
+                    <div style="font-size: 13px; opacity: 0.9;">View reports, filters & analytics</div>
+                </a>
+                <a href="leave_approvals.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fas fa-umbrella-beach" style="font-size: 32px;"></i>
+                    <div style="font-weight: 600; font-size: 18px;">Leave Approvals</div>
+                    <div style="font-size: 13px; opacity: 0.9;">Review & approve leave requests</div>
+                </a>
+                <a href="attendance_calendar.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fas fa-calendar-alt" style="font-size: 32px;"></i>
+                    <div style="font-weight: 600; font-size: 18px;">Attendance Calendar</div>
+                    <div style="font-size: 13px; opacity: 0.9;">Visual calendar with color codes</div>
+                </a>
+            </div>
+        </div>
+
         <!-- Content Grid -->
         <div class="content-grid">
             <!-- Recent Employees -->

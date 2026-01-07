@@ -483,9 +483,13 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
                     <i class="fas fa-file-invoice"></i>
                     <span>View Payslips</span>
                 </a>
-                <a href="attendance.php" class="action-btn">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Attendance</span>
+                <a href="attendance_calendar.php" class="action-btn">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>My Attendance</span>
+                </a>
+                <a href="leave_management.php" class="action-btn">
+                    <i class="fas fa-umbrella-beach"></i>
+                    <span>Apply Leave</span>
                 </a>
                 <a href="edit_profile.php" class="action-btn">
                     <i class="fas fa-edit"></i>
@@ -526,17 +530,30 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
                 </div>
             </div>
 
-            <!-- Attendance Overview -->
+            <!-- Attendance & Leave -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-calendar-alt"></i>
-                    <h3>Attendance Overview</h3>
+                    <h3>Attendance & Leave</h3>
                 </div>
                 <div class="card-body">
-                    <div class="calendar-placeholder">
-                        <i class="fas fa-calendar"></i>
-                        <p>Attendance calendar coming soon</p>
-                        <p style="font-size: 12px; margin-top: 10px; color: #718096;">Track your daily attendance and leave history</p>
+                    <div class="info-row" style="flex-direction: column; gap: 15px; align-items: stretch;">
+                        <a href="attendance_calendar.php" style="display: flex; align-items: center; gap: 12px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <i class="fas fa-calendar-check" style="font-size: 24px;"></i>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 16px;">View My Attendance</div>
+                                <div style="font-size: 12px; opacity: 0.9;">Track your daily attendance calendar</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        <a href="leave_management.php" style="display: flex; align-items: center; gap: 12px; padding: 15px; background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; border-radius: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <i class="fas fa-umbrella-beach" style="font-size: 24px;"></i>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 16px;">Apply for Leave</div>
+                                <div style="font-size: 12px; opacity: 0.9;">Submit leave requests & check balance</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
