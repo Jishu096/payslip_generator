@@ -88,11 +88,19 @@ class LeaveRequest {
                         reviewed_by_name = ?, 
                         review_date = NOW(),
                         review_comments = ?
-                    WHERE request_id = ?";
+                    WHERE leave_id = ?";
             
             $stmt = $this->conn->prepare($sql);
-            return $stmt->execute([$reviewerId, $reviewerName, $comments, $requestId]);
+            $result = $stmt->execute([$reviewerId, $reviewerName, $comments, $requestId]);
+            
+            // Log error if failed
+            if (!$result) {
+                error_log("Leave approval failed for request_id: $requestId - " . print_r($stmt->errorInfo(), true));
+            }
+            
+            return $result;
         } catch (PDOException $e) {
+            error_log("Leave approval exception: " . $e->getMessage());
             return false;
         }
     }
@@ -108,11 +116,19 @@ class LeaveRequest {
                         reviewed_by_name = ?, 
                         review_date = NOW(),
                         review_comments = ?
-                    WHERE request_id = ?";
+                    WHERE leave_id = ?";
             
             $stmt = $this->conn->prepare($sql);
-            return $stmt->execute([$reviewerId, $reviewerName, $comments, $requestId]);
+            $result = $stmt->execute([$reviewerId, $reviewerName, $comments, $requestId]);
+            
+            // Log error if failed
+            if (!$result) {
+                error_log("Leave rejection failed for request_id: $requestId - " . print_r($stmt->errorInfo(), true));
+            }
+            
+            return $result;
         } catch (PDOException $e) {
+            error_log("Leave rejection exception: " . $e->getMessage());
             return false;
         }
     }
