@@ -1,11 +1,8 @@
 <?php
 session_start();
 
-// Support both single-role and multi-role scenarios
-$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
-$hasAdminRole = in_array('administrator', $userRoles);
-
-if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
+// Allow all authenticated users to view the company-wide attendance calendar
+if (!isset($_SESSION['role'])) {
     header("Location: ../auth/login.php");
     exit;
 }
