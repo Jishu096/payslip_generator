@@ -5,8 +5,10 @@ session_start();
 $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
 $hasAdminRole = in_array('administrator', $userRoles);
 $hasDirectorRole = in_array('director', $userRoles);
+$hasAccountantRole = in_array('accountant', $userRoles);
 
-if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator' && !$hasDirectorRole && $_SESSION['role'] !== 'director')) {
+// Allow administrator, director, and accountant (HR) roles to approve leaves
+if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator' && !$hasDirectorRole && $_SESSION['role'] !== 'director' && !$hasAccountantRole && $_SESSION['role'] !== 'accountant')) {
     header("Location: ../auth/login.php");
     exit;
 }
