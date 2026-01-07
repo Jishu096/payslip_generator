@@ -87,6 +87,15 @@ try {
     // Extract date from timestamp
     $date = date('Y-m-d', strtotime($timestamp));
     
+    // Check if optional columns exist in attendance table
+    $columnsStmt = $db->query("SHOW COLUMNS FROM attendance LIKE 'device_id'");
+    $hasDeviceIdColumn = $columnsStmt->rowCount() > 0;
+    
+    // Override deviceId if column doesn't exist
+    if (!$hasDeviceIdColumn && $deviceId) {
+        $deviceId = null; // Column doesn't exist, don't try to use it
+    }
+    
     // Check if attendance already exists for this date
     $checkStmt = $db->prepare("SELECT attendance_id FROM attendance WHERE employee_id = :emp_id AND date = :date LIMIT 1");
     $checkStmt->execute([':emp_id' => $employeeId, ':date' => $date]);
@@ -95,8 +104,7 @@ try {
     if ($existing) {
         // Update existing record
         $updateSql = "UPDATE attendance SET 
-                        status = :status,
-                        updated_at = NOW()";
+                        status = :status";
         
         // If biometric fields exist in your table, update them
         if ($deviceId) {
@@ -126,13 +134,13 @@ try {
         
     } else {
         // Insert new attendance record
-        $insertSql = "INSERT INTO attendance (employee_id, date, status, created_at";
+        $insertSql = "INSERT INTO attendance (employee_id, date, status";
         
         if ($deviceId) {
             $insertSql .= ", device_id";
         }
         
-        $insertSql .= ") VALUES (:employee_id, :date, :status, NOW()";
+        $insertSql .= ") VALUES (:employee_id, :date, :status";
         
         if ($deviceId) {
             $insertSql .= ", :device_id";
