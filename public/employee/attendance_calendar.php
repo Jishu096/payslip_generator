@@ -115,7 +115,7 @@ $canGoNext = $nextMonth <= $currentMonth; // Don't allow future months
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -251,7 +251,7 @@ $canGoNext = $nextMonth <= $currentMonth; // Don't allow future months
         .calendar {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
+            gap: 8px;
             margin-top: 20px;
         }
 
@@ -259,7 +259,7 @@ $canGoNext = $nextMonth <= $currentMonth; // Don't allow future months
             aspect-ratio: 1;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -296,8 +296,8 @@ $canGoNext = $nextMonth <= $currentMonth; // Don't allow future months
         }
 
         .status-indicator {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             margin-top: 5px;
         }

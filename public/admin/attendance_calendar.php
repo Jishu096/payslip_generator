@@ -131,7 +131,7 @@ foreach ($attendanceData as $date => $records) {
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1100px;
             margin: 0 auto;
             padding: 30px;
         }
@@ -356,8 +356,8 @@ foreach ($attendanceData as $date => $records) {
             background: white;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
-            padding: 12px;
-            min-height: 100px;
+            padding: 8px;
+            min-height: 70px;
             position: relative;
             transition: all 0.3s;
             cursor: pointer;
@@ -404,8 +404,8 @@ foreach ($attendanceData as $date => $records) {
 
         .status-dot {
             width: 100%;
-            height: 6px;
-            border-radius: 3px;
+            height: 4px;
+            border-radius: 2px;
             transition: all 0.3s;
         }
 
