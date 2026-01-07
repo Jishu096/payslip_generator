@@ -418,15 +418,6 @@ $monthLabel = date('F Y');
                     <i class="fas fa-arrow-right"></i>
                 </a>
 
-                <a href="../admin/leave_approvals.php" class="action-btn">
-                    <i class="fas fa-umbrella-beach"></i>
-                    <div class="action-text">
-                        <h3>Leave Approvals (HR)</h3>
-                        <p>Review leave requests</p>
-                    </div>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-
                 <a href="../admin/employees.php" class="action-btn">
                     <i class="fas fa-users-cog"></i>
                     <div class="action-text">
