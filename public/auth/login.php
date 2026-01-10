@@ -1,5 +1,5 @@
 <?php
-session_start();
+// Session is now managed by SessionManager in index.php
 ?>
 <!DOCTYPE html>
 <html lang="en">

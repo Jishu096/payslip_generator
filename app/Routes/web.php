@@ -99,6 +99,8 @@ switch ($request) {
         break;
 
     default:
-        echo "Backend Router Working Successfully!";
+        // Redirect to login page if no route matches
+        header("Location: /payslip_generator/public/auth/login.php");
+        exit;
         break;
 }

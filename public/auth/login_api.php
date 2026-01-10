@@ -1,22 +1,29 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 
-// Set timezone to Asia/Kolkata
-date_default_timezone_set('Asia/Kolkata');
-
+// Load security helpers
+require_once __DIR__ . '/../../app/Helpers/Config.php';
+require_once __DIR__ . '/../../app/Helpers/SessionManager.php';
+require_once __DIR__ . '/../../app/Helpers/InputValidator.php';
 require_once __DIR__ . '/../../app/Config/database.php';
 require_once __DIR__ . '/../../app/Models/User.php';
 require_once __DIR__ . '/../../app/Models/Employee.php';
 require_once __DIR__ . '/../../app/Helpers/LoginAttemptHelper.php';
+
+// Start secure session
+SessionManager::start();
+
+// Set timezone to Asia/Kolkata
+date_default_timezone_set('Asia/Kolkata');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
     exit;
 }
 
-$username = trim($_POST['username'] ?? '');
-$password = trim($_POST['password'] ?? '');
+// Sanitize and validate input
+$username = InputValidator::sanitizeString($_POST['username'] ?? '');
+$password = $_POST['password'] ?? ''; // Don't sanitize passwords
 
 if (empty($username) || empty($password)) {
     echo json_encode(['success' => false, 'message' => 'Username and password are required']);
@@ -44,21 +51,24 @@ try {
     $user = $userModel->verifyUser($username, $password);
 
     if ($user) {
+        // Regenerate session ID to prevent session fixation
+        SessionManager::regenerate();
+        
         // Successful login
-        $_SESSION['user_id']  = $user['user_id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['role']     = $user['role']; // Keep primary role for backward compatibility
+        SessionManager::set('user_id', $user['user_id']);
+        SessionManager::set('username', $user['username']);
+        SessionManager::set('role', $user['role']); // Keep primary role for backward compatibility
 
         // Get all roles from RBAC system
         $userRoles = $userModel->getUserRoles($user['user_id']);
-        $_SESSION['all_roles'] = array_column($userRoles, 'role_name'); // Array of all role names
-        $_SESSION['has_multiple_roles'] = count($_SESSION['all_roles']) > 1;
+        SessionManager::set('all_roles', array_column($userRoles, 'role_name')); // Array of all role names
+        SessionManager::set('has_multiple_roles', count(SessionManager::get('all_roles')) > 1);
 
-        if ($user['role'] === 'employee' || in_array('employee', $_SESSION['all_roles'])) {
-            $_SESSION['employee_id'] = $user['employee_id'];
+        if ($user['role'] === 'employee' || in_array('employee', SessionManager::get('all_roles'))) {
+            SessionManager::set('employee_id', $user['employee_id']);
             $empModel = new Employee();
             $emp = $empModel->getEmployeeById($user['employee_id']);
-            $_SESSION['employee_name'] = $emp['full_name'];
+            SessionManager::set('employee_name', $emp['full_name']);
         }
 
         $attemptHelper->recordSuccessfulAttempt($username);
@@ -68,7 +78,7 @@ try {
         $primaryRole = $user['role'];
         
         // If has multiple roles, show role selector page
-        if ($_SESSION['has_multiple_roles']) {
+        if (SessionManager::get('has_multiple_roles')) {
             $redirect = $baseURL . 'auth/role_selector.php';
         } else {
             $redirect = match($primaryRole) {
@@ -102,7 +112,19 @@ try {
         }
     }
 } catch (Exception $e) {
+    // Log error
     error_log("Login Error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Server error. Please try again.']);
+    
+    // In development, show detailed error
+    if (Config::isDevelopment()) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Server error: ' . $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Server error. Please try again.']);
+    }
 }
-?>
+// No closing PHP tag to prevent accidental output
