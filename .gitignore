@@ -4,7 +4,7 @@
 # Environment and config files
 .env
 .env.local
-/app/Config/database.php
+#/app/Config/database.php
 
 # IDE and editor files
 .vscode/
