@@ -16,8 +16,7 @@ class ProfileController {
             'emergency_contact_name', 'emergency_contact_relation', 'emergency_contact_phone'
         ];
 
-        $db = new Database();
-        $conn = $db->connect();
+        $conn = getDBConnection();
 
         foreach ($fields as $field) {
             if (isset($_POST[$field])) {

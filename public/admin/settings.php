@@ -13,8 +13,7 @@ $username = $_SESSION['username'] ?? 'Admin';
 
 require_once __DIR__ . '/../../app/Config/database.php';
 
-$db = new Database();
-$conn = $db->connect();
+$conn = getDBConnection();
 
 // Test email sending
 if (isset($_GET['test_email'])) {

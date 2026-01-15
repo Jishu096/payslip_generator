@@ -4,8 +4,7 @@
         <i class="fas fa-building"></i>
         <span><?php 
             require_once __DIR__ . '/../../../app/Config/database.php';
-            $db = new Database();
-            $conn = $db->connect();
+            $conn = getDBConnection();
             $stmt = $conn->query("SELECT setting_value FROM settings WHERE setting_key = 'company_name'");
             $company = $stmt->fetch(PDO::FETCH_ASSOC);
             echo htmlspecialchars($company['setting_value'] ?? 'Enterprise Payroll Solutions');

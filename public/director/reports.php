@@ -13,8 +13,7 @@ if (!$hasDirectorRole && $_SESSION['role'] !== 'director') {
 $username = $_SESSION['username'] ?? 'Director';
 
 require_once __DIR__ . '/../../app/Config/database.php';
-$db = new Database();
-$conn = $db->connect();
+$conn = getDBConnection();
 
 // Get statistics
 $totalEmployees = $conn->query("SELECT COUNT(*) FROM employees")->fetchColumn();

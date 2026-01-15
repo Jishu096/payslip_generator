@@ -20,8 +20,7 @@ $username = $_SESSION['username'] ?? 'Admin';
 
 // Database connection
 require_once __DIR__ . '/../../app/Config/database.php';
-$db = new Database();
-$conn = $db->connect();
+$conn = getDBConnection();
 
 // Fetch real statistics
 $stmt = $conn->query("SELECT COUNT(*) as count FROM employees");

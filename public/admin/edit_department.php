@@ -11,8 +11,7 @@ if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'admin
 
 require_once __DIR__ . '/../../app/Config/database.php';
 
-$db = new Database();
-$conn = $db->connect();
+$conn = getDBConnection();
 
 $id = $_GET['id'] ?? null;
 $error = '';

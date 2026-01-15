@@ -6,8 +6,7 @@ class Attendance {
 
     public function __construct() {
         require_once __DIR__ . '/../Config/database.php';
-        $database = new Database();
-        $this->conn = $database->connect();
+        $this->conn = getDBConnection();
     }
 
     /**

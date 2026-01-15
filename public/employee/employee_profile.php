@@ -19,8 +19,7 @@ $employeeId = $_SESSION['employee_id'];
 // DB Connection
 require_once __DIR__ . "/../../app/Config/database.php";
 
-$db  = new Database();
-$conn = $db->connect();
+$conn = getDBConnection();
 
 // Fetch employee + department
 $sql = "SELECT e.*, d.department_name 

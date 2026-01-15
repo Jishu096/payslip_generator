@@ -7,8 +7,7 @@ class Payslip {
     private $conn;
 
     public function __construct() {
-        $db = new Database();
-        $this->conn = $db->connect();
+        $this->conn = getDBConnection();
     }
 
     // Fetch all payslips for employee

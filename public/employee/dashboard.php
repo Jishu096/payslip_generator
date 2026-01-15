@@ -21,8 +21,7 @@ require_once __DIR__ . "/../../app/Config/database.php";
 require_once __DIR__ . "/../../app/Models/Employee.php";
 require_once __DIR__ . "/../../app/Helpers/RBACHelper.php";
 
-$db = new Database();
-$conn = $db->connect();
+$conn = getDBConnection();
 
 $userId = $_SESSION['user_id'] ?? null;
 $employeeName = $_SESSION['employee_name'] ?? "Employee";

@@ -9,8 +9,7 @@ class EmployeeController {
     private $notificationHelper;
 
     public function __construct() {
-        $db = new Database();
-        $conn = $db->connect();
+        $conn = getDBConnection();
         $this->notificationHelper = new NotificationHelper($conn);
     }
 
@@ -92,8 +91,7 @@ class EmployeeController {
     public function updateEmployee() {
         $model = new Employee();
         $id = $_POST['employee_id'];
-        $db = new Database();
-        $conn = $db->connect();
+        $conn = getDBConnection();
 
         // Check if salary is being changed
         $currentEmployee = $model->getEmployeeById($id);

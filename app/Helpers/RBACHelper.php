@@ -12,8 +12,7 @@ class RBACHelper {
             $this->conn = $connection;
         } else {
             require_once __DIR__ . "/../Config/database.php";
-            $db = new Database();
-            $this->conn = $db->connect();
+            $this->conn = getDBConnection();
         }
     }
 
