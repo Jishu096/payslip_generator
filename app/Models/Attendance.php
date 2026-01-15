@@ -64,12 +64,15 @@ class Attendance {
      * @param string $status (Present, Absent, Leave, etc.)
      * @return bool
      */
-    public function markAttendance($employeeId, $date, $status = 'Present') {
+    public function markAttendance($employeeId, $date, $status = 'present') {
         try {
+            // Normalize status to lowercase to match ENUM values
+            $status = strtolower($status);
+            
             $query = "INSERT INTO " . $this->table . " 
                       (employee_id, date, status) 
                       VALUES (:employee_id, :date, :status)
-                      ON DUPLICATE KEY UPDATE status = :status";
+                      ON DUPLICATE KEY UPDATE status = VALUES(status)";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':employee_id', $employeeId, PDO::PARAM_INT);
@@ -78,6 +81,9 @@ class Attendance {
             
             return $stmt->execute();
         } catch (PDOException $e) {
+            // Log error for debugging
+            error_log("Attendance Error: " . $e->getMessage());
+            error_log("Employee ID: $employeeId, Date: $date, Status: $status");
             return false;
         }
     }

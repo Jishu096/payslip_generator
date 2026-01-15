@@ -557,11 +557,18 @@ foreach ($employees as $emp) {
                                 <td>
                                     <div class="employee-info">
                                         <div class="employee-avatar">
-                                            <?= strtoupper(substr($emp['first_name'], 0, 1) . substr($emp['last_name'], 0, 1)) ?>
+                                            <?php 
+                                                $nameParts = explode(' ', $emp['full_name']);
+                                                $initials = strtoupper(substr($nameParts[0], 0, 1));
+                                                if (count($nameParts) > 1) {
+                                                    $initials .= strtoupper(substr($nameParts[count($nameParts) - 1], 0, 1));
+                                                }
+                                                echo $initials;
+                                            ?>
                                         </div>
                                         <div class="employee-details">
                                             <div class="employee-name">
-                                                <?= htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']) ?>
+                                                <?= htmlspecialchars($emp['full_name']) ?>
                                             </div>
                                             <div class="employee-designation">
                                                 <?= htmlspecialchars($emp['email']) ?>
