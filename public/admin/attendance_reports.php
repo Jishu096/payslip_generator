@@ -15,6 +15,7 @@ $username = $_SESSION['username'] ?? 'Admin';
 require_once "../../app/Models/Employee.php";
 require_once "../../app/Models/Attendance.php";
 require_once "../../app/Models/Department.php";
+require_once __DIR__ . '/../../app/Config/database.php';
 
 $db = getDBConnection();
 $employeeModel = new Employee();
@@ -595,7 +596,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
                                 <?php foreach ($allEmployees as $emp): ?>
                                     <option value="<?= $emp['employee_id'] ?>" 
                                             <?= $filterEmployee == $emp['employee_id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']) ?>
+                                        <?= htmlspecialchars($emp['full_name']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

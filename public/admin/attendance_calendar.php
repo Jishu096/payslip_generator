@@ -31,6 +31,7 @@ $dayOfWeek = date('w', $firstDay);
 $monthName = date('F Y', $firstDay);
 
 // Get attendance data for the month
+require_once __DIR__ . '/../../app/Config/database.php';
 $db = getDBConnection();
 
 // Get holidays for the month
@@ -56,12 +57,14 @@ $leaveStmt = $db->prepare("SELECT lr.employee_id,
                            FROM leave_requests lr
                            JOIN employees e ON lr.employee_id = e.employee_id
                            WHERE lr.status = 'approved'
-                           AND ((YEAR(lr.start_date) = :year AND MONTH(lr.start_date) = :month)
-                                OR (YEAR(lr.end_date) = :year AND MONTH(lr.end_date) = :month)
+                           AND ((YEAR(lr.start_date) = :year1 AND MONTH(lr.start_date) = :month1)
+                                OR (YEAR(lr.end_date) = :year2 AND MONTH(lr.end_date) = :month2)
                                 OR (lr.start_date <= :month_start AND lr.end_date >= :month_end))");
 $leaveStmt->execute([
-    ':year' => $year, 
-    ':month' => $month,
+    ':year1' => $year,
+    ':month1' => $month,
+    ':year2' => $year, 
+    ':month2' => $month,
     ':month_start' => sprintf('%04d-%02d-01', $year, $month),
     ':month_end' => date('Y-m-t', $firstDay)
 ]);
@@ -721,7 +724,7 @@ foreach ($attendanceData as $date => $records) {
                                 <?php foreach ($allEmployees as $emp): ?>
                                     <option value="<?= $emp['employee_id'] ?>" 
                                             <?= $filterEmployee == $emp['employee_id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']) ?>
+                                        <?= htmlspecialchars($emp['full_name']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
