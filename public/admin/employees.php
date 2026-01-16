@@ -622,7 +622,6 @@ $error = $_GET['error'] ?? '';
 <body>
 
     <?php include 'includes/admin_navbar.php'; ?>
-    <?php include 'includes/admin_sidebar.php'; ?>
 
     <main class="main-content" id="mainContent">
         <div class="page-header">

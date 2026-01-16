@@ -1,4 +1,11 @@
 <?php
+/**
+ * DEPRECATED: This file is no longer used.
+ * All Accountant pages now use accountant_navbar.php for unified sidebar.
+ * This file is kept for reference only.
+ * Last used: 15 January 2026
+ * Replaced by: accountant_navbar.php
+ */
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <style>
@@ -18,11 +25,30 @@ $current_page = basename($_SERVER['PHP_SELF']);
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         min-height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
         padding: 20px;
         position: fixed;
         left: 0;
         top: 0;
         z-index: 1000;
+    }
+    
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .sidebar::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 3px;
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.5);
     }
 
     .sidebar h3 {
@@ -111,6 +137,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </a>
     <a href="generate_payslip.php" class="<?php echo $current_page == 'generate_payslip.php' ? 'active' : ''; ?>">
         <i class="fas fa-file-invoice-dollar"></i> Generate Payslip
+    </a>
+    <a href="generate_attendance_statement.php" class="<?php echo $current_page == 'generate_attendance_statement.php' ? 'active' : ''; ?>">
+        <i class="fas fa-file-excel"></i> Attendance Statement
+    </a>
+    <a href="manage_statement_officials.php" class="<?php echo $current_page == 'manage_statement_officials.php' ? 'active' : ''; ?>">
+        <i class="fas fa-user-tie"></i> Statement Officials
+    </a>
+    <a href="manage_salary_config.php" class="<?php echo $current_page == 'manage_salary_config.php' ? 'active' : ''; ?>">
+        <i class="fas fa-cog"></i> Salary Configuration
     </a>
     <a href="../admin/employees.php">
         <i class="fas fa-users"></i> Employees

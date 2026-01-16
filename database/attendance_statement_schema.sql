@@ -5,7 +5,7 @@
 
 -- Add employee_type to existing employees table if not exists
 ALTER TABLE employees 
-ADD COLUMN IF NOT EXISTS employee_type ENUM('regular', 'contract', 'project', 'daily_wage') DEFAULT 'regular' AFTER status,
+ADD COLUMN IF NOT EXISTS employee_type ENUM('permanent', 'contractual', 'intern', 'project', 'daily_wage') DEFAULT 'permanent' AFTER status,
 ADD COLUMN IF NOT EXISTS contract_end_date DATE NULL AFTER employee_type,
 ADD COLUMN IF NOT EXISTS employee_group VARCHAR(100) NULL COMMENT 'Project Staff, Daily Wage, etc.' AFTER contract_end_date,
 ADD COLUMN IF NOT EXISTS location VARCHAR(100) DEFAULT 'NIELIT Bhubaneswar' AFTER employee_group;
@@ -97,9 +97,9 @@ CREATE TABLE IF NOT EXISTS payroll_monthly_snapshot (
 
 -- Insert sample data for testing
 -- Update existing employees with employee_type
-UPDATE employees SET employee_type = 'regular', location = 'NIELIT Bhubaneswar' WHERE employee_id IN (18, 19, 20);
-UPDATE employees SET employee_type = 'contract', employee_group = 'Project Staff', location = 'NIELIT Bhubaneswar' WHERE employee_id IN (21);
-UPDATE employees SET employee_type = 'daily_wage', employee_group = 'Daily Wage Workers', location = 'NIELIT Balasore' WHERE employee_id IN (22);
+UPDATE employees SET employee_type = 'permanent', location = 'NIELIT Bhubaneswar' WHERE employee_id IN (18, 19, 20);
+UPDATE employees SET employee_type = 'contractual', employee_group = 'Contract Staff', location = 'NIELIT Bhubaneswar' WHERE employee_id IN (21);
+UPDATE employees SET employee_type = 'intern', employee_group = 'Internship Program', location = 'NIELIT Bhubaneswar' WHERE employee_id IN (22);
 
 -- Sample attendance summary for January 2026
 INSERT INTO monthly_attendance_summary 

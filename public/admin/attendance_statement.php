@@ -15,11 +15,44 @@ $db = getDBConnection();
 // Get filter parameters
 $selectedMonth = $_GET['month'] ?? date('n');
 $selectedYear = $_GET['year'] ?? date('Y');
-$reportType = $_GET['report_type'] ?? 'regular'; // 'regular' or 'contract'
 
 // Calculate days in month
 $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
 $monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
+
+// Fetch Permanent Employees Attendance Statement
+function getPermanentEmployeesStatement($db, $month, $year) {
+    $sql = "SELECT 
+                e.employee_id,
+                e.full_name,
+                e.designation,
+                e.location,
+                COALESCE(mas.od_days, 0) as od_days,
+                COALESCE(mas.tour_days, 0) as tour_days,
+                COALESCE(mas.el_days, 0) as el_days,
+                COALESCE(mas.ccl_days, 0) as ccl_days,
+                COALESCE(mas.pl_days, 0) as pl_days,
+                COALESCE(mas.cl_days, 0) as cl_days,
+                COALESCE(mas.rh_days, 0) as rh_days,
+                COALESCE(mas.sat_days, 0) as sat_days,
+                COALESCE(mas.sun_days, 0) as sun_days,
+                COALESCE(mas.gh_days, 0) as gh_days,
+                COALESCE(mas.working_days, 0) as working_days,
+                COALESCE(mas.net_working_days, 0) as net_working_days,
+                mas.remarks
+            FROM employees e
+            LEFT JOIN monthly_attendance_summary mas 
+                ON e.employee_id = mas.employee_id 
+                AND mas.month = :month 
+                AND mas.year = :year
+            WHERE e.employee_type = 'permanent' 
+            AND e.status = 'active'
+            ORDER BY e.full_name";
+    
+    $stmt = $db->prepare($sql);
+    $stmt->execute([':month' => $month, ':year' => $year]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Fetch Regular Employees Attendance Statement
 function getRegularEmployeesStatement($db, $month, $year) {
@@ -46,12 +79,70 @@ function getRegularEmployeesStatement($db, $month, $year) {
                 ON e.employee_id = mas.employee_id 
                 AND mas.month = :month 
                 AND mas.year = :year
-            WHERE e.employee_type = 'regular' 
+            WHERE e.employee_type = 'permanent' 
             AND e.status = 'active'
             ORDER BY e.full_name";
     
     $stmt = $db->prepare($sql);
     $stmt->execute([':month' => $month, ':year' => $year]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Fetch Contractual Employees Statement
+function getContractualEmployeesStatement($db, $month, $year) {
+    $sql = "SELECT 
+                e.employee_id,
+                e.full_name,
+                e.designation,
+                e.employee_group,
+                e.location,
+                e.contract_end_date,
+                COALESCE(mas.total_days, 0) as total_days,
+                COALESCE(mas.absent_days, 0) as absent_days,
+                COALESCE(mas.payable_days, 0) as payable_days,
+                mas.remarks
+            FROM employees e
+            LEFT JOIN monthly_attendance_summary mas 
+                ON e.employee_id = mas.employee_id 
+                AND mas.month = :month 
+                AND mas.year = :year
+            WHERE e.employee_type = 'contractual'
+            AND (e.status = 'active' OR 
+                 (e.status = 'inactive' AND e.contract_end_date >= :start_date))
+            ORDER BY e.location, e.full_name";
+    
+    $startDate = "$year-$month-01";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([':month' => $month, ':year' => $year, ':start_date' => $startDate]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Fetch Interns Statement
+function getInternsStatement($db, $month, $year) {
+    $sql = "SELECT 
+                e.employee_id,
+                e.full_name,
+                e.designation,
+                e.employee_group,
+                e.location,
+                e.contract_end_date,
+                COALESCE(mas.total_days, 0) as total_days,
+                COALESCE(mas.absent_days, 0) as absent_days,
+                COALESCE(mas.payable_days, 0) as payable_days,
+                mas.remarks
+            FROM employees e
+            LEFT JOIN monthly_attendance_summary mas 
+                ON e.employee_id = mas.employee_id 
+                AND mas.month = :month 
+                AND mas.year = :year
+            WHERE e.employee_type = 'intern'
+            AND (e.status = 'active' OR 
+                 (e.status = 'inactive' AND e.contract_end_date >= :start_date))
+            ORDER BY e.location, e.full_name";
+    
+    $startDate = "$year-$month-01";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([':month' => $month, ':year' => $year, ':start_date' => $startDate]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -113,23 +204,10 @@ function getLeaveDetails($db, $employeeId, $month, $year) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Fetch data based on report type
-$regularEmployees = ($reportType === 'regular') ? getRegularEmployeesStatement($db, $selectedMonth, $selectedYear) : [];
-$contractEmployees = ($reportType === 'contract') ? getContractEmployeesStatement($db, $selectedMonth, $selectedYear) : [];
-
-// Group contract employees
-$groupedContractEmployees = [];
-if (!empty($contractEmployees)) {
-    foreach ($contractEmployees as $emp) {
-        $group = $emp['employee_group'] ?? 'Others';
-        $location = $emp['location'] ?? 'NIELIT Bhubaneswar';
-        $key = "$location - $group";
-        if (!isset($groupedContractEmployees[$key])) {
-            $groupedContractEmployees[$key] = [];
-        }
-        $groupedContractEmployees[$key][] = $emp;
-    }
-}
+// Fetch data for all three categories
+$permanentEmployees = getPermanentEmployeesStatement($db, $selectedMonth, $selectedYear);
+$contractualEmployees = getContractualEmployeesStatement($db, $selectedMonth, $selectedYear);
+$interns = getInternsStatement($db, $selectedMonth, $selectedYear);
 ?>
 
 <!DOCTYPE html>
@@ -466,18 +544,6 @@ if (!empty($contractEmployees)) {
                            value="<?= $selectedYear ?>" required>
                 </div>
 
-                <div class="form-group">
-                    <label><i class="fas fa-users"></i> Report Type</label>
-                    <select name="report_type" required>
-                        <option value="regular" <?= $reportType === 'regular' ? 'selected' : '' ?>>
-                            Regular Employees Attendance
-                        </option>
-                        <option value="contract" <?= $reportType === 'contract' ? 'selected' : '' ?>>
-                            Contract Employees Absentee
-                        </option>
-                    </select>
-                </div>
-
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-search"></i> Generate Report
                 </button>
@@ -495,169 +561,228 @@ if (!empty($contractEmployees)) {
                 <h1>NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</h1>
                 <h2>NIELIT BHUBANESWAR</h2>
                 <h2 style="margin-top: 15px;">
-                    <?php if ($reportType === 'regular'): ?>
-                        ATTENDANCE STATEMENT OF REGULAR EMPLOYEES
-                    <?php else: ?>
-                        ABSENTEE STATEMENT OF CONTRACT EMPLOYEES
-                    <?php endif; ?>
+                    ATTENDANCE & ABSENTEE STATEMENT
                 </h2>
                 <div class="period">
                     For the month of <strong><?= $monthName ?> <?= $selectedYear ?></strong>
                 </div>
             </div>
 
-            <?php if ($reportType === 'regular'): ?>
-                <!-- REGULAR EMPLOYEES ATTENDANCE STATEMENT -->
-                <table class="govt-table">
-                    <thead>
+            <!-- PERMANENT EMPLOYEES ATTENDANCE STATEMENT -->
+            <h3 style="color: #2d3748; margin: 30px 0 15px 0; padding: 10px; background: #e6f2ff; border-left: 4px solid #3182ce;">
+                <i class="fas fa-user-tie"></i> PERMANENT EMPLOYEES ATTENDANCE STATEMENT
+            </h3>
+            <table class="govt-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="serial-no">S.No.</th>
+                        <th rowspan="2" class="name-designation">Name & Designation</th>
+                        <th rowspan="2" class="period-col">Period of Absence/<br>OD/Tour</th>
+                        <th rowspan="2" class="nature-col">Nature of Leave/<br>OD/Tour</th>
+                        <th colspan="5">Number of Days</th>
+                        <th rowspan="2" class="days-col">Working<br>Days</th>
+                        <th rowspan="2" class="days-col">Net Working<br>Days</th>
+                        <th rowspan="2" class="remarks-col">Remarks</th>
+                    </tr>
+                    <tr>
+                        <th class="days-col">OD/<br>Tour</th>
+                        <th class="days-col">EL/CCL/<br>PL</th>
+                        <th class="days-col">CL/RH</th>
+                        <th class="days-col">Sat/Sun/<br>GH</th>
+                        <th class="days-col">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($permanentEmployees)): ?>
                         <tr>
-                            <th rowspan="2" class="serial-no">S.No.</th>
-                            <th rowspan="2" class="name-designation">Name & Designation</th>
-                            <th rowspan="2" class="period-col">Period of Absence/<br>OD/Tour</th>
-                            <th rowspan="2" class="nature-col">Nature of Leave/<br>OD/Tour</th>
-                            <th colspan="5">Number of Days</th>
-                            <th rowspan="2" class="days-col">Working<br>Days</th>
-                            <th rowspan="2" class="days-col">Net Working<br>Days</th>
-                            <th rowspan="2" class="remarks-col">Remarks</th>
+                            <td colspan="12" style="text-align: center; padding: 20px; color: #a0aec0;">
+                                No permanent employees data available for <?= $monthName ?> <?= $selectedYear ?>
+                            </td>
                         </tr>
-                        <tr>
-                            <th class="days-col">OD/<br>Tour</th>
-                            <th class="days-col">EL/CCL/<br>PL</th>
-                            <th class="days-col">CL/RH</th>
-                            <th class="days-col">Sat/Sun/<br>GH</th>
-                            <th class="days-col">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($regularEmployees)): ?>
+                    <?php else: ?>
+                        <?php 
+                        $serialNo = 1;
+                        foreach ($permanentEmployees as $emp): 
+                            $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
+                            
+                            // Combine periods and natures
+                            $periods = [];
+                            $natures = [];
+                            foreach ($leaveDetails as $leave) {
+                                $periods[] = $leave['period'];
+                                $natures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
+                            }
+                            $periodStr = !empty($periods) ? implode(', ', $periods) : '---';
+                            $natureStr = !empty($natures) ? implode('; ', $natures) : '---';
+                            
+                            // Calculate totals
+                            $odTour = $emp['od_days'] + $emp['tour_days'];
+                            $elCclPl = $emp['el_days'] + $emp['ccl_days'] + $emp['pl_days'];
+                            $clRh = $emp['cl_days'] + $emp['rh_days'];
+                            $satSunGh = $emp['sat_days'] + $emp['sun_days'] + $emp['gh_days'];
+                            $totalDays = $odTour + $elCclPl + $clRh + $satSunGh;
+                        ?>
                             <tr>
-                                <td colspan="12" style="text-align: center; padding: 20px; color: #a0aec0;">
-                                    No data available for <?= $monthName ?> <?= $selectedYear ?>
+                                <td><?= $serialNo++ ?></td>
+                                <td class="text-left">
+                                    <strong><?= htmlspecialchars($emp['full_name']) ?></strong>
+                                    <span class="designation-small"><?= htmlspecialchars($emp['designation']) ?></span>
                                 </td>
+                                <td><?= $periodStr ?></td>
+                                <td class="text-left"><?= $natureStr ?></td>
+                                <td><?= $odTour > 0 ? $odTour : '---' ?></td>
+                                <td><?= $elCclPl > 0 ? $elCclPl : '---' ?></td>
+                                <td><?= $clRh > 0 ? $clRh : '---' ?></td>
+                                <td><?= $satSunGh > 0 ? $satSunGh : '---' ?></td>
+                                <td><?= $totalDays > 0 ? $totalDays : '---' ?></td>
+                                <td><?= $emp['working_days'] ?: $daysInMonth ?></td>
+                                <td><strong><?= $emp['net_working_days'] ?: $daysInMonth ?></strong></td>
+                                <td class="text-left"><?= htmlspecialchars($emp['remarks'] ?: '---') ?></td>
                             </tr>
-                        <?php else: ?>
-                            <?php 
-                            $serialNo = 1;
-                            foreach ($regularEmployees as $emp): 
-                                $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
-                                
-                                // Combine periods and natures
-                                $periods = [];
-                                $natures = [];
-                                foreach ($leaveDetails as $leave) {
-                                    $periods[] = $leave['period'];
-                                    $natures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
-                                }
-                                $periodStr = !empty($periods) ? implode(', ', $periods) : '---';
-                                $natureStr = !empty($natures) ? implode('; ', $natures) : '---';
-                                
-                                // Calculate totals
-                                $odTour = $emp['od_days'] + $emp['tour_days'];
-                                $elCclPl = $emp['el_days'] + $emp['ccl_days'] + $emp['pl_days'];
-                                $clRh = $emp['cl_days'] + $emp['rh_days'];
-                                $satSunGh = $emp['sat_days'] + $emp['sun_days'] + $emp['gh_days'];
-                                $totalDays = $odTour + $elCclPl + $clRh + $satSunGh;
-                            ?>
-                                <tr>
-                                    <td><?= $serialNo++ ?></td>
-                                    <td class="text-left">
-                                        <strong><?= htmlspecialchars($emp['full_name']) ?></strong>
-                                        <span class="designation-small"><?= htmlspecialchars($emp['designation']) ?></span>
-                                    </td>
-                                    <td><?= $periodStr ?></td>
-                                    <td class="text-left"><?= $natureStr ?></td>
-                                    <td><?= $odTour > 0 ? $odTour : '---' ?></td>
-                                    <td><?= $elCclPl > 0 ? $elCclPl : '---' ?></td>
-                                    <td><?= $clRh > 0 ? $clRh : '---' ?></td>
-                                    <td><?= $satSunGh > 0 ? $satSunGh : '---' ?></td>
-                                    <td><?= $totalDays > 0 ? $totalDays : '---' ?></td>
-                                    <td><?= $emp['working_days'] ?: $daysInMonth ?></td>
-                                    <td><strong><?= $emp['net_working_days'] ?: $daysInMonth ?></strong></td>
-                                    <td class="text-left"><?= htmlspecialchars($emp['remarks'] ?: '---') ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
 
-            <?php else: ?>
-                <!-- CONTRACT EMPLOYEES ABSENTEE STATEMENT -->
-                <table class="govt-table">
-                    <thead>
+            <!-- CONTRACTUAL EMPLOYEES STATEMENT -->
+            <h3 style="color: #2d3748; margin: 40px 0 15px 0; padding: 10px; background: #fff5e6; border-left: 4px solid #f6ad55;">
+                <i class="fas fa-user-clock"></i> CONTRACTUAL EMPLOYEES ABSENTEE STATEMENT
+            </h3>
+            <table class="govt-table">
+                <thead>
+                    <tr>
+                        <th class="serial-no">S.No.</th>
+                        <th class="name-designation">Name & Designation</th>
+                        <th class="period-col">Period of Leave<br>(From – To)</th>
+                        <th class="nature-col">Nature of Leave/OD</th>
+                        <th class="period-col">Period of Absence<br>(From – To)</th>
+                        <th class="days-col">Absent<br>Days</th>
+                        <th class="remarks-col">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($contractualEmployees)): ?>
                         <tr>
-                            <th class="serial-no">S.No.</th>
-                            <th class="name-designation">Name & Designation</th>
-                            <th class="period-col">Period of Leave<br>(From – To)</th>
-                            <th class="nature-col">Nature of Leave/OD</th>
-                            <th class="period-col">Period of Absence<br>(From – To)</th>
-                            <th class="days-col">Absent<br>Days</th>
-                            <th class="remarks-col">Remarks</th>
+                            <td colspan="7" style="text-align: center; padding: 20px; color: #a0aec0;">
+                                No contractual employees data available for <?= $monthName ?> <?= $selectedYear ?>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($contractEmployees)): ?>
+                    <?php else: ?>
+                        <?php 
+                        $serialNo = 1;
+                        foreach ($contractualEmployees as $emp): 
+                            $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
+                            
+                            // Get leave and absence periods
+                            $leavePeriods = [];
+                            $leaveNatures = [];
+                            $absencePeriods = [];
+                            
+                            foreach ($leaveDetails as $leave) {
+                                if ($leave['leave_type'] === 'Absent') {
+                                    $absencePeriods[] = $leave['period'];
+                                } else {
+                                    $leavePeriods[] = $leave['period'];
+                                    $leaveNatures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
+                                }
+                            }
+                            
+                            $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '---';
+                            $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
+                            $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
+                            
+                            // Check if contract ended
+                            $remarks = $emp['remarks'] ?: '';
+                            if ($emp['contract_end_date'] && strtotime($emp['contract_end_date']) < strtotime("$selectedYear-$selectedMonth-$daysInMonth")) {
+                                $remarks = 'Contract ended on ' . date('d/m/Y', strtotime($emp['contract_end_date']));
+                            }
+                        ?>
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 20px; color: #a0aec0;">
-                                    No data available for <?= $monthName ?> <?= $selectedYear ?>
+                                <td><?= $serialNo++ ?></td>
+                                <td class="text-left">
+                                    <strong><?= htmlspecialchars($emp['full_name']) ?></strong>
+                                    <span class="designation-small"><?= htmlspecialchars($emp['designation']) ?></span>
                                 </td>
+                                <td><?= $leavePerStr ?></td>
+                                <td class="text-left"><?= $leaveNatStr ?></td>
+                                <td><?= $absenceStr ?></td>
+                                <td><strong><?= $emp['absent_days'] > 0 ? $emp['absent_days'] : '---' ?></strong></td>
+                                <td class="text-left"><?= htmlspecialchars($remarks ?: '---') ?></td>
                             </tr>
-                        <?php else: ?>
-                            <?php 
-                            $serialNo = 1;
-                            foreach ($groupedContractEmployees as $groupName => $employees): 
-                            ?>
-                                <!-- Group Header -->
-                                <tr>
-                                    <td colspan="7" class="group-header">
-                                        <i class="fas fa-users"></i> <?= htmlspecialchars($groupName) ?>
-                                    </td>
-                                </tr>
-                                
-                                <?php foreach ($employees as $emp): 
-                                    $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
-                                    
-                                    // Get leave and absence periods
-                                    $leavePeriods = [];
-                                    $leaveNatures = [];
-                                    $absencePeriods = [];
-                                    
-                                    foreach ($leaveDetails as $leave) {
-                                        if ($leave['leave_type'] === 'Absent') {
-                                            $absencePeriods[] = $leave['period'];
-                                        } else {
-                                            $leavePeriods[] = $leave['period'];
-                                            $leaveNatures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
-                                        }
-                                    }
-                                    
-                                    $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '---';
-                                    $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
-                                    $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
-                                    
-                                    // Check if contract ended
-                                    $remarks = $emp['remarks'] ?: '';
-                                    if ($emp['contract_end_date'] && strtotime($emp['contract_end_date']) < strtotime("$selectedYear-$selectedMonth-$daysInMonth")) {
-                                        $remarks = 'Contract ended on ' . date('d/m/Y', strtotime($emp['contract_end_date']));
-                                    }
-                                ?>
-                                    <tr>
-                                        <td><?= $serialNo++ ?></td>
-                                        <td class="text-left">
-                                            <strong><?= htmlspecialchars($emp['full_name']) ?></strong>
-                                            <span class="designation-small"><?= htmlspecialchars($emp['designation']) ?></span>
-                                        </td>
-                                        <td><?= $leavePerStr ?></td>
-                                        <td class="text-left"><?= $leaveNatStr ?></td>
-                                        <td><?= $absenceStr ?></td>
-                                        <td><strong><?= $emp['absent_days'] > 0 ? $emp['absent_days'] : '---' ?></strong></td>
-                                        <td class="text-left"><?= htmlspecialchars($remarks ?: '---') ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <!-- INTERNS STATEMENT -->
+            <h3 style="color: #2d3748; margin: 40px 0 15px 0; padding: 10px; background: #e6ffe6; border-left: 4px solid #48bb78;">
+                <i class="fas fa-user-graduate"></i> INTERNS ABSENTEE STATEMENT
+            </h3>
+            <table class="govt-table">
+                <thead>
+                    <tr>
+                        <th class="serial-no">S.No.</th>
+                        <th class="name-designation">Name & Designation</th>
+                        <th class="period-col">Period of Leave<br>(From – To)</th>
+                        <th class="nature-col">Nature of Leave/OD</th>
+                        <th class="period-col">Period of Absence<br>(From – To)</th>
+                        <th class="days-col">Absent<br>Days</th>
+                        <th class="remarks-col">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($interns)): ?>
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px; color: #a0aec0;">
+                                No interns data available for <?= $monthName ?> <?= $selectedYear ?>
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php 
+                        $serialNo = 1;
+                        foreach ($interns as $emp): 
+                            $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
+                            
+                            // Get leave and absence periods
+                            $leavePeriods = [];
+                            $leaveNatures = [];
+                            $absencePeriods = [];
+                            
+                            foreach ($leaveDetails as $leave) {
+                                if ($leave['leave_type'] === 'Absent') {
+                                    $absencePeriods[] = $leave['period'];
+                                } else {
+                                    $leavePeriods[] = $leave['period'];
+                                    $leaveNatures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
+                                }
+                            }
+                            
+                            $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '---';
+                            $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
+                            $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
+                            
+                            // Check if internship ended
+                            $remarks = $emp['remarks'] ?: '';
+                            if ($emp['contract_end_date'] && strtotime($emp['contract_end_date']) < strtotime("$selectedYear-$selectedMonth-$daysInMonth")) {
+                                $remarks = 'Internship ended on ' . date('d/m/Y', strtotime($emp['contract_end_date']));
+                            }
+                        ?>
+                            <tr>
+                                <td><?= $serialNo++ ?></td>
+                                <td class="text-left">
+                                    <strong><?= htmlspecialchars($emp['full_name']) ?></strong>
+                                    <span class="designation-small"><?= htmlspecialchars($emp['designation']) ?></span>
+                                </td>
+                                <td><?= $leavePerStr ?></td>
+                                <td class="text-left"><?= $leaveNatStr ?></td>
+                                <td><?= $absenceStr ?></td>
+                                <td><strong><?= $emp['absent_days'] > 0 ? $emp['absent_days'] : '---' ?></strong></td>
+                                <td class="text-left"><?= htmlspecialchars($remarks ?: '---') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
 
             <!-- Footer with Signatures -->
             <div class="register-footer">

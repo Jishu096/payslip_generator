@@ -1,366 +1,473 @@
 <?php
 session_start();
 
-// Check if user has director role
-$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role']];
-$hasDirectorRole = in_array('director', $userRoles);
-
-if (!$hasDirectorRole && $_SESSION['role'] !== 'director') {
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'director') {
     header("Location: ../auth/login.php");
     exit;
 }
 
+require_once __DIR__ . "/../../app/Config/database.php";
+
+$db = getDBConnection();
 $username = $_SESSION['username'] ?? 'Director';
 
-require_once __DIR__ . '/../../app/Config/database.php';
-$db = new Database();
-$conn = $db->connect();
+// Get filter parameters
+$monthFilter = $_GET['month'] ?? date('F');
+$yearFilter = $_GET['year'] ?? date('Y');
 
-// Get statistics
-$totalEmployees = $conn->query("SELECT COUNT(*) FROM employees")->fetchColumn();
-$totalDepartments = $conn->query("SELECT COUNT(*) FROM departments")->fetchColumn();
-$totalPayroll = $conn->query("SELECT SUM(basic_salary) FROM employees WHERE status='active'")->fetchColumn() ?? 0;
+// Get payroll summary by month/year
+try {
+    // Total payout (approved)
+    $stmt = $db->prepare("
+        SELECT SUM(net_salary) as total_payout, COUNT(*) as approved_count
+        FROM payroll 
+        WHERE month = ? AND year = ? AND approval_status = 'approved'
+    ");
+    $stmt->execute([$monthFilter, $yearFilter]);
+    $payoutData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $totalPayout = $payoutData['total_payout'] ?? 0;
+    $approvedCount = $payoutData['approved_count'] ?? 0;
+    
+    // Pending count
+    $stmt = $db->prepare("
+        SELECT COUNT(*) as pending_count
+        FROM payroll 
+        WHERE month = ? AND year = ? 
+        AND (approval_status = 'pending' OR approval_status IS NULL)
+    ");
+    $stmt->execute([$monthFilter, $yearFilter]);
+    $pendingData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $pendingCount = $pendingData['pending_count'] ?? 0;
+    
+    // Rejected count
+    $stmt = $db->prepare("
+        SELECT COUNT(*) as rejected_count
+        FROM payroll 
+        WHERE month = ? AND year = ? AND approval_status = 'rejected'
+    ");
+    $stmt->execute([$monthFilter, $yearFilter]);
+    $rejectedData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $rejectedCount = $rejectedData['rejected_count'] ?? 0;
+    
+    // Department-wise breakdown
+    $stmt = $db->prepare("
+        SELECT 
+            d.department_name,
+            COUNT(*) as employee_count,
+            SUM(p.net_salary) as department_payout,
+            SUM(p.gross_salary) as total_gross,
+            SUM(p.total_deductions) as total_deductions
+        FROM payroll p
+        JOIN employees e ON p.employee_id = e.employee_id
+        LEFT JOIN departments d ON e.department_id = d.department_id
+        WHERE p.month = ? AND p.year = ? AND p.approval_status = 'approved'
+        GROUP BY d.department_id
+        ORDER BY department_payout DESC
+    ");
+    $stmt->execute([$monthFilter, $yearFilter]);
+    $departmentBreakdown = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Monthly trend (last 12 months)
+    $stmt = $db->query("
+        SELECT 
+            month,
+            year,
+            SUM(net_salary) as total_payout,
+            COUNT(*) as employee_count
+        FROM payroll 
+        WHERE approval_status = 'approved'
+        AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY year, month
+        ORDER BY year DESC, 
+            FIELD(month, 'January', 'February', 'March', 'April', 'May', 'June', 
+                        'July', 'August', 'September', 'October', 'November', 'December') DESC
+        LIMIT 12
+    ");
+    $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+} catch (Exception $e) {
+    $error = $e->getMessage();
+    $totalPayout = 0;
+    $approvedCount = 0;
+    $pendingCount = 0;
+    $rejectedCount = 0;
+    $departmentBreakdown = [];
+    $monthlyTrend = [];
+}
 
-// Department-wise employee count
-$deptStats = $conn->query("
-    SELECT d.department_name, COUNT(e.employee_id) as count 
-    FROM departments d 
-    LEFT JOIN employees e ON d.department_id = e.department_id 
-    GROUP BY d.department_id, d.department_name 
-    ORDER BY count DESC
-")->fetchAll(PDO::FETCH_ASSOC);
-
-// Recent salary approvals
-$recentApprovals = $conn->query("
-    SELECT scr.*, e.full_name, e.designation 
-    FROM salary_change_requests scr
-    JOIN employees e ON scr.employee_id = e.employee_id
-    ORDER BY scr.request_date DESC
-    LIMIT 10
-")->fetchAll(PDO::FETCH_ASSOC);
+$months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+$years = range(date('Y'), date('Y') - 3);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports - Director Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Payroll Reports - Director</title>
+    <?php include 'includes/director_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: #ffffff;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+        .filters-card {
+            background: white;
+            padding: 20px;
             border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.95;
-        }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .stats-grid {
+        .filters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .stat-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--accent);
         }
 
+        .stat-card.payout { border-left-color: #667eea; }
+        .stat-card.approved { border-left-color: #10b981; }
+        .stat-card.pending { border-left-color: #f59e0b; }
+        .stat-card.rejected { border-left-color: #ef4444; }
+
         .stat-label {
-            font-size: 14px;
-            color: #718096;
-            font-weight: 500;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .stat-value {
             font-size: 32px;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
         }
 
-        .content-card {
+        .report-section {
             background: white;
-            padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             margin-bottom: 25px;
         }
 
-        .section-title {
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-header h2 {
             font-size: 20px;
             font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 20px;
+            color: var(--text);
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .chart-container {
-            margin-top: 20px;
-        }
-
-        .dept-bar {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .dept-bar:last-child {
-            border-bottom: none;
-        }
-
-        .dept-name {
-            flex: 1;
-            font-weight: 500;
-        }
-
-        .dept-progress {
-            flex: 2;
-            height: 8px;
-            background: #f7fafc;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .dept-progress-fill {
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-        }
-
-        .dept-count {
-            font-weight: 600;
+        .export-btn {
+            padding: 8px 16px;
+            background: #e0e7ff;
             color: #667eea;
-            min-width: 40px;
-            text-align: right;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        table {
+        .export-btn:hover {
+            background: #c7d2fe;
+        }
+
+        .data-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+        .data-table thead {
+            background: #f8fafc;
         }
 
-        th {
-            background: #f7fafc;
+        .data-table th {
+            padding: 12px 15px;
+            text-align: left;
             font-size: 13px;
             font-weight: 600;
-            color: #718096;
+            color: var(--muted);
             text-transform: uppercase;
         }
 
-        tbody tr:hover {
-            background: #f7fafc;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge-success {
-            background: #e6fffa;
-            color: #0f766e;
-        }
-
-        .badge-warning {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .badge-danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .logout-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 8px;
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
             font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-            transition: all 0.3s ease;
         }
 
-        .logout-btn:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .trend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trend-item:last-child {
+            border-bottom: none;
+        }
+
+        .trend-period {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .trend-value {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--accent);
+        }
+
+        .trend-employees {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 1200px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="director_dashboard.php" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-            <h1><i class="fas fa-chart-bar"></i> Analytics & Reports</h1>
-            <p>Company overview and statistics</p>
-        </div>
+    <?php include 'includes/director_navbar.php'; ?>
+    <?php include 'includes/director_sidebar.php'; ?>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-users"></i> Total Employees</div>
-                <div class="stat-value"><?php echo $totalEmployees; ?></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-building"></i> Departments</div>
-                <div class="stat-value"><?php echo $totalDepartments; ?></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-rupee-sign"></i> Total Payroll</div>
-                <div class="stat-value">₹<?php echo number_format($totalPayroll, 0); ?></div>
+    <div class="main-content">
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-chart-line"></i> Payroll Reports</h1>
+                <p>Financial summaries and payroll analytics</p>
             </div>
         </div>
 
-        <div class="content-card">
-            <div class="section-title">
-                <i class="fas fa-chart-pie"></i> Department Distribution
+        <!-- Filters -->
+        <div class="filters-card">
+            <form method="GET" class="filters-grid">
+                <div class="filter-group">
+                    <label>Month</label>
+                    <select name="month">
+                        <?php foreach ($months as $m): ?>
+                            <option value="<?php echo $m; ?>" <?php echo $monthFilter === $m ? 'selected' : ''; ?>><?php echo $m; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Year</label>
+                    <select name="year">
+                        <?php foreach ($years as $y): ?>
+                            <option value="<?php echo $y; ?>" <?php echo $yearFilter == $y ? 'selected' : ''; ?>><?php echo $y; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-sync-alt"></i> Update Report
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card payout">
+                <div class="stat-label">
+                    <i class="fas fa-wallet"></i> Total Payout
+                </div>
+                <div class="stat-value">₹<?php echo number_format($totalPayout, 2); ?></div>
             </div>
-            <div class="chart-container">
-                <?php 
-                $maxCount = !empty($deptStats) ? max(array_column($deptStats, 'count')) : 1;
-                foreach ($deptStats as $dept): 
-                ?>
-                    <div class="dept-bar">
-                        <div class="dept-name"><?php echo htmlspecialchars($dept['department_name']); ?></div>
-                        <div class="dept-progress">
-                            <div class="dept-progress-fill" style="width: <?php echo $maxCount > 0 ? ($dept['count'] / $maxCount * 100) : 0; ?>%"></div>
-                        </div>
-                        <div class="dept-count"><?php echo $dept['count']; ?></div>
-                    </div>
-                <?php endforeach; ?>
+            <div class="stat-card approved">
+                <div class="stat-label">
+                    <i class="fas fa-check-circle"></i> Approved
+                </div>
+                <div class="stat-value"><?php echo $approvedCount; ?></div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-label">
+                    <i class="fas fa-clock"></i> Pending
+                </div>
+                <div class="stat-value"><?php echo $pendingCount; ?></div>
+            </div>
+            <div class="stat-card rejected">
+                <div class="stat-label">
+                    <i class="fas fa-times-circle"></i> Rejected
+                </div>
+                <div class="stat-value"><?php echo $rejectedCount; ?></div>
             </div>
         </div>
 
-        <div class="content-card">
-            <div class="section-title">
-                <i class="fas fa-history"></i> Recent Approval Activity
+        <!-- Department Breakdown -->
+        <div class="report-section">
+            <div class="section-header">
+                <h2><i class="fas fa-building"></i> Department-wise Breakdown</h2>
+                <button class="export-btn" onclick="exportTable('dept-table', 'Department_Breakdown_<?php echo $monthFilter . '_' . $yearFilter; ?>')">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Employee</th>
-                        <th>Designation</th>
-                        <th>Request Date</th>
-                        <th>Current Salary</th>
-                        <th>Requested Salary</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($recentApprovals)): ?>
+            
+            <?php if (empty($departmentBreakdown)): ?>
+                <div style="text-align: center; padding: 40px; color: var(--muted);">
+                    <i class="fas fa-inbox" style="font-size: 48px; opacity: 0.5; display: block; margin-bottom: 15px;"></i>
+                    <p>No approved payrolls found for this period</p>
+                </div>
+            <?php else: ?>
+                <table class="data-table" id="dept-table">
+                    <thead>
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px; color: #a0aec0;">
-                                No recent approvals
-                            </td>
+                            <th>Department</th>
+                            <th>Employees</th>
+                            <th>Gross Salary</th>
+                            <th>Deductions</th>
+                            <th>Net Payout</th>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($recentApprovals as $approval): ?>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($departmentBreakdown as $dept): ?>
                             <tr>
-                                <td><strong><?php echo htmlspecialchars($approval['full_name']); ?></strong></td>
-                                <td><?php echo htmlspecialchars($approval['designation']); ?></td>
-                                <td><?php echo date('d M Y', strtotime($approval['request_date'])); ?></td>
-                                <td>₹<?php echo number_format($approval['current_salary'], 2); ?></td>
-                                <td>₹<?php echo number_format($approval['requested_salary'], 2); ?></td>
-                                <td>
-                                    <?php if ($approval['status'] === 'approved'): ?>
-                                        <span class="badge badge-success">Approved</span>
-                                    <?php elseif ($approval['status'] === 'rejected'): ?>
-                                        <span class="badge badge-danger">Rejected</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-warning">Pending</span>
-                                    <?php endif; ?>
-                                </td>
+                                <td><strong><?php echo htmlspecialchars($dept['department_name'] ?? 'Unassigned'); ?></strong></td>
+                                <td><?php echo $dept['employee_count']; ?></td>
+                                <td>₹<?php echo number_format($dept['total_gross'], 2); ?></td>
+                                <td style="color: #ef4444;">₹<?php echo number_format($dept['total_deductions'], 2); ?></td>
+                                <td style="color: var(--accent); font-weight: 700;">₹<?php echo number_format($dept['department_payout'], 2); ?></td>
                             </tr>
                         <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <!-- Monthly Trend -->
+        <div class="report-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-area"></i> 12-Month Trend</h2>
+            </div>
+            
+            <?php if (empty($monthlyTrend)): ?>
+                <div style="text-align: center; padding: 40px; color: var(--muted);">
+                    <i class="fas fa-chart-line" style="font-size: 48px; opacity: 0.5; display: block; margin-bottom: 15px;"></i>
+                    <p>No historical data available</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($monthlyTrend as $trend): ?>
+                    <div class="trend-item">
+                        <div>
+                            <div class="trend-period"><?php echo $trend['month'] . ' ' . $trend['year']; ?></div>
+                            <div class="trend-employees"><?php echo $trend['employee_count']; ?> employees</div>
+                        </div>
+                        <div class="trend-value">₹<?php echo number_format($trend['total_payout'], 2); ?></div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 
-    <a href="../auth/logout.php" class="logout-btn">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
+    <?php include 'includes/director_scripts.php'; ?>
+    <script>
+        function exportTable(tableId, filename) {
+            const table = document.getElementById(tableId);
+            let csv = [];
+            
+            // Headers
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                headers.push(th.textContent.trim());
+            });
+            csv.push(headers.join(','));
+            
+            // Rows
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    row.push('"' + td.textContent.trim().replace(/"/g, '""') + '"');
+                });
+                csv.push(row.join(','));
+            });
+            
+            // Download
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
 </body>
 </html>

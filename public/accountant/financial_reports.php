@@ -259,7 +259,7 @@ $deductions = $deductionStmt->fetch(PDO::FETCH_ASSOC);
     </style>
 </head>
 <body>
-    <?php include 'includes/accountant_sidebar.php'; ?>
+    <?php include 'includes/accountant_navbar.php'; ?>
 
     <main class="main-content">
         <div class="page-header">

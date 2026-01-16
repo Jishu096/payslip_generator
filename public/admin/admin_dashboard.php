@@ -23,35 +23,44 @@ require_once __DIR__ . '/../../app/Config/database.php';
 $db = new Database();
 $conn = $db->connect();
 
-// Fetch real statistics
-$stmt = $conn->query("SELECT COUNT(*) as count FROM employees");
-$totalEmployees = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+// Fetch attendance workflow statistics
+// Total uploads this month
+$stmt = $conn->query("SELECT COUNT(*) as count FROM attendance_uploads 
+                      WHERE MONTH(uploaded_at) = MONTH(CURRENT_DATE) 
+                      AND YEAR(uploaded_at) = YEAR(CURRENT_DATE)");
+$uploadsThisMonth = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
-$stmt = $conn->query("SELECT COUNT(*) as count FROM employees WHERE status = 'active'");
-$activeEmployees = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+// Pending verification count
+$stmt = $conn->query("SELECT COUNT(*) as count FROM attendance_uploads WHERE status = 'UPLOADED'");
+$pendingVerification = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
-$stmt = $conn->query("SELECT COUNT(*) as count FROM departments");
-$totalDepartments = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+// Total attendance months processed
+$stmt = $conn->query("SELECT COUNT(DISTINCT CONCAT(month, '-', year)) as count FROM attendance_uploads");
+$attendanceMonths = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
-$stmt = $conn->query("SELECT COUNT(*) as count FROM users WHERE is_active = 1");
-$activeUsers = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+// Latest upload status
+$stmt = $conn->query("SELECT status, uploaded_at, month, year FROM attendance_uploads 
+                      ORDER BY uploaded_at DESC LIMIT 1");
+$latestUpload = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Recent Employees (last 5)
-$stmt = $conn->query("SELECT e.*, d.department_name FROM employees e 
-                      LEFT JOIN departments d ON e.department_id = d.department_id 
-                      ORDER BY e.created_at DESC LIMIT 5");
-$recentEmployees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Recent uploads (last 5)
+$stmt = $conn->query("SELECT au.*, u.username as uploaded_by_name 
+                      FROM attendance_uploads au
+                      LEFT JOIN users u ON au.uploaded_by = u.user_id 
+                      ORDER BY au.uploaded_at DESC LIMIT 5");
+$recentUploads = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Department wise employee count
-$stmt = $conn->query("SELECT d.department_name, COUNT(e.employee_id) as count 
-                      FROM departments d 
-                      LEFT JOIN employees e ON d.department_id = e.department_id 
-                      GROUP BY d.department_id, d.department_name 
-                      ORDER BY count DESC LIMIT 5");
-$departmentStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Get max count for progress bar calculation
-$maxCount = !empty($departmentStats) ? max(array_column($departmentStats, 'count')) : 1;
+// Monthly upload trend (last 6 months)
+$stmt = $conn->query("SELECT 
+                        CONCAT(month, ' ', year) as period,
+                        COUNT(*) as count,
+                        SUM(CASE WHEN status = 'VERIFIED' THEN 1 ELSE 0 END) as verified_count
+                      FROM attendance_uploads 
+                      WHERE uploaded_at >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
+                      GROUP BY month, year, period
+                      ORDER BY uploaded_at DESC 
+                      LIMIT 6");
+$monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -64,307 +73,33 @@ $maxCount = !empty($departmentStats) ? max(array_column($departmentStats, 'count
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php include 'includes/admin_styles.php'; ?>
-    <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --bg-tertiary: #f1f3f5;
-            --text-primary: #1a1f36;
-            --text-secondary: #555;
-            --text-tertiary: #7f8c8d;
-            --border-color: #e0e0e0;
-            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            --gradient-green: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --gradient-orange: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    <script>
+        // Force refresh - clear cache
+        if (performance.navigation.type === 1) {
+            location.reload(true);
         }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .dashboard-header {
-            margin-bottom: 30px;
-        }
-
-        .dashboard-header h1 {
-            font-family: "Roboto", sans-serif;
-            font-size: 32px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .dashboard-header p {
-            color: var(--text-tertiary);
-            font-size: 16px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 24px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-        }
-
-        .stat-card.purple::before { background: var(--gradient-primary); }
-        .stat-card.blue::before { background: var(--gradient-blue); }
-        .stat-card.green::before { background: var(--gradient-green); }
-        .stat-card.orange::before { background: var(--gradient-orange); }
-
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-        }
-
-        .stat-card.purple .stat-icon { background: var(--gradient-primary); }
-        .stat-card.blue .stat-icon { background: var(--gradient-blue); }
-        .stat-card.green .stat-icon { background: var(--gradient-green); }
-        .stat-card.orange .stat-icon { background: var(--gradient-orange); }
-
-        .stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: var(--text-tertiary);
-            font-weight: 500;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .card-header h3 {
-            font-family: "Roboto", sans-serif;
-            font-size: 20px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-link {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .card-link:hover {
-            color: #764ba2;
-        }
-
-        .employee-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .employee-item:hover {
-            background: var(--bg-secondary);
-        }
-
-        .employee-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .employee-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--gradient-primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .employee-details {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .employee-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .employee-dept {
-            font-size: 13px;
-            color: var(--text-tertiary);
-        }
-
-        .dept-bar {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .dept-bar:last-child {
-            border-bottom: none;
-        }
-
-        .dept-name {
-            flex: 1;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .dept-progress {
-            flex: 2;
-            height: 8px;
-            background: var(--bg-secondary);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .dept-progress-fill {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-
-        .dept-count {
-            font-weight: 600;
-            color: var(--text-primary);
-            min-width: 40px;
-            text-align: right;
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    </script>
 </head>
 <body>
 
     <?php include 'includes/admin_navbar.php'; ?>
-    <?php include 'includes/admin_sidebar.php'; ?>
 
     <main class="main-content" id="mainContent">
         <div class="dashboard-header">
-            <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
-            <p>Welcome back, <?php echo htmlspecialchars($username); ?>! Here's what's happening today.</p>
+            <h1><i class="fas fa-calendar-check"></i> Attendance Management Dashboard</h1>
+            <p>Welcome back, <?php echo htmlspecialchars($username); ?>! Manage attendance uploads and workflow.</p>
         </div>
 
-        <!-- Statistics Cards -->
+        <!-- Attendance Workflow Statistics -->
         <div class="stats-grid">
             <div class="stat-card purple">
                 <div class="stat-header">
                     <div>
-                        <div class="stat-value"><?php echo $totalEmployees; ?></div>
-                        <div class="stat-label">Total Employees</div>
+                        <div class="stat-value"><?php echo $uploadsThisMonth; ?></div>
+                        <div class="stat-label">Uploads This Month</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card blue">
-                <div class="stat-header">
-                    <div>
-                        <div class="stat-value"><?php echo $activeEmployees; ?></div>
-                        <div class="stat-label">Active Employees</div>
-                    </div>
-                    <div class="stat-icon">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card green">
-                <div class="stat-header">
-                    <div>
-                        <div class="stat-value"><?php echo $totalDepartments; ?></div>
-                        <div class="stat-label">Departments</div>
-                    </div>
-                    <div class="stat-icon">
-                        <i class="fas fa-building"></i>
+                        <i class="fas fa-upload"></i>
                     </div>
                 </div>
             </div>
@@ -372,94 +107,158 @@ $maxCount = !empty($departmentStats) ? max(array_column($departmentStats, 'count
             <div class="stat-card orange">
                 <div class="stat-header">
                     <div>
-                        <div class="stat-value"><?php echo $activeUsers; ?></div>
-                        <div class="stat-label">Active Users</div>
+                        <div class="stat-value"><?php echo $pendingVerification; ?></div>
+                        <div class="stat-label">Pending Verification</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="fas fa-user-shield"></i>
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card blue">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?php echo $attendanceMonths; ?></div>
+                        <div class="stat-label">Attendance Months</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <?php if ($latestUpload): ?>
+                            <div class="stat-value" style="font-size: 18px; font-weight: 600;">
+                                <?php echo htmlspecialchars($latestUpload['month'] . ' ' . $latestUpload['year']); ?>
+                            </div>
+                            <div class="stat-label">Latest Upload</div>
+                            <div style="margin-top: 8px;">
+                                <span class="badge badge-<?php echo $latestUpload['status'] === 'VERIFIED' ? 'success' : 'info'; ?>" style="font-size: 11px;">
+                                    <?php echo htmlspecialchars($latestUpload['status']); ?>
+                                </span>
+                            </div>
+                        <?php else: ?>
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">No Uploads Yet</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions for Attendance -->
-        <div class="card" style="margin-bottom: 30px;">
-            <div class="card-header">
-                <h3><i class="fas fa-calendar-check"></i> Attendance & Leave Management</h3>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; padding: 20px;">
-                <a href="manage_attendance.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-user-check" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Mark Attendance</div>
-                    <div style="font-size: 13px; opacity: 0.9;">Manage daily employee attendance</div>
-                </a>
-                <a href="attendance_reports.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-chart-bar" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Attendance Reports</div>
-                    <div style="font-size: 13px; opacity: 0.9;">View reports, filters & analytics</div>
-                </a>
-                <a href="leave_approvals.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-umbrella-beach" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Leave Approvals</div>
-                    <div style="font-size: 13px; opacity: 0.9;">Review & approve leave requests</div>
-                </a>
-                <a href="attendance_calendar.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-calendar-alt" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Attendance Calendar</div>
-                    <div style="font-size: 13px; opacity: 0.9;">Visual calendar with color codes</div>
+        <!-- Quick Action: Upload New Statement -->
+        <div class="card" style="margin-bottom: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h2 style="font-size: 24px; margin-bottom: 10px; color: white;"><i class="fas fa-cloud-upload-alt"></i> Ready to Upload?</h2>
+                    <p style="opacity: 0.95; font-size: 15px;">Upload the monthly absentee statement PDF for HR Officer verification</p>
+                </div>
+                <a href="upload_attendance.php" style="padding: 15px 30px; background: white; color: #667eea; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; transition: transform 0.2s; display: inline-block;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <i class="fas fa-upload"></i> Upload Statement
                 </a>
             </div>
         </div>
 
         <!-- Content Grid -->
         <div class="content-grid">
-            <!-- Recent Employees -->
+            <!-- Recent Uploads -->
             <div class="card">
                 <div class="card-header">
-                    <h3><i class="fas fa-user-plus"></i> Recent Employees</h3>
-                    <a href="employees.php" class="card-link">View All <i class="fas fa-arrow-right"></i></a>
+                    <h3><i class="fas fa-history"></i> Recent Uploads</h3>
+                    <a href="upload_attendance.php" class="card-link">View All <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <div class="employee-list">
-                    <?php if (!empty($recentEmployees)): ?>
-                        <?php foreach ($recentEmployees as $emp): ?>
+                <div class="upload-list">
+                    <?php if (!empty($recentUploads)): ?>
+                        <?php foreach ($recentUploads as $upload): ?>
                             <div class="employee-item">
                                 <div class="employee-info">
-                                    <div class="employee-avatar">
-                                        <?php echo strtoupper(substr($emp['full_name'], 0, 2)); ?>
+                                    <div class="employee-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                        <i class="fas fa-file-pdf"></i>
                                     </div>
                                     <div class="employee-details">
-                                        <div class="employee-name"><?php echo htmlspecialchars($emp['full_name']); ?></div>
-                                        <div class="employee-dept"><?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?></div>
+                                        <div class="employee-name"><?php echo htmlspecialchars($upload['month'] . ' ' . $upload['year']); ?></div>
+                                        <div class="employee-dept">
+                                            <?php echo date('d M Y', strtotime($upload['uploaded_at'])); ?> • 
+                                            <?php echo htmlspecialchars($upload['uploaded_by_name'] ?? 'Unknown'); ?>
+                                        </div>
                                     </div>
                                 </div>
+                                <span class="badge badge-<?php echo $upload['status'] === 'VERIFIED' ? 'success' : ($upload['status'] === 'REJECTED' ? 'danger' : 'info'); ?>">
+                                    <?php echo htmlspecialchars($upload['status']); ?>
+                                </span>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No recent employees found.</p>
+                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No uploads found. Upload your first attendance statement!</p>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Department Statistics -->
+            <!-- Monthly Trend -->
             <div class="card">
                 <div class="card-header">
-                    <h3><i class="fas fa-chart-bar"></i> Department Overview</h3>
-                    <a href="departments.php" class="card-link">Manage <i class="fas fa-cog"></i></a>
+                    <h3><i class="fas fa-chart-line"></i> Monthly Upload Trend</h3>
                 </div>
                 <div class="dept-stats">
-                    <?php if (!empty($departmentStats)): ?>
-                        <?php foreach ($departmentStats as $dept): ?>
+                    <?php if (!empty($monthlyTrend)): ?>
+                        <?php 
+                        $maxTrendCount = max(array_column($monthlyTrend, 'count'));
+                        foreach ($monthlyTrend as $trend): ?>
                             <div class="dept-bar">
-                                <div class="dept-name"><?php echo htmlspecialchars($dept['department_name']); ?></div>
+                                <div class="dept-name"><?php echo htmlspecialchars($trend['period']); ?></div>
                                 <div class="dept-progress">
-                                    <div class="dept-progress-fill" style="width: <?php echo $maxCount > 0 ? ($dept['count'] / $maxCount * 100) : 0; ?>%"></div>
+                                    <div class="dept-progress-fill" style="width: <?php echo $maxTrendCount > 0 ? ($trend['count'] / $maxTrendCount * 100) : 0; ?>%; background: linear-gradient(90deg, #10b981, #059669);"></div>
                                 </div>
-                                <div class="dept-count"><?php echo $dept['count']; ?></div>
+                                <div class="dept-count">
+                                    <?php echo $trend['verified_count']; ?>/<?php echo $trend['count']; ?>
+                                    <small style="color: var(--text-tertiary); font-weight: 400; font-size: 11px; margin-left: 4px;">verified</small>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No department data available.</p>
+                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No trend data available.</p>
                     <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow Info Card -->
+        <div class="card" style="background: #f0f4ff; border: 2px solid #c7d2fe;">
+            <div style="display: flex; align-items: start; gap: 20px;">
+                <div style="min-width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 12px; font-size: 20px;">Attendance Upload Workflow</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">1</span>
+                            <span style="color: var(--text-primary); font-weight: 500;">Admin uploads monthly absentee PDF statement</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">2</span>
+                            <span style="color: var(--text-primary); font-weight: 500;">System saves file and sets status to <strong>UPLOADED</strong></span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">3</span>
+                            <span style="color: var(--text-primary); font-weight: 500;">HR Officer receives notification to verify data</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">4</span>
+                            <span style="color: var(--text-primary); font-weight: 500;">HR Officer converts PDF to table and verifies accuracy</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="background: #10b981; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;"><i class="fas fa-check"></i></span>
+                            <span style="color: var(--text-primary); font-weight: 500;">Verified data ready for payroll processing</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

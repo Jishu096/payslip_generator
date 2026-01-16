@@ -139,7 +139,6 @@ require_once __DIR__ . '/../../app/Config/database.php';
 <body>
 
     <?php include 'includes/admin_navbar.php'; ?>
-    <?php include 'includes/admin_sidebar.php'; ?>
 
     <main class="main-content" id="mainContent">
         <div class="form-container">

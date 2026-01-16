@@ -184,11 +184,46 @@ class RBACHelper {
      */
     public static function getRoleDescription($role) {
         return match($role) {
-            'administrator' => 'Administrator - Full system access',
-            'employee' => 'Employee - View personal payslips and attendance',
-            'accountant' => 'Accountant - Manage payroll and generate payslips',
-            'director' => 'Director - Approve salary and role changes',
+            'super_admin' => 'Super Admin - System owner with full control',
+            'administrator' => 'Administrator - System custodian',
+            'hr_officer' => 'HR Officer - Attendance and leave management',
+            'accountant' => 'Accountant - Payroll and salary management',
+            'director' => 'Director - Final approval authority',
+            'auditor' => 'Auditor - Read-only compliance access',
+            'employee' => 'Employee - Self-service portal',
             default => ucfirst($role)
         };
+    }
+    
+    /**
+     * Get role redirect URL after login
+     * 
+     * @param string $role Role name
+     * @return string Redirect URL
+     */
+    public static function getRoleRedirectURL($role) {
+        $baseURL = '/payslip_generator/public/';
+        
+        return match($role) {
+            'super_admin' => $baseURL . 'super_admin/dashboard.php',
+            'administrator' => $baseURL . 'admin/admin_dashboard.php',
+            'hr_officer' => $baseURL . 'hr_officer/dashboard.php',
+            'accountant' => $baseURL . 'accountant/accountant_dashboard.php',
+            'director' => $baseURL . 'director/director_dashboard.php',
+            'auditor' => $baseURL . 'auditor/dashboard.php',
+            'employee' => $baseURL . 'employee/dashboard.php',
+            default => $baseURL . 'auth/login.php'
+        };
+    }
+    
+    /**
+     * Get permission helper instance
+     * 
+     * @param PDO $conn Database connection
+     * @return PermissionHelper
+     */
+    public static function getPermissionHelper($conn = null) {
+        require_once __DIR__ . '/PermissionHelper.php';
+        return new PermissionHelper($conn);
     }
 }

@@ -72,10 +72,13 @@ try {
             $redirect = $baseURL . 'auth/role_selector.php';
         } else {
             $redirect = match($primaryRole) {
-                'employee' => $baseURL . 'employee/dashboard.php',
+                'super_admin' => $baseURL . 'super_admin/dashboard.php',
+                'administrator' => $baseURL . 'admin/admin_dashboard.php',
+                'hr_officer' => $baseURL . 'hr_officer/dashboard.php',
                 'accountant' => $baseURL . 'accountant/accountant_dashboard.php',
                 'director' => $baseURL . 'director/director_dashboard.php',
-                'administrator' => $baseURL . 'admin/admin_dashboard.php',
+                'auditor' => $baseURL . 'auditor/dashboard.php',
+                'employee' => $baseURL . 'employee/dashboard.php',
                 default => $baseURL . 'admin/admin_dashboard.php'
             };
         }

@@ -1,431 +1,436 @@
 <?php
 session_start();
 
-// Support both single-role and multi-role scenarios
-if (!isset($_SESSION['role'])) {
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'director') {
     header("Location: ../auth/login.php");
     exit;
 }
 
-// Check if user has director role (either primary or in all_roles)
-$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role']];
-$hasDirectorRole = in_array('director', $userRoles);
-
-if (!$hasDirectorRole && $_SESSION['role'] !== 'director') {
-    header("Location: ../auth/login.php");
-    exit;
-}
-
-require_once __DIR__ . "/../../app/Models/Employee.php";
 require_once __DIR__ . "/../../app/Config/database.php";
 
 $db = getDBConnection();
-$employeeModel = new Employee();
-
 $username = $_SESSION['username'] ?? 'Director';
-$totalEmployees = count($employeeModel->getAllEmployees());
 
-// Get pending salary change requests count
-$stmt = $db->prepare("SELECT COUNT(*) as pending_count FROM salary_change_requests WHERE status = 'pending'");
-$stmt->execute();
-$pendingRequests = $stmt->fetch(PDO::FETCH_ASSOC)['pending_count'];
+// Get pending payroll approvals (payrolls awaiting director approval)
+try {
+    $stmt = $db->query("
+        SELECT COUNT(*) 
+        FROM payroll 
+        WHERE approval_status = 'pending' OR approval_status IS NULL
+    ");
+    $pendingApprovals = $stmt->fetchColumn() ?? 0;
+} catch (Exception $e) {
+    $pendingApprovals = 0;
+}
 
-// Get pending role change requests count
-$stmt = $db->prepare("SELECT COUNT(*) as pending_count FROM role_change_requests WHERE status = 'pending'");
-$stmt->execute();
-$pendingRoleRequests = $stmt->fetch(PDO::FETCH_ASSOC)['pending_count'];
+// Get total payout for current month (approved payrolls)
+try {
+    $stmt = $db->query("
+        SELECT SUM(net_salary) 
+        FROM payroll 
+        WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) 
+        AND YEAR(created_at) = YEAR(CURRENT_DATE())
+        AND approval_status = 'approved'
+    ");
+    $totalPayout = $stmt->fetchColumn() ?? 0;
+} catch (Exception $e) {
+    $totalPayout = 0;
+}
 
-// Get approved requests count
-$stmt = $db->prepare("SELECT COUNT(*) as approved_count FROM salary_change_requests WHERE status = 'approved'");
-$stmt->execute();
-$approvedRequests = $stmt->fetch(PDO::FETCH_ASSOC)['approved_count'];
+// Get approved count this month
+try {
+    $stmt = $db->query("
+        SELECT COUNT(*) 
+        FROM payroll 
+        WHERE approval_status = 'approved'
+        AND MONTH(approved_at) = MONTH(CURRENT_DATE()) 
+        AND YEAR(approved_at) = YEAR(CURRENT_DATE())
+    ");
+    $approvedCount = $stmt->fetchColumn() ?? 0;
+} catch (Exception $e) {
+    $approvedCount = 0;
+}
 
-// Get rejected requests count
-$stmt = $db->prepare("SELECT COUNT(*) as rejected_count FROM salary_change_requests WHERE status = 'rejected'");
-$stmt->execute();
-$rejectedRequests = $stmt->fetch(PDO::FETCH_ASSOC)['rejected_count'];
+// Get rejected count this month
+try {
+    $stmt = $db->query("
+        SELECT COUNT(*) 
+        FROM payroll 
+        WHERE approval_status = 'rejected'
+        AND MONTH(approved_at) = MONTH(CURRENT_DATE()) 
+        AND YEAR(approved_at) = YEAR(CURRENT_DATE())
+    ");
+    $rejectedCount = $stmt->fetchColumn() ?? 0;
+} catch (Exception $e) {
+    $rejectedCount = 0;
+}
+
+// Get recent pending payrolls
+try {
+    $stmt = $db->query("
+        SELECT 
+            p.payroll_id,
+            e.full_name,
+            d.department_name,
+            p.month,
+            p.year,
+            p.basic,
+            p.gross_salary,
+            p.total_deductions,
+            p.net_salary,
+            p.created_at
+        FROM payroll p
+        JOIN employees e ON p.employee_id = e.employee_id
+        LEFT JOIN departments d ON e.department_id = d.department_id
+        WHERE p.approval_status = 'pending' OR p.approval_status IS NULL
+        ORDER BY p.created_at DESC
+        LIMIT 10
+    ");
+    $pendingPayrolls = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $pendingPayrolls = [];
+}
+
+$currentMonth = date('F Y');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Director Dashboard - Payroll System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Director Dashboard</title>
+    <?php include 'includes/director_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: #ffffff;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.95;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: 700;
-        }
-
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 30px;
         }
 
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 5px solid var(--accent);
         }
 
         .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
+
+        .stat-card.pending { border-left-color: #f59e0b; }
+        .stat-card.payout { border-left-color: #10b981; }
+        .stat-card.approved { border-left-color: #3b82f6; }
+        .stat-card.rejected { border-left-color: #ef4444; }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .stat-icon.pending { background: #fef3c7; color: #f59e0b; }
+        .stat-icon.payout { background: #d1fae5; color: #10b981; }
+        .stat-icon.approved { background: #dbeafe; color: #3b82f6; }
+        .stat-icon.rejected { background: #fee2e2; color: #ef4444; }
 
         .stat-label {
             font-size: 14px;
-            color: #718096;
-            font-weight: 500;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
             margin-bottom: 8px;
         }
 
-        .stat-info {
+        .stat-desc {
             font-size: 13px;
-            color: #a0aec0;
+            color: var(--muted);
         }
 
-        .stat-badge {
+        .data-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-header h2 i {
+            color: var(--accent);
+        }
+
+        .view-all-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .view-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .payroll-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .payroll-table thead {
+            background: #f8fafc;
+        }
+
+        .payroll-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payroll-table td {
+            padding: 18px 15px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        .payroll-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .amount {
+            font-weight: 700;
+        }
+
+        .amount.positive {
+            color: #10b981;
+        }
+
+        .amount.negative {
+            color: #ef4444;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-approve, .btn-reject, .btn-view {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 5px 12px;
-            background: #e6fffa;
-            color: #0f766e;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 8px;
         }
 
-        .stat-badge.warning {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .stat-badge.danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .actions-section {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-        }
-
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 20px;
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            color: #2d3748;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .action-btn:hover {
-            border-color: #667eea;
-            background: white;
-            transform: translateX(5px);
-        }
-
-        .action-btn i {
-            font-size: 24px;
+        .btn-view {
+            background: #e0e7ff;
             color: #667eea;
         }
 
-        .action-text {
-            flex: 1;
-            margin-left: 15px;
+        .btn-view:hover {
+            background: #c7d2fe;
         }
 
-        .action-text h3 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 4px;
+        .btn-approve {
+            background: #d1fae5;
+            color: #065f46;
         }
 
-        .action-text p {
-            font-size: 12px;
-            color: #718096;
+        .btn-approve:hover {
+            background: #a7f3d0;
         }
 
-        .badge-notification {
-            background: #ef4444;
+        .btn-reject {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .btn-reject:hover {
+            background: #fecaca;
+        }
+
+        .period-badge {
+            background: var(--accent);
             color: white;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 12px;
             font-size: 11px;
-            font-weight: 700;
-        }
-
-        .logout-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
             font-weight: 600;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-            transition: all 0.3s ease;
+            text-transform: uppercase;
         }
 
-        .logout-btn:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
             .stats-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .actions-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .logout-btn {
-                bottom: 15px;
-                right: 15px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1><i class="fas fa-crown"></i> Director Dashboard</h1>
-            <p>Manage approvals and company operations</p>
-            <div class="user-info">
-                <div class="user-avatar"><?php echo strtoupper(substr($username, 0, 1)); ?></div>
-                <div>
-                    <div style="font-weight: 600; font-size: 16px;"><?php echo htmlspecialchars($username); ?></div>
-                    <div style="opacity: 0.9; font-size: 14px;">Director</div>
-                </div>
+    <?php include 'includes/director_navbar.php'; ?>
+    <?php include 'includes/director_sidebar.php'; ?>
+
+    <div class="main-content">
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-user-tie"></i> Director Dashboard</h1>
+                <p>Payroll approval and financial oversight</p>
             </div>
         </div>
 
-        <!-- Statistics -->
+        <!-- Stats -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-users"></i> Total Employees</div>
-                <div class="stat-value"><?php echo $totalEmployees; ?></div>
-                <div class="stat-info">Active employees</div>
+            <div class="stat-card pending">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-label">Pending Approvals</div>
+                <div class="stat-value"><?php echo number_format($pendingApprovals); ?></div>
+                <div class="stat-desc">Awaiting your review</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-hand-holding-usd"></i> Pending Salary Requests</div>
-                <div class="stat-value"><?php echo $pendingRequests; ?></div>
-                <?php if ($pendingRequests > 0): ?>
-                    <div class="stat-badge warning"><i class="fas fa-exclamation-circle"></i> Needs Review</div>
-                <?php else: ?>
-                    <div class="stat-info">No pending requests</div>
-                <?php endif; ?>
+            <div class="stat-card payout">
+                <div class="stat-icon payout">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="stat-label">Total Payout</div>
+                <div class="stat-value">₹<?php echo number_format($totalPayout, 2); ?></div>
+                <div class="stat-desc">For <?php echo $currentMonth; ?></div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-user-check"></i> Pending Role Changes</div>
-                <div class="stat-value"><?php echo $pendingRoleRequests; ?></div>
-                <?php if ($pendingRoleRequests > 0): ?>
-                    <div class="stat-badge warning"><i class="fas fa-clock"></i> Awaiting Action</div>
-                <?php else: ?>
-                    <div class="stat-info">No pending changes</div>
-                <?php endif; ?>
+            <div class="stat-card approved">
+                <div class="stat-icon approved">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-label">Approved</div>
+                <div class="stat-value"><?php echo number_format($approvedCount); ?></div>
+                <div class="stat-desc">This month</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-check-circle"></i> Approved This Month</div>
-                <div class="stat-value"><?php echo $approvedRequests; ?></div>
-                <div class="stat-info">Total approvals</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-times-circle"></i> Rejected Requests</div>
-                <div class="stat-value"><?php echo $rejectedRequests; ?></div>
-                <div class="stat-info">Declined requests</div>
+            <div class="stat-card rejected">
+                <div class="stat-icon rejected">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value"><?php echo number_format($rejectedCount); ?></div>
+                <div class="stat-desc">This month</div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="actions-section">
-            <div class="section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
-            <div class="actions-grid">
-                <a href="salary_approvals.php" class="action-btn">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    <div class="action-text">
-                        <h3>Salary Approvals <?php if ($pendingRequests > 0): ?><span class="badge-notification"><?php echo $pendingRequests; ?></span><?php endif; ?></h3>
-                        <p>Review & approve salary changes</p>
-                    </div>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-
-                <a href="role_approvals.php" class="action-btn">
-                    <i class="fas fa-user-check"></i>
-                    <div class="action-text">
-                        <h3>Role Changes <?php if ($pendingRoleRequests > 0): ?><span class="badge-notification"><?php echo $pendingRoleRequests; ?></span><?php endif; ?></h3>
-                        <p>Review & approve role changes</p>
-                    </div>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-
-                <a href="employees.php" class="action-btn">
-                    <i class="fas fa-users"></i>
-                    <div class="action-text">
-                        <h3>View Employees</h3>
-                        <p>Browse all employees</p>
-                    </div>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-
-                <a href="reports.php" class="action-btn">
-                    <i class="fas fa-chart-bar"></i>
-                    <div class="action-text">
-                        <h3>View Reports</h3>
-                        <p>Analytics & reports</p>
-                    </div>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-
-                <a href="approvals.php" class="action-btn">
-                    <i class="fas fa-check-square"></i>
-                    <div class="action-text">
-                        <h3>All Approvals</h3>
-                        <p>Review all request types</p>
-                    </div>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-
-                <a href="departments.php" class="action-btn">
-                    <i class="fas fa-building"></i>
-                    <div class="action-text">
-                        <h3>Departments</h3>
-                        <p>Department management</p>
-                    </div>
-                    <i class="fas fa-arrow-right"></i>
+        <!-- Pending Payrolls -->
+        <div class="data-card">
+            <div class="card-header">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Pending Payroll Approvals</h2>
+                <a href="approvals.php" class="view-all-btn">
+                    View All <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
+
+            <?php if (empty($pendingPayrolls)): ?>
+                <div style="text-align: center; padding: 60px; color: var(--muted);">
+                    <i class="fas fa-check-double" style="font-size: 56px; display: block; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <h3 style="font-size: 24px; margin-bottom: 10px;">All Caught Up!</h3>
+                    <p style="font-size: 16px;">No pending payroll approvals at the moment</p>
+                </div>
+            <?php else: ?>
+                <table class="payroll-table">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Basic</th>
+                            <th>Gross</th>
+                            <th>Deductions</th>
+                            <th>Net Salary</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pendingPayrolls as $payroll): ?>
+                            <tr>
+                                <td>
+                                    <span class="period-badge"><?php echo $payroll['month'] . ' ' . $payroll['year']; ?></span>
+                                </td>
+                                <td>
+                                    <strong><?php echo htmlspecialchars($payroll['full_name']); ?></strong>
+                                </td>
+                                <td><?php echo htmlspecialchars($payroll['department_name'] ?? 'N/A'); ?></td>
+                                <td class="amount">₹<?php echo number_format($payroll['basic'], 2); ?></td>
+                                <td class="amount positive">₹<?php echo number_format($payroll['gross_salary'], 2); ?></td>
+                                <td class="amount negative">₹<?php echo number_format($payroll['total_deductions'], 2); ?></td>
+                                <td class="amount" style="font-size: 16px; font-weight: 700; color: #667eea;">₹<?php echo number_format($payroll['net_salary'], 2); ?></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="approvals.php?payroll_id=<?php echo $payroll['payroll_id']; ?>" class="btn-view">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </div>
     </div>
 
-    <!-- Logout Button -->
-    <a href="../auth/logout.php" class="logout-btn">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
-
+    <?php include 'includes/director_scripts.php'; ?>
 </body>
 </html>

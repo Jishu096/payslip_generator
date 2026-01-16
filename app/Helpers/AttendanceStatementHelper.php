@@ -37,7 +37,7 @@ class AttendanceStatementHelper {
         // Get all leave/absence records for the month
         $leaveData = $this->getMonthlyLeaveData($employeeId, $month, $year);
         
-        if ($employee['employee_type'] === 'regular') {
+        if ($employee['employee_type'] === 'permanent') {
             return $this->calculateRegularEmployeeSummary(
                 $employeeId, $month, $year, $daysInMonth, $weekendHolidays, $leaveData
             );
@@ -261,9 +261,10 @@ class AttendanceStatementHelper {
         $perDaySalary = $basicSalary / $daysInMonth;
         
         // Calculate payable days based on employee type
-        if ($employee['employee_type'] === 'regular') {
+        if ($employee['employee_type'] === 'permanent') {
             $payableDays = $summary['net_working_days'];
         } else {
+            // For contractual, intern, project, daily_wage
             $payableDays = $summary['payable_days'];
         }
         

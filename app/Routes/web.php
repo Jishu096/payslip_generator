@@ -91,6 +91,24 @@ switch ($request) {
         // Controller handles approval/rejection based on POST action
         break;
 
+    case 'generate-attendance-statement':
+        require_once __DIR__ . "/../Controllers/AttendanceStatementController.php";
+        $controller = new AttendanceStatementController();
+        $controller->generateStatement();
+        break;
+
+    case 'delete-audit-log':
+        require_once __DIR__ . "/../Controllers/AuditLogController.php";
+        $controller = new AuditLogController();
+        $controller->deleteLog();
+        break;
+
+    case 'clear-audit-logs':
+        require_once __DIR__ . "/../Controllers/AuditLogController.php";
+        $controller = new AuditLogController();
+        $controller->clearLogs();
+        break;
+
     case 'logout':
         session_start();
         session_destroy();

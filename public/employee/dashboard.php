@@ -19,7 +19,6 @@ if (!$hasEmployeeRole && $_SESSION['role'] !== 'employee') {
 // Load DB Connection
 require_once __DIR__ . "/../../app/Config/database.php";
 require_once __DIR__ . "/../../app/Models/Employee.php";
-require_once __DIR__ . "/../../app/Helpers/RBACHelper.php";
 
 $db = new Database();
 $conn = $db->connect();
@@ -27,9 +26,14 @@ $conn = $db->connect();
 $userId = $_SESSION['user_id'] ?? null;
 $employeeName = $_SESSION['employee_name'] ?? "Employee";
 $employeeId = $_SESSION['employee_id'] ?? "";
-$hasMultipleRoles = $_SESSION['has_multiple_roles'] ?? false;
 
 // Fetch employee details
+$employeeEmail = '';
+$employeeDesignation = '';
+$employeeDepartment = '';
+$employeeBasicSalary = 0;
+$employeeCode = '';
+
 if ($employeeId) {
     $empModel = new Employee();
     $emp = $empModel->getEmployeeById($employeeId);
@@ -39,10 +43,81 @@ if ($employeeId) {
         $employeeDesignation = $emp['designation'] ?? '';
         $employeeDepartment = $emp['department_name'] ?? '';
         $employeeBasicSalary = $emp['basic_salary'] ?? 0;
+        $employeeCode = $emp['employee_code'] ?? '';
     }
 }
 
-// Avatar first letter
+// Get payslip count
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM payslips WHERE employee_id = ?");
+    $stmt->execute([$employeeId]);
+    $payslipCount = $stmt->fetchColumn() ?? 0;
+} catch (Exception $e) {
+    $payslipCount = 0;
+}
+
+// Get attendance stats (current month)
+try {
+    $stmt = $conn->prepare("
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) as present,
+            SUM(CASE WHEN status = 'Absent' THEN 1 ELSE 0 END) as absent,
+            SUM(CASE WHEN status = 'Leave' THEN 1 ELSE 0 END) as leaves
+        FROM attendance 
+        WHERE employee_id = ? 
+        AND MONTH(date) = MONTH(CURRENT_DATE())
+        AND YEAR(date) = YEAR(CURRENT_DATE())
+    ");
+    $stmt->execute([$employeeId]);
+    $attendance = $stmt->fetch(PDO::FETCH_ASSOC);
+    $attendanceTotal = $attendance['total'] ?? 0;
+    $attendancePresent = $attendance['present'] ?? 0;
+    $attendanceAbsent = $attendance['absent'] ?? 0;
+    $attendanceLeaves = $attendance['leaves'] ?? 0;
+} catch (Exception $e) {
+    $attendanceTotal = 0;
+    $attendancePresent = 0;
+    $attendanceAbsent = 0;
+    $attendanceLeaves = 0;
+}
+
+// Get recent payslips
+try {
+    $stmt = $conn->prepare("
+        SELECT 
+            ps.payslip_id,
+            ps.generated_at,
+            pr.month,
+            pr.year,
+            pr.gross_salary,
+            pr.net_salary
+        FROM payslips ps
+        JOIN payroll pr ON ps.payroll_id = pr.payroll_id
+        WHERE ps.employee_id = ?
+        ORDER BY ps.generated_at DESC
+        LIMIT 5
+    ");
+    $stmt->execute([$employeeId]);
+    $recentPayslips = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $recentPayslips = [];
+}
+
+// Get leave requests
+try {
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) 
+        FROM leave_requests 
+        WHERE employee_id = ? 
+        AND status = 'Pending'
+    ");
+    $stmt->execute([$employeeId]);
+    $pendingLeaves = $stmt->fetchColumn() ?? 0;
+} catch (Exception $e) {
+    $pendingLeaves = 0;
+}
+
 $avatarLetter = strtoupper(substr($employeeName, 0, 1));
 ?>
 <!DOCTYPE html>
@@ -50,114 +125,55 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Dashboard - Payroll System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>Employee Dashboard</title>
+    <?php include 'includes/employee_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: #ffffff;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .profile-banner {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             padding: 40px;
-            border-radius: 12px;
+            border-radius: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.95;
-            margin-top: 8px;
-        }
-
-        .user-section {
+            color: white;
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .user-avatar {
-            width: 60px;
-            height: 60px;
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 42px;
             font-weight: 700;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            border: 4px solid rgba(255, 255, 255, 0.3);
         }
 
-        .user-info h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 4px;
+        .profile-info h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
         }
 
-        .user-info p {
+        .profile-meta {
+            display: flex;
+            gap: 25px;
             font-size: 14px;
-            opacity: 0.9;
-            margin: 0;
+            opacity: 0.95;
         }
 
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-flex;
+        .profile-meta-item {
+            display: flex;
             align-items: center;
             gap: 8px;
-            font-weight: 600;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -166,36 +182,24 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 4px solid var(--accent);
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
 
-        .stat-card.purple {
-            border-top: 4px solid #667eea;
-        }
-
-        .stat-card.blue {
-            border-top: 4px solid #3b82f6;
-        }
-
-        .stat-card.green {
-            border-top: 4px solid #10b981;
-        }
-
-        .stat-card.orange {
-            border-top: 4px solid #f59e0b;
-        }
+        .stat-card.present { border-left-color: #10b981; }
+        .stat-card.leaves { border-left-color: #f59e0b; }
+        .stat-card.payslips { border-left-color: #3b82f6; }
 
         .stat-icon {
             width: 50px;
             height: 50px;
-            border-radius: 10px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -203,361 +207,349 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
             margin-bottom: 15px;
         }
 
-        .stat-card.purple .stat-icon {
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-        }
+        .stat-icon.salary { background: #e0e7ff; color: var(--accent); }
+        .stat-icon.present { background: #d1fae5; color: #10b981; }
+        .stat-icon.leaves { background: #fef3c7; color: #f59e0b; }
+        .stat-icon.payslips { background: #dbeafe; color: #3b82f6; }
 
-        .stat-card.blue .stat-icon {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-        }
-
-        .stat-card.green .stat-icon {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-        }
-
-        .stat-card.orange .stat-icon {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
             margin-bottom: 5px;
         }
 
-        .stat-label {
-            font-size: 14px;
-            color: #718096;
-            font-weight: 500;
-        }
-
-        .quick-actions {
-            margin-bottom: 30px;
-        }
-
-        .quick-actions h2 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 20px;
-        }
-
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .action-btn {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            color: #2d3748;
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-weight: 600;
-        }
-
-        .action-btn:hover {
-            border-color: #667eea;
-            background: #f7fafc;
-            transform: translateY(-2px);
-        }
-
-        .action-btn i {
-            font-size: 24px;
-            color: #667eea;
+        .stat-desc {
+            font-size: 12px;
+            color: var(--muted);
         }
 
         .content-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 25px;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
         }
 
-        .card {
+        .data-card {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
         .card-header {
-            padding: 20px 25px;
-            background: #f7fafc;
-            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .card-header h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin: 0;
+        .card-header h2 i {
+            color: var(--accent);
         }
 
-        .card-header i {
-            color: #667eea;
-            font-size: 20px;
-        }
-
-        .card-body {
-            padding: 25px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: #718096;
-            font-size: 14px;
-        }
-
-        .info-value {
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 14px;
-        }
-
-        .calendar-placeholder {
-            text-align: center;
-            padding: 40px 20px;
-            color: #a0aec0;
-        }
-
-        .calendar-placeholder i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .calendar-placeholder p {
-            font-size: 16px;
-            font-weight: 500;
-            margin: 10px 0;
-        }
-
-        .multi-role-badge {
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
+        .view-all-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
             font-size: 13px;
             font-weight: 600;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
+        .view-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
 
-            .header {
-                padding: 25px;
-            }
+        .payslip-item {
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-            .header h1 {
-                font-size: 24px;
-            }
+        .payslip-item:last-child {
+            margin-bottom: 0;
+        }
 
-            .header-top {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+        .payslip-period {
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
 
-            .user-section {
-                width: 100%;
-                justify-content: space-between;
-            }
+        .payslip-date {
+            font-size: 12px;
+            color: var(--muted);
+        }
 
+        .payslip-amount {
+            text-align: right;
+        }
+
+        .payslip-amount-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .payslip-amount-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .quick-actions {
+            display: grid;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .action-btn:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .action-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+        }
+
+        .action-content h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .action-content p {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 1200px) {
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .content-grid {
                 grid-template-columns: 1fr;
             }
+        }
 
-            .actions-grid {
+        @media (max-width: 768px) {
+            .profile-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stats-grid {
                 grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-top">
-                <div>
-                    <h1><i class="fas fa-tachometer-alt"></i> Welcome back, <?= htmlspecialchars($employeeName) ?>!</h1>
-                    <p>Here's what's happening with your account today</p>
-                </div>
+    <?php include 'includes/employee_navbar.php'; ?>
+    <?php include 'includes/employee_sidebar.php'; ?>
 
-                <?php if ($hasMultipleRoles): ?>
-                    <div class="multi-role-badge">
-                        <i class="fas fa-crown"></i> Multi-Role: <?= count($userRoles) ?> roles
+    <div class="main-content">
+        <!-- Profile Banner -->
+        <div class="profile-banner">
+            <div class="profile-avatar"><?php echo $avatarLetter; ?></div>
+            <div class="profile-info">
+                <h1><?php echo htmlspecialchars($employeeName); ?></h1>
+                <div class="profile-meta">
+                    <div class="profile-meta-item">
+                        <i class="fas fa-briefcase"></i>
+                        <span><?php echo htmlspecialchars($employeeDesignation); ?></span>
                     </div>
-                <?php endif; ?>
-            </div>
-
-            <div class="user-section">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div class="user-avatar"><?= $avatarLetter ?></div>
-                    <div class="user-info">
-                        <h3><?= htmlspecialchars($employeeName) ?></h3>
-                        <p>Employee ID: <?= htmlspecialchars($employeeId) ?></p>
+                    <div class="profile-meta-item">
+                        <i class="fas fa-building"></i>
+                        <span><?php echo htmlspecialchars($employeeDepartment); ?></span>
+                    </div>
+                    <div class="profile-meta-item">
+                        <i class="fas fa-id-badge"></i>
+                        <span><?php echo htmlspecialchars($employeeCode); ?></span>
                     </div>
                 </div>
-                <a href="../auth/logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
             </div>
         </div>
 
-        <!-- Stats Grid -->
+        <!-- Stats -->
         <div class="stats-grid">
-            <div class="stat-card purple">
-                <div class="stat-icon">
-                    <i class="fas fa-money-bill-wave"></i>
+            <div class="stat-card">
+                <div class="stat-icon salary">
+                    <i class="fas fa-rupee-sign"></i>
                 </div>
-                <div class="stat-value">₹<?= number_format($employeeBasicSalary ?? 0) ?></div>
                 <div class="stat-label">Basic Salary</div>
+                <div class="stat-value">₹<?php echo number_format($employeeBasicSalary, 2); ?></div>
+                <div class="stat-desc">Monthly basic pay</div>
             </div>
 
-            <div class="stat-card blue">
-                <div class="stat-icon">
+            <div class="stat-card present">
+                <div class="stat-icon present">
                     <i class="fas fa-calendar-check"></i>
                 </div>
-                <div class="stat-value">22 Days</div>
-                <div class="stat-label">Days Present This Month</div>
+                <div class="stat-label">Present Days</div>
+                <div class="stat-value"><?php echo $attendancePresent; ?></div>
+                <div class="stat-desc">This month</div>
             </div>
 
-            <div class="stat-card green">
-                <div class="stat-icon">
-                    <i class="fas fa-umbrella-beach"></i>
+            <div class="stat-card leaves">
+                <div class="stat-icon leaves">
+                    <i class="fas fa-plane-departure"></i>
                 </div>
-                <div class="stat-value">12</div>
-                <div class="stat-label">Leave Balance</div>
+                <div class="stat-label">Leave Days</div>
+                <div class="stat-value"><?php echo $attendanceLeaves; ?></div>
+                <div class="stat-desc">This month</div>
             </div>
 
-            <div class="stat-card orange">
-                <div class="stat-icon">
+            <div class="stat-card payslips">
+                <div class="stat-icon payslips">
                     <i class="fas fa-file-invoice"></i>
                 </div>
-                <div class="stat-value">8</div>
                 <div class="stat-label">Total Payslips</div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-            <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
-            <div class="actions-grid">
-                <a href="employee_profile.php" class="action-btn">
-                    <i class="fas fa-user"></i>
-                    <span>My Profile</span>
-                </a>
-                <a href="view_payslips.php" class="action-btn">
-                    <i class="fas fa-file-invoice"></i>
-                    <span>View Payslips</span>
-                </a>
-                <a href="attendance_calendar.php" class="action-btn">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>My Attendance</span>
-                </a>
-                <a href="leave_management.php" class="action-btn">
-                    <i class="fas fa-umbrella-beach"></i>
-                    <span>Apply Leave</span>
-                </a>
-                <a href="edit_profile.php" class="action-btn">
-                    <i class="fas fa-edit"></i>
-                    <span>Edit Profile</span>
-                </a>
+                <div class="stat-value"><?php echo $payslipCount; ?></div>
+                <div class="stat-desc">All time</div>
             </div>
         </div>
 
         <!-- Content Grid -->
         <div class="content-grid">
-            <!-- Personal Information -->
-            <div class="card">
+            <!-- Recent Payslips -->
+            <div class="data-card">
                 <div class="card-header">
-                    <i class="fas fa-id-card"></i>
-                    <h3>Personal Information</h3>
+                    <h2><i class="fas fa-history"></i> Recent Payslips</h2>
+                    <a href="view_payslips.php" class="view-all-btn">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <div class="card-body">
-                    <div class="info-row">
-                        <span class="info-label">Employee ID</span>
-                        <span class="info-value"><?= htmlspecialchars($employeeId) ?></span>
+
+                <?php if (empty($recentPayslips)): ?>
+                    <div style="text-align: center; padding: 40px; color: var(--muted);">
+                        <i class="fas fa-inbox" style="font-size: 48px; display: block; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <h3>No Payslips Yet</h3>
+                        <p>Your payslips will appear here</p>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Full Name</span>
-                        <span class="info-value"><?= htmlspecialchars($employeeName) ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Email</span>
-                        <span class="info-value"><?= htmlspecialchars($employeeEmail ?? 'N/A') ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Designation</span>
-                        <span class="info-value"><?= htmlspecialchars($employeeDesignation ?? 'N/A') ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Department</span>
-                        <span class="info-value"><?= htmlspecialchars($employeeDepartment ?? 'N/A') ?></span>
-                    </div>
-                </div>
+                <?php else: ?>
+                    <?php foreach ($recentPayslips as $payslip): ?>
+                        <div class="payslip-item">
+                            <div class="payslip-info">
+                                <div class="payslip-period"><?php echo $payslip['month'] . ' ' . $payslip['year']; ?></div>
+                                <div class="payslip-date">Generated: <?php echo date('d M Y', strtotime($payslip['generated_at'])); ?></div>
+                            </div>
+                            <div class="payslip-amount">
+                                <div class="payslip-amount-label">Net Salary</div>
+                                <div class="payslip-amount-value">₹<?php echo number_format($payslip['net_salary'], 2); ?></div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
 
-            <!-- Attendance & Leave -->
-            <div class="card">
+            <!-- Quick Actions -->
+            <div class="data-card">
                 <div class="card-header">
-                    <i class="fas fa-calendar-alt"></i>
-                    <h3>Attendance & Leave</h3>
+                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
                 </div>
-                <div class="card-body">
-                    <div class="info-row" style="flex-direction: column; gap: 15px; align-items: stretch;">
-                        <a href="attendance_calendar.php" style="display: flex; align-items: center; gap: 12px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                            <i class="fas fa-calendar-check" style="font-size: 24px;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; font-size: 16px;">View My Attendance</div>
-                                <div style="font-size: 12px; opacity: 0.9;">Track your daily attendance calendar</div>
-                            </div>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                        <a href="leave_management.php" style="display: flex; align-items: center; gap: 12px; padding: 15px; background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; border-radius: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                            <i class="fas fa-umbrella-beach" style="font-size: 24px;"></i>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; font-size: 16px;">Apply for Leave</div>
-                                <div style="font-size: 12px; opacity: 0.9;">Submit leave requests & check balance</div>
-                            </div>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </div>
+
+                <div class="quick-actions">
+                    <a href="view_payslips.php" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>My Payslips</h3>
+                            <p><?php echo $payslipCount; ?> payslips</p>
+                        </div>
+                    </a>
+
+                    <a href="attendance.php" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Attendance</h3>
+                            <p>View my attendance</p>
+                        </div>
+                    </a>
+
+                    <a href="leave_management.php" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-plane-departure"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Leave Requests</h3>
+                            <p><?php echo $pendingLeaves; ?> pending</p>
+                        </div>
+                    </a>
+
+                    <a href="employee_profile.php" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>My Profile</h3>
+                            <p>View & edit profile</p>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <?php include 'includes/employee_scripts.php'; ?>
 </body>
 </html>

@@ -267,7 +267,7 @@ $error = $_GET['error'] ?? '';
     </style>
 </head>
 <body>
-    <?php include 'includes/accountant_sidebar.php'; ?>
+    <?php include 'includes/accountant_navbar.php'; ?>
 
     <main class="main-content" id="mainContent">
         <div class="page-header">
