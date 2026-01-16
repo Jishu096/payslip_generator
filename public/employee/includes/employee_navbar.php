@@ -1,95 +1,55 @@
 <?php
 $baseURL = "/payslip_generator/public/";
+$currentPage = basename($_SERVER['PHP_SELF']);
 $username = $_SESSION['employee_name'] ?? $_SESSION['username'] ?? 'Employee';
 ?>
 
-<style>
-    .top-navbar {
-        background: white;
-        height: 70px;
-        position: fixed;
-        top: 0;
-        left: 260px;
-        right: 0;
-        z-index: 999;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 30px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .nav-welcome {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--text);
-    }
-
-    .nav-user {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .nav-user-info {
-        text-align: right;
-    }
-
-    .nav-user-name {
-        font-weight: 600;
-        color: var(--text);
-        font-size: 14px;
-    }
-
-    .nav-user-role {
-        font-size: 12px;
-        color: var(--muted);
-    }
-
-    .logout-btn {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .logout-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    }
-
-    .main-content {
-        margin-top: 70px;
-    }
-
-    @media (max-width: 768px) {
-        .top-navbar {
-            left: 0;
-        }
-    }
-</style>
-
-<div class="top-navbar">
-    <div class="nav-welcome">
-        Welcome back, <span style="color: var(--accent);"><?php echo htmlspecialchars($username); ?></span>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h3><i class="fas fa-user"></i> Employee Portal</h3>
+        <p>Self Service & Records</p>
     </div>
     
-    <div class="nav-user">
-        <div class="nav-user-info">
-            <div class="nav-user-name"><?php echo htmlspecialchars($username); ?></div>
-            <div class="nav-user-role">Employee</div>
+    <div class="sidebar-menu">
+        <a href="<?php echo $baseURL; ?>employee/dashboard.php" class="<?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>employee/view_payslips.php" class="<?php echo $currentPage === 'view_payslips.php' ? 'active' : ''; ?>">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span>My Payslips</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>employee/attendance.php" class="<?php echo $currentPage === 'attendance.php' ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-check"></i>
+            <span>My Attendance</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>employee/attendance_calendar.php" class="<?php echo $currentPage === 'attendance_calendar.php' ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Attendance Calendar</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>employee/leave_management.php" class="<?php echo $currentPage === 'leave_management.php' ? 'active' : ''; ?>">
+            <i class="fas fa-umbrella-beach"></i>
+            <span>Leave Management</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>employee/employee_profile.php" class="<?php echo $currentPage === 'employee_profile.php' ? 'active' : ''; ?>">
+            <i class="fas fa-user-circle"></i>
+            <span>My Profile</span>
+        </a>
+    </div>
+    
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span><?php echo htmlspecialchars($username); ?></span>
         </div>
-        <a href="<?php echo $baseURL; ?>auth/logout.php" class="logout-btn">
+        <a href="<?php echo $baseURL; ?>index.php?page=logout" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i>
-            Logout
+            <span>Logout</span>
         </a>
     </div>
 </div>

@@ -92,6 +92,52 @@
         font-weight: 600;
     }
 
+    .sidebar-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px 15px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-footer .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .sidebar-footer .user-info i {
+        font-size: 18px;
+    }
+
+    .sidebar-footer .logout-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .sidebar-footer .logout-btn:hover {
+        background: rgba(239, 68, 68, 1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
     .main-content {
         margin-left: 260px;
         padding: 30px;

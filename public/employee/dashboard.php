@@ -174,16 +174,28 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            gap: 25px;
             margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
             border-left: 4px solid var(--accent);
         }
 
@@ -196,53 +208,80 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         .stat-card.leaves { border-left-color: #f59e0b; }
         .stat-card.payslips { border-left-color: #3b82f6; }
 
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-
-        .stat-icon.salary { background: #e0e7ff; color: var(--accent); }
-        .stat-icon.present { background: #d1fae5; color: #10b981; }
-        .stat-icon.leaves { background: #fef3c7; color: #f59e0b; }
-        .stat-icon.payslips { background: #dbeafe; color: #3b82f6; }
-
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--muted);
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
             font-size: 32px;
             font-weight: 700;
-            color: var(--text);
-            margin-bottom: 5px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.present .stat-value {
+            background: linear-gradient(135deg, #10b981, #059669);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.leaves .stat-value {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.payslips .stat-value {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .stat-desc {
-            font-size: 12px;
+            font-size: 13px;
             color: var(--muted);
+            margin-top: 8px;
         }
 
         .content-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 20px;
+            gap: 25px;
+        }
+        
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .profile-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
 
         .data-card {
             background: white;
             border-radius: 12px;
             padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .card-header {
@@ -372,37 +411,10 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
             font-size: 12px;
             color: var(--muted);
         }
-
-        @media (max-width: 1200px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .profile-banner {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .profile-meta {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
     <?php include 'includes/employee_navbar.php'; ?>
-    <?php include 'includes/employee_sidebar.php'; ?>
 
     <div class="main-content">
         <!-- Profile Banner -->
@@ -430,36 +442,24 @@ $avatarLetter = strtoupper(substr($employeeName, 0, 1));
         <!-- Stats -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon salary">
-                    <i class="fas fa-rupee-sign"></i>
-                </div>
                 <div class="stat-label">Basic Salary</div>
                 <div class="stat-value">₹<?php echo number_format($employeeBasicSalary, 2); ?></div>
                 <div class="stat-desc">Monthly basic pay</div>
             </div>
 
             <div class="stat-card present">
-                <div class="stat-icon present">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
                 <div class="stat-label">Present Days</div>
                 <div class="stat-value"><?php echo $attendancePresent; ?></div>
                 <div class="stat-desc">This month</div>
             </div>
 
             <div class="stat-card leaves">
-                <div class="stat-icon leaves">
-                    <i class="fas fa-plane-departure"></i>
-                </div>
                 <div class="stat-label">Leave Days</div>
                 <div class="stat-value"><?php echo $attendanceLeaves; ?></div>
                 <div class="stat-desc">This month</div>
             </div>
 
             <div class="stat-card payslips">
-                <div class="stat-icon payslips">
-                    <i class="fas fa-file-invoice"></i>
-                </div>
                 <div class="stat-label">Total Payslips</div>
                 <div class="stat-value"><?php echo $payslipCount; ?></div>
                 <div class="stat-desc">All time</div>
