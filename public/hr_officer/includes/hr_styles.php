@@ -116,29 +116,26 @@
         font-size: 20px;
     }
 
-    .logout-btn {
+    .sidebar-footer .logout-btn {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px;
+        background: rgba(239, 68, 68, 0.9);
         color: white;
         text-decoration: none;
-        padding: 12px 15px;
-        border-radius: 10px;
-        transition: all 0.3s ease;
+        border-radius: 8px;
+        font-weight: 600;
         font-size: 14px;
-        font-weight: 500;
-        background: rgba(239, 68, 68, 0.3);
+        transition: all 0.3s;
     }
 
-    .logout-btn i {
-        width: 20px;
-        text-align: center;
-        font-size: 16px;
-    }
-
-    .logout-btn:hover {
-        background: rgba(239, 68, 68, 0.5);
-        transform: translateX(5px);
+    .sidebar-footer .logout-btn:hover {
+        background: rgba(239, 68, 68, 1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
 
     .main-content {

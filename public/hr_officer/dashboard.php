@@ -116,43 +116,92 @@ try {
     <style>
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
             margin-bottom: 30px;
         }
+        
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         .stat-card {
             background: white;
-            border-radius: 15px;
             padding: 25px;
+            border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.3s;
+            border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
         }
+        
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
-        .stat-card .icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 30px;
+        
+        .stat-card.pending { border-left-color: #f59e0b; }
+        .stat-card.issues { border-left-color: #ef4444; }
+        .stat-card.disputes { border-left-color: #f59e0b; }
+        .stat-card.employees { border-left-color: #10b981; }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
-        .stat-card .content h3 {
+        
+        .stat-value {
             font-size: 32px;
-            color: #1e293b;
-            margin-bottom: 5px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .stat-card .content p {
-            color: #64748b;
-            font-size: 14px;
+        
+        .stat-card.pending .stat-value {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.issues .stat-value {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.disputes .stat-value {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.employees .stat-value {
+            background: linear-gradient(135deg, #10b981, #059669);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 8px;
         }
         .quick-actions {
             display: grid;
@@ -239,54 +288,43 @@ try {
 <body>
     <?php include 'includes/hr_navbar.php'; ?>
     
-    <div class="container">
-        <?php include 'includes/hr_sidebar.php'; ?>
-        
-        <div class="main-content">
-            <div class="page-header">
-                <h1><i class="fas fa-tachometer-alt"></i> HR Officer Dashboard</h1>
-                <p>Welcome back, <?php echo htmlspecialchars($username); ?>! Verify attendance and manage workforce records.</p>
+    <div class="main-content">
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-user-tie"></i> HR Officer Dashboard</h1>
+                <p>Attendance verification and workforce management</p>
             </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; color: var(--muted); margin-bottom: 5px;">Active Users</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--accent);">
+                    <?php echo number_format($stats['total_employees']); ?> Employees
+                </div>
+            </div>
+        </div>
 
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="icon">
-                        <i class="fas fa-hourglass-half"></i>
-                    </div>
-                    <div class="content">
-                        <h3><?php echo number_format($stats['pending_verifications']); ?></h3>
-                        <p>Pending Verifications</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="content">
-                        <h3><?php echo number_format($stats['attendance_issues']); ?></h3>
-                        <p>Attendance Issues</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="icon">
-                        <i class="fas fa-flag"></i>
-                    </div>
-                    <div class="content">
-                        <h3><?php echo number_format($stats['disputes']); ?></h3>
-                        <p>Disputes</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="content">
-                        <h3><?php echo number_format($stats['total_employees']); ?></h3>
-                        <p>Active Employees</p>
-                    </div>
-                </div>
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="stat-label">Pending Verifications</div>
+                <div class="stat-value"><?php echo number_format($stats['pending_verifications']); ?></div>
+                <div class="stat-desc">Awaiting review</div>
             </div>
+            <div class="stat-card issues">
+                <div class="stat-label">Attendance Issues</div>
+                <div class="stat-value"><?php echo number_format($stats['attendance_issues']); ?></div>
+                <div class="stat-desc">Last 7 days</div>
+            </div>
+            <div class="stat-card disputes">
+                <div class="stat-label">Disputes</div>
+                <div class="stat-value"><?php echo number_format($stats['disputes']); ?></div>
+                <div class="stat-desc">Last 30 days</div>
+            </div>
+            <div class="stat-card employees">
+                <div class="stat-label">Active Employees</div>
+                <div class="stat-value"><?php echo number_format($stats['total_employees']); ?></div>
+                <div class="stat-desc">Current workforce</div>
+            </div>
+        </div>
 
             <!-- Quick Actions -->
             <h2 style="margin-bottom: 15px; color: #1e293b;">Quick Actions</h2>
