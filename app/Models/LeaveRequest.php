@@ -25,6 +25,26 @@ class LeaveRequest {
     }
 
     /**
+     * Delete pending leave request
+     */
+    public function deleteLeaveRequest($requestId, $employeeId) {
+        try {
+            // Only allow deleting PENDING requests for the specific employee
+            $sql = "DELETE FROM leave_requests 
+                    WHERE leave_id = ? 
+                    AND employee_id = ? 
+                    AND status = 'pending'";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$requestId, $employeeId]);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Leave deletion failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Get leave requests by employee
      */
     public function getLeaveRequestsByEmployee($employeeId) {

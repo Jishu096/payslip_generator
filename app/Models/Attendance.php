@@ -101,9 +101,9 @@ class Attendance {
         try {
             $query = "SELECT 
                         COUNT(*) as total_days,
-                        SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) as present_days,
-                        SUM(CASE WHEN status = 'Absent' THEN 1 ELSE 0 END) as absent_days,
-                        SUM(CASE WHEN status = 'Leave' THEN 1 ELSE 0 END) as leave_days
+                        SUM(CASE WHEN LOWER(status) = 'present' THEN 1 ELSE 0 END) as present_days,
+                        SUM(CASE WHEN LOWER(status) = 'absent' THEN 1 ELSE 0 END) as absent_days,
+                        SUM(CASE WHEN LOWER(status) = 'leave' THEN 1 ELSE 0 END) as leave_days
                       FROM " . $this->table . " 
                       WHERE employee_id = :employee_id 
                       AND DATE_FORMAT(date, '%Y-%m') = :month";
