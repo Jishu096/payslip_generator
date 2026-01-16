@@ -74,38 +74,45 @@ try {
 </head>
 <body>
     <?php include 'includes/superadmin_navbar.php'; ?>
-    <?php include 'includes/superadmin_sidebar.php'; ?>
 
     <div class="main-content">
-        <h1 style="color: #2d3748; margin-bottom: 10px;">
-            <i class="fas fa-shield-alt" style="color: #667eea;"></i> System Protection Dashboard
-        </h1>
-        <p style="color: #718096; margin-bottom: 30px;">Monitor and protect the entire system</p>
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-crown"></i> Super Admin Dashboard</h1>
+                <p>System protection and security management</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; color: var(--muted); margin-bottom: 5px;">System Status</div>
+                <div style="font-size: 16px; font-weight: 700; color: #10b981;">
+                    <i class="fas fa-circle" style="font-size: 8px;"></i> ONLINE
+                </div>
+            </div>
+        </div>
 
         <!-- Statistics Grid -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <i class="fas fa-server"></i>
-                </div>
-                <div class="stat-value" style="color: #48bb78;">ONLINE</div>
+            <div class="stat-card status">
                 <div class="stat-label">System Status</div>
+                <div class="stat-value">ONLINE</div>
+                <div class="stat-desc">All systems operational</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white;">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-value"><?php echo number_format($stats['total_users']); ?></div>
+            <div class="stat-card users">
                 <div class="stat-label">Total Users</div>
+                <div class="stat-value"><?php echo number_format($stats['total_users']); ?></div>
+                <div class="stat-desc">Active user accounts</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="stat-value">0</div>
+            <div class="stat-card alerts">
                 <div class="stat-label">Security Alerts</div>
+                <div class="stat-value">0</div>
+                <div class="stat-desc">No active threats</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Audit Logs</div>
+                <div class="stat-value"><?php echo number_format($stats['recent_audits']); ?></div>
+                <div class="stat-desc">Last 7 days</div>
             </div>
         </div>
 
