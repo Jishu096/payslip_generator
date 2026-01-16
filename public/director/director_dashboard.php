@@ -104,22 +104,34 @@ $currentMonth = date('F Y');
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            gap: 25px;
             margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-card {
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-left: 5px solid var(--accent);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
         }
-
+        
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
 
         .stat-card.pending { border-left-color: #f59e0b; }
@@ -127,24 +139,8 @@ $currentMonth = date('F Y');
         .stat-card.approved { border-left-color: #3b82f6; }
         .stat-card.rejected { border-left-color: #ef4444; }
 
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
-
-        .stat-icon.pending { background: #fef3c7; color: #f59e0b; }
-        .stat-icon.payout { background: #d1fae5; color: #10b981; }
-        .stat-icon.approved { background: #dbeafe; color: #3b82f6; }
-        .stat-icon.rejected { background: #fee2e2; color: #ef4444; }
-
         .stat-label {
-            font-size: 14px;
+            font-size: 12px;
             color: var(--muted);
             font-weight: 600;
             text-transform: uppercase;
@@ -153,22 +149,53 @@ $currentMonth = date('F Y');
         }
 
         .stat-value {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 700;
-            color: var(--text);
-            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
+        
+        .stat-card.pending .stat-value {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.payout .stat-value {
+            background: linear-gradient(135deg, #10b981, #059669);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.approved .stat-value {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.rejected .stat-value {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
         .stat-desc {
             font-size: 13px;
             color: var(--muted);
+            margin-top: 8px;
         }
 
         .data-card {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .card-header {
@@ -177,16 +204,21 @@ $currentMonth = date('F Y');
             align-items: center;
             margin-bottom: 25px;
             padding-bottom: 20px;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 2px solid #f1f5f9;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            margin: -25px -25px 25px -25px;
+            padding: 25px;
+            border-radius: 12px 12px 0 0;
         }
 
         .card-header h2 {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--text);
             display: flex;
             align-items: center;
             gap: 12px;
+            margin: 0;
         }
 
         .card-header h2 i {
@@ -308,23 +340,10 @@ $currentMonth = date('F Y');
             font-weight: 600;
             text-transform: uppercase;
         }
-
-        @media (max-width: 1200px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
     <?php include 'includes/director_navbar.php'; ?>
-    <?php include 'includes/director_sidebar.php'; ?>
 
     <div class="main-content">
         <div class="content-header">
@@ -332,41 +351,35 @@ $currentMonth = date('F Y');
                 <h1><i class="fas fa-user-tie"></i> Director Dashboard</h1>
                 <p>Payroll approval and financial oversight</p>
             </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; color: var(--muted); margin-bottom: 5px;">Current Period</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--accent);">
+                    <?php echo date('F Y'); ?>
+                </div>
+            </div>
         </div>
 
         <!-- Stats -->
         <div class="stats-grid">
             <div class="stat-card pending">
-                <div class="stat-icon pending">
-                    <i class="fas fa-clock"></i>
-                </div>
                 <div class="stat-label">Pending Approvals</div>
                 <div class="stat-value"><?php echo number_format($pendingApprovals); ?></div>
                 <div class="stat-desc">Awaiting your review</div>
             </div>
 
             <div class="stat-card payout">
-                <div class="stat-icon payout">
-                    <i class="fas fa-wallet"></i>
-                </div>
                 <div class="stat-label">Total Payout</div>
                 <div class="stat-value">₹<?php echo number_format($totalPayout, 2); ?></div>
                 <div class="stat-desc">For <?php echo $currentMonth; ?></div>
             </div>
 
             <div class="stat-card approved">
-                <div class="stat-icon approved">
-                    <i class="fas fa-check-circle"></i>
-                </div>
                 <div class="stat-label">Approved</div>
                 <div class="stat-value"><?php echo number_format($approvedCount); ?></div>
                 <div class="stat-desc">This month</div>
             </div>
 
             <div class="stat-card rejected">
-                <div class="stat-icon rejected">
-                    <i class="fas fa-times-circle"></i>
-                </div>
                 <div class="stat-label">Rejected</div>
                 <div class="stat-value"><?php echo number_format($rejectedCount); ?></div>
                 <div class="stat-desc">This month</div>
