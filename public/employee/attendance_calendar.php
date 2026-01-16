@@ -283,6 +283,7 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .calendar {
@@ -290,6 +291,8 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
             margin-top: 20px;
+            width: 100%;
+            max-width: 100%;
         }
 
         .calendar-day {
@@ -303,6 +306,8 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
             justify-content: center;
             transition: all 0.3s;
             position: relative;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .calendar-day.header {
