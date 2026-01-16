@@ -26,13 +26,31 @@ Thumbs.db
 /storage/logs/*.txt
 /storage/logs/*.log
 *.log
+error_log
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+*_old.php
+*.old
+*.sql.bak
+*.sql.backup
+
+# Test and debug files
+test_*.php
+*_test.php
+debug.php
+phpunit.xml
 
 # Uploaded files and generated content
 /storage/payslips/*.pdf
 /public/uploads/
 
-# Composer lock (optional - uncomment if you want to ignore)
+# Composer
 # composer.lock
+composer.phar.sig
 
 # Session files
 /tmp/
