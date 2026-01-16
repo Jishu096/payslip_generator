@@ -105,22 +105,40 @@ arsort($actionGroups);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit Trail - Auditor</title>
+    <title>Audit Trail - Auditor Portal</title>
     <?php include 'includes/auditor_styles.php'; ?>
     <style>
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-card {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             border-left: 4px solid var(--accent);
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
 
         .stat-card.users { border-left-color: #3b82f6; }
@@ -128,25 +146,28 @@ arsort($actionGroups);
         .stat-card.today { border-left-color: #f59e0b; }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--muted);
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            color: var(--text);
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .filters-card {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .filters-grid {
@@ -216,17 +237,25 @@ arsort($actionGroups);
 
         .table-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .table-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 25px;
+            border-bottom: 2px solid #f1f5f9;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+        
+        .table-header h3 {
+            margin: 0;
+            color: var(--text);
+            font-size: 18px;
+            font-weight: 700;
         }
 
         .data-table {
@@ -261,31 +290,33 @@ arsort($actionGroups);
 
         .action-badge {
             display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            color: var(--accent);
+            letter-spacing: 0.3px;
+        }
+
+        .role-badge {
+            display: inline-block;
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-
-        .role-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
         .sidebar-widget {
             background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             margin-bottom: 20px;
         }
 
@@ -293,8 +324,20 @@ arsort($actionGroups);
             font-size: 14px;
             font-weight: 700;
             color: var(--text);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .widget-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 2px;
         }
 
         .action-list {
@@ -340,13 +383,18 @@ arsort($actionGroups);
 </head>
 <body>
     <?php include 'includes/auditor_navbar.php'; ?>
-    <?php include 'includes/auditor_sidebar.php'; ?>
 
     <div class="main-content">
         <div class="content-header">
             <div>
-                <h1><i class="fas fa-clipboard-list"></i> Audit Trail</h1>
-                <p>Comprehensive system activity logs</p>
+                <h1><i class="fas fa-list-alt"></i> Audit Trail</h1>
+                <p>Comprehensive system activity logs and tracking</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; color: var(--muted); margin-bottom: 5px;">Period</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--accent);">
+                    <?php echo date('M d', strtotime($startDate)); ?> - <?php echo date('M d, Y', strtotime($endDate)); ?>
+                </div>
             </div>
         </div>
 

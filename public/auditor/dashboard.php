@@ -80,14 +80,14 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditor Dashboard</title>
+    <title>Auditor Dashboard - Audit Portal</title>
     <?php include 'includes/auditor_styles.php'; ?>
     <style>
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
-            margin-bottom: 30px;
+            gap: 30px;
+            margin-bottom: 40px;
         }
         
         @media (max-width: 768px) {
@@ -98,16 +98,30 @@ try {
 
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid var(--accent);
-            transition: all 0.3s;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--accent);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: 50%;
+            transform: translate(30%, -30%);
         }
 
         .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.2);
         }
 
         .stat-card.logs { border-left-color: #8b5cf6; }
@@ -147,19 +161,23 @@ try {
         }
 
         .stat-label {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--muted);
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
         }
 
         .stat-value {
-            font-size: 36px;
+            font-size: 42px;
             font-weight: 700;
-            color: var(--text);
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             line-height: 1;
+            position: relative;
+            z-index: 1;
         }
 
         .content-grid {
@@ -177,17 +195,23 @@ try {
 
         .card {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         }
 
         .card-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 25px;
+            border-bottom: 2px solid #f1f5f9;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03), rgba(118, 75, 162, 0.03));
         }
 
         .card-header h3 {
@@ -320,13 +344,16 @@ try {
 </head>
 <body>
     <?php include 'includes/auditor_navbar.php'; ?>
-    <?php include 'includes/auditor_sidebar.php'; ?>
 
     <div class="main-content">
         <div class="content-header">
             <div>
-                <h1><i class="fas fa-chart-line"></i> Audit Dashboard</h1>
-                <p>Monitor system activity and compliance</p>
+                <h1><i class="fas fa-tachometer-alt"></i> Audit Dashboard</h1>
+                <p>Monitor system activity, compliance, and reports</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; color: var(--muted); margin-bottom: 5px;">Monitoring Period</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--accent);">Last 30 Days</div>
             </div>
         </div>
 

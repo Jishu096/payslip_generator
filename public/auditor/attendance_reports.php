@@ -90,22 +90,40 @@ $stats = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Reports - Auditor</title>
+    <title>Attendance Reports - Auditor Portal</title>
     <?php include 'includes/auditor_styles.php'; ?>
     <style>
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-card {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
 
         .stat-card.present { border-left-color: #10b981; }
@@ -113,25 +131,46 @@ $stats = [
         .stat-card.leave { border-left-color: #f59e0b; }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--muted);
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            color: var(--text);
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.present .stat-value {
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.absent .stat-value {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.leave .stat-value {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .filters-card {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .filters-grid {
@@ -190,14 +229,22 @@ $stats = [
 
         .table-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .table-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 25px;
+            border-bottom: 2px solid #f1f5f9;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+        
+        .table-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -268,13 +315,18 @@ $stats = [
 </head>
 <body>
     <?php include 'includes/auditor_navbar.php'; ?>
-    <?php include 'includes/auditor_sidebar.php'; ?>
 
     <div class="main-content">
         <div class="content-header">
             <div>
                 <h1><i class="fas fa-user-check"></i> Attendance Reports</h1>
-                <p>View and export attendance records</p>
+                <p>Comprehensive attendance tracking and analysis</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; color: var(--muted); margin-bottom: 5px;">Period</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--accent);">
+                    <?php echo date('M d', strtotime($startDate)); ?> - <?php echo date('M d, Y', strtotime($endDate)); ?>
+                </div>
             </div>
         </div>
 

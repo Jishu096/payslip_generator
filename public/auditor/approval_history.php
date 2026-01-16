@@ -160,22 +160,40 @@ $stats = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Approval History - Auditor</title>
+    <title>Approval History - Auditor Portal</title>
     <?php include 'includes/auditor_styles.php'; ?>
     <style>
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-card {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
 
         .stat-card.pending { border-left-color: #f59e0b; }
@@ -183,25 +201,46 @@ $stats = [
         .stat-card.rejected { border-left-color: #ef4444; }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--muted);
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            color: var(--text);
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.pending .stat-value {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.approved .stat-value {
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.rejected .stat-value {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .filters-card {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .filters-grid {
@@ -407,13 +446,18 @@ $stats = [
 </head>
 <body>
     <?php include 'includes/auditor_navbar.php'; ?>
-    <?php include 'includes/auditor_sidebar.php'; ?>
 
     <div class="main-content">
         <div class="content-header">
             <div>
-                <h1><i class="fas fa-check-circle"></i> Approval History</h1>
-                <p>View salary, role, and leave approval records</p>
+                <h1><i class="fas fa-clipboard-check"></i> Approval History</h1>
+                <p>Complete approval tracking and audit trail</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; color: var(--muted); margin-bottom: 5px;">Period</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--accent);">
+                    <?php echo date('M d', strtotime($startDate)); ?> - <?php echo date('M d, Y', strtotime($endDate)); ?>
+                </div>
             </div>
         </div>
 
