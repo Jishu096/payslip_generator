@@ -43,7 +43,7 @@ class Attendance {
             $query = "SELECT * FROM " . $this->table . " 
                       WHERE employee_id = :employee_id 
                       AND date BETWEEN :start_date AND :end_date
-                      ORDER BY date DESC";
+                      ORDER BY date DESC, attendance_id DESC";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':employee_id', $employeeId, PDO::PARAM_INT);
@@ -69,10 +69,13 @@ class Attendance {
             // Normalize status to lowercase to match ENUM values
             $status = strtolower($status);
             
+            // Use VALUES() for compatibility with all MySQL versions
+            // Note: VALUES() is deprecated in MySQL 8.0.20+ but still works
             $query = "INSERT INTO " . $this->table . " 
                       (employee_id, date, status) 
                       VALUES (:employee_id, :date, :status)
-                      ON DUPLICATE KEY UPDATE status = VALUES(status)";
+                      ON DUPLICATE KEY UPDATE 
+                      status = VALUES(status)";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':employee_id', $employeeId, PDO::PARAM_INT);
