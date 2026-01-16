@@ -248,4 +248,160 @@
             display: none;
         }
     }
+    /* Glassmorphism & Modern UI */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        border-radius: 16px;
+    }
+
+    .glass-btn {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,0.18);
+        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.1);
+    }
+
+    /* Attendance Quick Action Cards */
+    .attendance-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        padding: 5px;
+    }
+
+    .action-card {
+        position: relative;
+        padding: 24px;
+        border-radius: 20px;
+        color: white;
+        text-decoration: none;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 160px;
+    }
+
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .action-card .icon-bg {
+        position: absolute;
+        right: -20px;
+        bottom: -20px;
+        font-size: 100px;
+        opacity: 0.2;
+        transform: rotate(-15deg);
+        transition: transform 0.3s ease;
+    }
+
+    .action-card:hover .icon-bg {
+        transform: rotate(0deg) scale(1.1);
+    }
+
+    .action-card .card-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .action-card .card-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .action-card .card-desc {
+        font-size: 13px;
+        opacity: 0.9;
+        line-height: 1.4;
+    }
+
+    /* Gradients */
+    .bg-gradient-purple { background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%); }
+    .bg-gradient-teal { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .bg-gradient-orange { background: linear-gradient(135deg, #f12711 0%, #f5af19 100%); }
+    .bg-gradient-blue { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); }
+    .bg-gradient-pink { background: linear-gradient(135deg, #ec008c 0%, #fc6767 100%); }
+    .bg-gradient-dark { background: linear-gradient(135deg, #232526 0%, #414345 100%); }
+    
+    /* Live Stats Widget */
+    .live-stats-container {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .live-stat-item {
+        flex: 1;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border: 1px solid #eee;
+    }
+    
+    .live-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .stat-text h4 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2d3748;
+        line-height: 1;
+    }
+
+    .stat-text span {
+        font-size: 12px;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+</style>
+
+<style>
+    /* Print Styles */
+    @media print {
+        .navbar,
+        .sidebar,
+        .no-print,
+        .btn, 
+        .page-header {
+            display: none !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            margin-top: 0 !important;
+            padding: 0 !important;
+            min-height: auto !important;
+        }
+
+        body {
+            background: white !important;
+            color: black !important;
+        }
+
+        .glass-card, .card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+    }
 </style>

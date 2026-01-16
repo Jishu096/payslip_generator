@@ -120,4 +120,33 @@ class Attendance {
             ];
         }
     }
+    /**
+     * Get daily attendance statistics
+     * @param string $date (format: YYYY-MM-DD)
+     * @return array
+     */
+    public function getDailyStats($date) {
+        try {
+            $query = "SELECT 
+                        status, COUNT(*) as count
+                      FROM " . $this->table . " 
+                      WHERE date = :date 
+                      GROUP BY status";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':date', $date);
+            $stmt->execute();
+            
+            $stats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            
+            // Ensure all keys exist
+            return [
+                'present' => $stats['present'] ?? 0,
+                'absent' => $stats['absent'] ?? 0,
+                'leave' => $stats['leave'] ?? 0
+            ];
+        } catch (PDOException $e) {
+            return ['present' => 0, 'absent' => 0, 'leave' => 0];
+        }
+    }
 }

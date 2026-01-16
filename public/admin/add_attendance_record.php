@@ -1,8 +1,12 @@
 <?php
 session_start();
 
+// Support both single-role and multi-role scenarios
+$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
+$hasAdminRole = in_array('administrator', $userRoles);
+
 // Admin-only access
-if (!isset($_SESSION['role'])) {
+if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
     header("Location: ../auth/login.php");
     exit;
 }
@@ -67,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $summary = $attendanceHelper->calculateMonthlySummary($employeeId, $month, $year);
         $attendanceHelper->saveMonthlySummary($summary);
         
-        $message = "Leave/Absence record added successfully and monthly summary updated!";
+        $message = "Record added successfully!";
         $messageType = "success";
         
     } catch (Exception $e) {
@@ -85,277 +89,210 @@ $employees = $employeeModel->getAllEmployees();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Leave/Absence Record</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Add Attendance Record - Admin Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include 'includes/admin_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 30px 20px;
-        }
-
-        .container {
-            max-width: 800px;
+        .page-container {
+            max-width: 800px; /* Narrower for form focus */
             margin: 0 auto;
         }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        
+        .form-section {
             padding: 30px;
-            margin-bottom: 20px;
         }
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .card-header h2 {
-            color: #2d3748;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #2d3748;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #2d3748;
+            color: #4a5568;
+            font-size: 14px;
         }
 
-        .form-group label .required {
+        .form-group label span.required {
             color: #e53e3e;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-control {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: #f8fafc;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
+        .form-control:focus {
+            background: white;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
         }
 
-        .form-row {
+        .form-row-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
 
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            margin: 0;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-success {
-            background: #c6f6d5;
-            border-left: 4px solid #48bb78;
-            color: #22543d;
-        }
-
-        .alert-error {
-            background: #fed7d7;
-            border-left: 4px solid #e53e3e;
-            color: #742a2a;
-        }
-
         .help-text {
             font-size: 12px;
             color: #718096;
-            margin-top: 5px;
+            margin-top: 6px;
         }
 
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #edf2f7;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <?php if ($message): ?>
-            <div class="alert alert-<?= $messageType ?>">
-                <i class="fas fa-<?= $messageType === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
-                <?= htmlspecialchars($message) ?>
-            </div>
-        <?php endif; ?>
+    <?php include 'includes/admin_navbar.php'; ?>
+    <?php include 'includes/admin_sidebar.php'; ?>
 
-        <div class="card">
-            <div class="card-header">
-                <h2>
-                    <i class="fas fa-calendar-plus"></i>
-                    Add Leave/Absence Record
-                </h2>
-                <a href="attendance_statement.php" class="btn btn-secondary">
+    <main class="main-content">
+        <div class="page-container">
+            <div class="page-header">
+                <a href="attendance_statement.php" class="back-link" style="display: inline-block; margin-bottom: 10px; color: #718096; text-decoration: none; font-size: 14px;">
                     <i class="fas fa-arrow-left"></i> Back to Statement
                 </a>
+                <h1>Add Attendance Record</h1>
+                <p>Manually add past leave or attendance records.</p>
             </div>
 
-            <form method="POST" action="" id="leaveForm">
-                <div class="form-group">
-                    <label>
-                        Employee <span class="required">*</span>
-                    </label>
-                    <select name="employee_id" required>
-                        <option value="">-- Select Employee --</option>
-                        <?php foreach ($employees as $emp): ?>
-                            <option value="<?= $emp['employee_id'] ?>">
-                                <?= htmlspecialchars($emp['full_name']) ?> - <?= htmlspecialchars($emp['designation']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+            <?php if ($message): ?>
+                <div class="alert alert-<?= $messageType ?>" style="margin-bottom: 25px; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; 
+                    background: <?= $messageType === 'success' ? '#def7ec' : '#fde8e8' ?>; 
+                    color: <?= $messageType === 'success' ? '#03543f' : '#9b1c1c' ?>;">
+                    <i class="fas fa-<?= $messageType === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
+                    <?= htmlspecialchars($message) ?>
                 </div>
+            <?php endif; ?>
 
-                <div class="form-group">
-                    <label>
-                        Leave/Absence Type <span class="required">*</span>
-                    </label>
-                    <select name="leave_type" id="leaveType" required>
-                        <option value="">-- Select Type --</option>
-                        <optgroup label="Regular Employee Leaves">
-                            <option value="OD">OD (Official Duty)</option>
-                            <option value="Tour">Tour</option>
-                            <option value="EL">EL (Earned Leave)</option>
-                            <option value="CCL">CCL (Commuted Leave)</option>
-                            <option value="PL">PL (Privilege Leave)</option>
-                            <option value="CL">CL (Casual Leave)</option>
-                            <option value="RH">RH (Restricted Holiday)</option>
-                        </optgroup>
-                        <optgroup label="Contract Employee">
-                            <option value="Absent">Absent (Unpaid)</option>
-                        </optgroup>
-                        <option value="Half_Day">Half Day Leave</option>
-                    </select>
-                    <div class="help-text">
-                        OD/Tour are payable days. EL, CL, etc. are leave days. Absent reduces salary for contract staff.
+            <div class="glass-card form-section">
+                <form method="POST" action="" id="leaveForm">
+                    <div class="form-grid">
+                        <!-- Employee Selection -->
+                        <div class="form-group">
+                            <label>Select Employee <span class="required">*</span></label>
+                            <select name="employee_id" class="form-control" required>
+                                <option value="">-- Choose Employee --</option>
+                                <?php foreach ($employees as $emp): ?>
+                                    <option value="<?= $emp['employee_id'] ?>">
+                                        <?= htmlspecialchars($emp['full_name']) ?> (<?= htmlspecialchars($emp['designation']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Leave Type -->
+                        <div class="form-group">
+                            <label>Record Type <span class="required">*</span></label>
+                            <select name="leave_type" id="leaveType" class="form-control" required>
+                                <option value="">-- Choose Type --</option>
+                                <optgroup label="Regular Employee Leaves">
+                                    <option value="OD">OD (Official Duty)</option>
+                                    <option value="Tour">Tour</option>
+                                    <option value="EL">EL (Earned Leave)</option>
+                                    <option value="CCL">CCL (Commuted Leave)</option>
+                                    <option value="PL">PL (Privilege Leave)</option>
+                                    <option value="CL">CL (Casual Leave)</option>
+                                    <option value="RH">RH (Restricted Holiday)</option>
+                                </optgroup>
+                                <optgroup label="Contract Employee">
+                                    <option value="Absent">Absent (Unpaid)</option>
+                                </optgroup>
+                                <option value="Half_Day">Half Day Leave</option>
+                            </select>
+                            <div class="help-text">Select the type of leave or duty to record.</div>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label>Start Date <span class="required">*</span></label>
+                                <input type="date" name="start_date" id="startDate" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>End Date <span class="required">*</span></label>
+                                <input type="date" name="end_date" id="endDate" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <!-- Half Day Logic -->
+                        <div class="form-group" id="halfDaySection" style="display: none;">
+                            <label>Half Day Details</label>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="is_half_day" id="isHalfDay">
+                                <label for="isHalfDay" style="margin:0; font-weight:normal;">Mark as Half Day</label>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <select name="half_day_type" id="halfDayType" class="form-control" style="display: none;">
+                                    <option value="">-- Select Shift --</option>
+                                    <option value="FN">Forenoon (FN)</option>
+                                    <option value="AN">Afternoon (AN)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Reason -->
+                        <div class="form-group">
+                            <label>Nature of Leave / Remarks</label>
+                            <textarea name="nature_of_leave" rows="3" class="form-control" placeholder="E.g., Medical emergency, Official meeting..."></textarea>
+                        </div>
+
+                        <!-- Submit -->
+                        <div style="margin-top: 10px;">
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-save"></i> Save Record
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>
-                            Start Date <span class="required">*</span>
-                        </label>
-                        <input type="date" name="start_date" id="startDate" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            End Date <span class="required">*</span>
-                        </label>
-                        <input type="date" name="end_date" id="endDate" required>
-                    </div>
-                </div>
-
-                <div class="form-group" id="halfDaySection" style="display: none;">
-                    <label>Half Day Options</label>
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="is_half_day" id="isHalfDay">
-                        <label for="isHalfDay" style="margin: 0;">This is a half day</label>
-                    </div>
-                    <select name="half_day_type" id="halfDayType" style="margin-top: 10px; display: none;">
-                        <option value="">-- Select Half --</option>
-                        <option value="FN">FN (Forenoon)</option>
-                        <option value="AN">AN (Afternoon)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        Nature of Leave/Reason
-                    </label>
-                    <textarea name="nature_of_leave" rows="3" 
-                              placeholder="E.g., Official meeting at NIELIT Delhi, Medical emergency, Personal work..."></textarea>
-                    <div class="help-text">
-                        Provide brief description of leave reason (optional but recommended for OD/Tour)
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Record & Update Summary
-                    </button>
-                    <button type="reset" class="btn btn-secondary">
-                        <i class="fas fa-undo"></i> Reset Form
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
         // Auto-set end date same as start date

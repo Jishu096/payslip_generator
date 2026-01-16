@@ -51,6 +51,15 @@ $departmentStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get max count for progress bar calculation
 $maxCount = !empty($departmentStats) ? max(array_column($departmentStats, 'count')) : 1;
+
+// Fetch Today's Attendance Stats
+require_once __DIR__ . '/../../app/Models/Attendance.php';
+$attendanceModel = new Attendance();
+$todayDate = date('Y-m-d');
+$todayStats = $attendanceModel->getDailyStats($todayDate);
+$presentToday = $todayStats['present'] ?? 0;
+$absentToday = $todayStats['absent'] ?? 0;
+$leaveToday = $todayStats['leave'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -382,30 +391,119 @@ $maxCount = !empty($departmentStats) ? max(array_column($departmentStats, 'count
         </div>
 
         <!-- Quick Actions for Attendance -->
-        <div class="card" style="margin-bottom: 30px;">
-            <div class="card-header">
-                <h3><i class="fas fa-calendar-check"></i> Attendance & Leave Management</h3>
+        <div class="card" style="margin-bottom: 30px; border: none; background: transparent; box-shadow: none; padding: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 22px; color: var(--text-primary); margin: 0;">
+                    <i class="fas fa-calendar-check" style="color: #667eea; margin-right: 10px;"></i>
+                    Attendance & Leave Management
+                </h3>
+                <span style="font-size: 14px; color: var(--text-tertiary);">
+                    <i class="far fa-clock"></i> Today: <?php echo date('d M Y'); ?>
+                </span>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; padding: 20px;">
-                <a href="manage_attendance.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-user-check" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Mark Attendance</div>
-                    <div style="font-size: 13px; opacity: 0.9;">Manage daily employee attendance</div>
+
+            <!-- Live Stats Widget -->
+            <div class="live-stats-container">
+                <div class="live-stat-item">
+                    <div class="live-stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-text">
+                        <h4><?php echo $presentToday; ?></h4>
+                        <span>Present Today</span>
+                    </div>
+                </div>
+                <div class="live-stat-item">
+                    <div class="live-stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <div class="stat-text">
+                        <h4><?php echo $absentToday; ?></h4>
+                        <span>Absent Today</span>
+                    </div>
+                </div>
+                <div class="live-stat-item">
+                    <div class="live-stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                        <i class="fas fa-umbrella-beach"></i>
+                    </div>
+                    <div class="stat-text">
+                        <h4><?php echo $leaveToday; ?></h4>
+                        <span>On Leave</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="attendance-actions-grid">
+                <!-- Mark Attendance -->
+                <a href="manage_attendance.php" class="action-card bg-gradient-purple">
+                    <i class="fas fa-user-check icon-bg"></i>
+                    <div class="card-content">
+                        <div class="card-title">Mark Attendance</div>
+                        <div class="card-desc">Manage daily employee attendance records efficiently.</div>
+                    </div>
+                    <div style="margin-top: auto; display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 500;">
+                        Go to Page <i class="fas fa-arrow-right"></i>
+                    </div>
                 </a>
-                <a href="attendance_reports.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-chart-bar" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Attendance Reports</div>
-                    <div style="font-size: 13px; opacity: 0.9;">View reports, filters & analytics</div>
+
+                <!-- Add Record -->
+                <a href="add_attendance_record.php" class="action-card bg-gradient-teal">
+                    <i class="fas fa-calendar-plus icon-bg"></i>
+                    <div class="card-content">
+                        <div class="card-title">Add Record</div>
+                        <div class="card-desc">Add individual attendance entry for specific dates.</div>
+                    </div>
+                    <div style="margin-top: auto; display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 500;">
+                        Add Entry <i class="fas fa-arrow-right"></i>
+                    </div>
                 </a>
-                <a href="leave_approvals.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-umbrella-beach" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Leave Approvals</div>
-                    <div style="font-size: 13px; opacity: 0.9;">Review & approve leave requests</div>
+
+                <!-- Attendance Reports -->
+                <a href="attendance_reports.php" class="action-card bg-gradient-blue">
+                    <i class="fas fa-chart-pie icon-bg"></i>
+                    <div class="card-content">
+                        <div class="card-title">Reports</div>
+                        <div class="card-desc">View detailed analytics and download CSV reports.</div>
+                    </div>
+                    <div style="margin-top: auto; display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 500;">
+                        View Analytics <i class="fas fa-arrow-right"></i>
+                    </div>
                 </a>
-                <a href="attendance_calendar.php" style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); color: white; text-decoration: none; border-radius: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-calendar-alt" style="font-size: 32px;"></i>
-                    <div style="font-weight: 600; font-size: 18px;">Attendance Calendar</div>
-                    <div style="font-size: 13px; opacity: 0.9;">Visual calendar with color codes</div>
+
+                 <!-- Attendance Statement -->
+                 <a href="attendance_statement.php" class="action-card bg-gradient-dark">
+                    <i class="fas fa-file-invoice icon-bg"></i>
+                    <div class="card-content">
+                        <div class="card-title">Statement</div>
+                        <div class="card-desc">Generate official government-style statements.</div>
+                    </div>
+                    <div style="margin-top: auto; display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 500;">
+                        Generate <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Calendar -->
+                <a href="attendance_calendar.php" class="action-card bg-gradient-orange">
+                    <i class="fas fa-calendar-alt icon-bg"></i>
+                    <div class="card-content">
+                        <div class="card-title">Calendar</div>
+                        <div class="card-desc">Visual monthly overview of all employee attendance.</div>
+                    </div>
+                    <div style="margin-top: auto; display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 500;">
+                        Open Calendar <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Leave Approvals -->
+                <a href="leave_approvals.php" class="action-card bg-gradient-pink">
+                    <i class="fas fa-user-clock icon-bg"></i>
+                    <div class="card-content">
+                        <div class="card-title">Leave Approvals</div>
+                        <div class="card-desc">Review and approve pending leave requests.</div>
+                    </div>
+                    <div style="margin-top: auto; display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 500;">
+                        Review Requests <i class="fas fa-arrow-right"></i>
+                    </div>
                 </a>
             </div>
         </div>

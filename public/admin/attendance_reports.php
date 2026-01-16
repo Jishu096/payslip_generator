@@ -10,8 +10,6 @@ if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'admin
     exit;
 }
 
-$username = $_SESSION['username'] ?? 'Admin';
-
 require_once "../../app/Models/Employee.php";
 require_once "../../app/Models/Attendance.php";
 require_once "../../app/Models/Department.php";
@@ -133,632 +131,313 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Reports - Admin Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <?php include 'includes/admin_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: #f7fafc;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .container {
+        .page-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 30px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .breadcrumb {
-            font-size: 14px;
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-
-        .breadcrumb a {
-            color: white;
-            text-decoration: none;
-            transition: opacity 0.3s;
-        }
-
-        .breadcrumb a:hover {
-            opacity: 0.8;
-        }
-
-        .breadcrumb i {
-            margin: 0 8px;
-            font-size: 10px;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .stats-grid {
+        /* Override/Additions to admin_styles for specific needs */
+        .stats-grid-reports {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
 
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-        }
-
-        .stat-card.primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-        }
-
-        .stat-card.success {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            border: none;
-        }
-
-        .stat-card.danger {
-            background: linear-gradient(135deg, #f56565, #e53e3e);
-            color: white;
-            border: none;
-        }
-
-        .stat-card.warning {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
-            color: white;
-            border: none;
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.2);
+        .stat-card-glass {
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.5);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        
+        .stat-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
             margin-bottom: 15px;
         }
 
-        .stat-number {
-            font-size: 36px;
+        .stat-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-value {
+            font-size: 32px;
             font-weight: 700;
-            margin-bottom: 5px;
+            color: #2d3748;
+            line-height: 1;
         }
 
         .stat-label {
             font-size: 13px;
-            opacity: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: #718096;
+            margin-top: 5px;
         }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-            margin-bottom: 25px;
-        }
-
-        .card-header {
-            padding: 20px 25px;
-            background: #f7fafc;
-            border-bottom: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .card-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-header i {
-            color: #667eea;
-            font-size: 20px;
-        }
-
-        .card-body {
-            padding: 25px;
-        }
-
-        .filters {
+        
+        .chart-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .table-glass {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
+        .table-glass th {
+            background: #f8f9fa;
             font-weight: 600;
-            font-size: 13px;
             color: #4a5568;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group select,
-        .form-group input {
-            padding: 10px 15px;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Roboto', sans-serif;
-            transition: all 0.3s;
-        }
-
-        .form-group select:focus,
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-success {
-            background: #48bb78;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #38a169;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #f7fafc;
-            padding: 15px 20px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        td {
-            padding: 18px 20px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        tbody tr:hover {
-            background: #f7fafc;
-        }
-
-        .status-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
             font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
+            padding: 16px 24px;
         }
 
-        .status-badge.present {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-
-        .status-badge.absent {
-            background: #fed7d7;
-            color: #742a2a;
-        }
-
-        .status-badge.leave {
-            background: #bee3f8;
-            color: #2c5282;
-        }
-
-        .status-badge.holiday {
-            background: #e2e8f0;
+        .table-glass td {
+            padding: 16px 24px;
             color: #2d3748;
+            border-bottom: 1px solid #edf2f7;
         }
 
-        .chart-container {
-            max-width: 600px;
-            margin: 0 auto;
+        .table-glass tr:last-child td {
+            border-bottom: none;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #a0aec0;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .empty-state h3 {
-            font-size: 22px;
-            font-weight: 600;
-            color: #718096;
-            margin-bottom: 10px;
-        }
-
-        .back-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .back-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            table {
-                font-size: 13px;
-            }
-
-            th, td {
-                padding: 12px;
-            }
+        @media (max-width: 992px) {
+            .chart-section { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="breadcrumb">
-                <a href="admin_dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
-                <i class="fas fa-chevron-right"></i>
-                <span>Attendance Reports</span>
-            </div>
-            <h1><i class="fas fa-chart-bar"></i> Attendance Reports</h1>
-        </div>
+    <?php include 'includes/admin_navbar.php'; ?>
+    <?php include 'includes/admin_sidebar.php'; ?>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card primary">
-                <div class="stat-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <div class="stat-number"><?= $totalRecords ?></div>
-                <div class="stat-label">Total Records</div>
+    <main class="main-content">
+        <div class="page-container">
+            <div class="page-header">
+                <h1>Attendance Reports</h1>
+                <p>Detailed analytics and attendance records for <?= date('F Y', strtotime($filterMonth)) ?></p>
             </div>
 
-            <div class="stat-card success">
-                <div class="stat-icon">
-                    <i class="fas fa-check"></i>
-                </div>
-                <div class="stat-number"><?= $presentCount ?></div>
-                <div class="stat-label">Present Days</div>
-            </div>
-
-            <div class="stat-card danger">
-                <div class="stat-icon">
-                    <i class="fas fa-times"></i>
-                </div>
-                <div class="stat-number"><?= $absentCount ?></div>
-                <div class="stat-label">Absent Days</div>
-            </div>
-
-            <div class="stat-card warning">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-day"></i>
-                </div>
-                <div class="stat-number"><?= $leaveCount ?></div>
-                <div class="stat-label">Leave Days</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #e2e8f0; color: #2d3748;">
-                    <i class="fas fa-percentage"></i>
-                </div>
-                <div class="stat-number" style="color: #2d3748;"><?= $attendanceRate ?>%</div>
-                <div class="stat-label" style="color: #718096;">Attendance Rate</div>
-            </div>
-        </div>
-
-        <!-- Filters Card -->
-        <div class="card">
-            <div class="card-header">
-                <h2>
-                    <i class="fas fa-filter"></i>
-                    Filter Reports
-                </h2>
-                <div class="btn-group">
-                    <a href="?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>" class="btn btn-success">
-                        <i class="fas fa-download"></i> Export CSV
-                    </a>
-                    <button onclick="window.print()" class="btn btn-primary">
-                        <i class="fas fa-print"></i> Print
-                    </button>
-                </div>
-            </div>
-
-            <div class="card-body">
-                <form method="GET" action="">
-                    <div class="filters">
-                        <div class="form-group">
-                            <label for="month">
-                                <i class="far fa-calendar"></i> Month
-                            </label>
-                            <input type="month" 
-                                   id="month" 
-                                   name="month" 
-                                   value="<?= htmlspecialchars($filterMonth) ?>"
-                                   max="<?= date('Y-m') ?>">
+            <!-- Stats Overview -->
+            <div class="stats-grid-reports">
+                <div class="stat-card-glass">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><?= $totalRecords ?></div>
+                            <div class="stat-label">TOTAL RECORDS</div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="employee_id">
-                                <i class="fas fa-user"></i> Employee
-                            </label>
-                            <select id="employee_id" name="employee_id">
-                                <option value="">All Employees</option>
-                                <?php foreach ($allEmployees as $emp): ?>
-                                    <option value="<?= $emp['employee_id'] ?>" 
-                                            <?= $filterEmployee == $emp['employee_id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($emp['full_name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                        <div class="stat-icon-wrapper bg-gradient-purple" style="color: white;">
+                             <i class="fas fa-clipboard-list"></i>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="form-group">
-                            <label for="department_id">
-                                <i class="fas fa-building"></i> Department
-                            </label>
-                            <select id="department_id" name="department_id">
-                                <option value="">All Departments</option>
-                                <?php foreach ($allDepartments as $dept): ?>
-                                    <option value="<?= $dept['department_id'] ?>" 
-                                            <?= $filterDepartment == $dept['department_id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($dept['department_name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                <div class="stat-card-glass">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" style="color: #48bb78;"><?= $presentCount ?></div>
+                            <div class="stat-label">PRESENT</div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="status">
-                                <i class="fas fa-flag"></i> Status
-                            </label>
-                            <select id="status" name="status">
-                                <option value="">All Status</option>
-                                <option value="present" <?= $filterStatus === 'present' ? 'selected' : '' ?>>Present</option>
-                                <option value="absent" <?= $filterStatus === 'absent' ? 'selected' : '' ?>>Absent</option>
-                                <option value="leave" <?= $filterStatus === 'leave' ? 'selected' : '' ?>>Leave</option>
-                                <option value="holiday" <?= $filterStatus === 'holiday' ? 'selected' : '' ?>>Holiday</option>
-                            </select>
+                        <div class="stat-icon-wrapper" style="background: #c6f6d5; color: #22543d;">
+                             <i class="fas fa-check"></i>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="form-group" style="align-self: flex-end;">
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">
-                                <i class="fas fa-search"></i> Apply Filters
+                 <div class="stat-card-glass">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" style="color: #f56565;"><?= $absentCount ?></div>
+                            <div class="stat-label">ABSENT</div>
+                        </div>
+                        <div class="stat-icon-wrapper" style="background: #fed7d7; color: #742a2a;">
+                             <i class="fas fa-times"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card-glass">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" style="color: #2d3748;"><?= $attendanceRate ?>%</div>
+                            <div class="stat-label">ATTENDANCE RATE</div>
+                        </div>
+                        <div class="stat-icon-wrapper" style="background: #edf2f7; color: #4a5568;">
+                             <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <!-- Records List -->
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header" style="background: white; padding-bottom: 0; border: none;">
+                         <h3><i class="fas fa-table" style="color: #667eea; margin-right: 10px;"></i> Detailed Records</h3>
+                         <div style="display: flex; gap: 10px;">
+                            <a href="?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>" class="glass-btn btn" style="font-size: 13px; color: #2d3748;">
+                                <i class="fas fa-download"></i> CSV
+                            </a>
+                            <button onclick="window.print()" class="glass-btn btn" style="font-size: 13px; color: #2d3748;">
+                                <i class="fas fa-print"></i> Print
                             </button>
+                         </div>
+                    </div>
+                    <div class="card-body" style="padding-top: 15px;">
+                         <?php if (empty($attendanceRecords)): ?>
+                            <div class="empty-state" style="text-align: center; padding: 40px; color: #a0aec0;">
+                                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 20px;"></i>
+                                <p>No records found for the selected filters.</p>
+                            </div>
+                        <?php else: ?>
+                            <div style="overflow-x: auto;">
+                                <table class="table-glass">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Employee</th>
+                                            <th>Department</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($attendanceRecords as $record): ?>
+                                        <tr>
+                                            <td><?= date('M d, Y', strtotime($record['date'])) ?></td>
+                                            <td>
+                                                <div style="font-weight: 500;"><?= htmlspecialchars($record['employee_name']) ?></div>
+                                                <div style="font-size: 12px; color: #718096;"><?= htmlspecialchars($record['designation']) ?></div>
+                                            </td>
+                                            <td><?= htmlspecialchars($record['department_name'] ?? '-') ?></td>
+                                            <td>
+                                                <span class="status-badge <?= strtolower($record['status']) ?>">
+                                                    <?= ucfirst($record['status']) ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Filters & Chart Sidebar -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- Filter Card -->
+                    <div class="card">
+                        <div class="card-header" style="background: white; border-bottom: 1px solid #f7fafc;">
+                            <h3 style="font-size: 16px;"><i class="fas fa-filter" style="color: #667eea;"></i> Filters</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="GET">
+                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                    <div class="form-group">
+                                        <label>Month</label>
+                                        <input type="month" name="month" value="<?= htmlspecialchars($filterMonth) ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Department</label>
+                                        <select name="department_id">
+                                            <option value="">All Departments</option>
+                                            <?php foreach ($allDepartments as $dept): ?>
+                                                <option value="<?= $dept['department_id'] ?>" <?= $filterDepartment == $dept['department_id'] ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($dept['department_name']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status</label>
+                                        <select name="status">
+                                            <option value="">All Status</option>
+                                            <option value="present" <?= $filterStatus === 'present' ? 'selected' : '' ?>>Present</option>
+                                            <option value="absent" <?= $filterStatus === 'absent' ? 'selected' : '' ?>>Absent</option>
+                                            <option value="leave" <?= $filterStatus === 'leave' ? 'selected' : '' ?>>Leave</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Apply Filters</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
 
-        <!-- Chart Card -->
-        <?php if ($totalRecords > 0): ?>
-        <div class="card">
-            <div class="card-header">
-                <h2>
-                    <i class="fas fa-chart-pie"></i>
-                    Attendance Distribution
-                </h2>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="attendanceChart"></canvas>
+                    <!-- Chart Card -->
+                    <?php if ($totalRecords > 0): ?>
+                    <div class="card">
+                         <div class="card-body">
+                            <h4 style="margin-bottom: 15px; font-size: 16px; text-align: center; color: #4a5568;">Distribution</h4>
+                            <div style="position: relative; height: 250px;">
+                                <canvas id="attendanceChart"></canvas>
+                            </div>
+                         </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
-        <?php endif; ?>
-
-        <!-- Records Table -->
-        <div class="card">
-            <div class="card-header">
-                <h2>
-                    <i class="fas fa-table"></i>
-                    Attendance Records
-                </h2>
-                <span style="color: #718096; font-size: 14px;">
-                    <?= date('F Y', strtotime($filterMonth)) ?>
-                </span>
-            </div>
-
-            <div class="card-body">
-                <?php if (empty($attendanceRecords)): ?>
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>No Records Found</h3>
-                        <p>No attendance records found for the selected filters.</p>
-                    </div>
-                <?php else: ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Employee</th>
-                                <th>Department</th>
-                                <th>Designation</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($attendanceRecords as $record): ?>
-                            <tr>
-                                <td><?= date('M d, Y', strtotime($record['date'])) ?></td>
-                                <td><?= htmlspecialchars($record['employee_name']) ?></td>
-                                <td><?= htmlspecialchars($record['department_name'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($record['designation']) ?></td>
-                                <td><?= ucfirst($record['employment_type']) ?></td>
-                                <td>
-                                    <span class="status-badge <?= strtolower($record['status']) ?>">
-                                        <?= ucfirst($record['status']) ?>
-                                    </span>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- Back Button -->
-    <a href="admin_dashboard.php" class="back-btn" title="Back to Dashboard">
-        <i class="fas fa-arrow-left"></i>
-    </a>
+    </main>
 
     <?php if ($totalRecords > 0): ?>
     <script>
         const ctx = document.getElementById('attendanceChart').getContext('2d');
         new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: ['Present', 'Absent', 'Leave', 'Holiday'],
                 datasets: [{
                     data: [<?= $presentCount ?>, <?= $absentCount ?>, <?= $leaveCount ?>, <?= $holidayCount ?>],
                     backgroundColor: [
-                        '#48bb78',
-                        '#f56565',
-                        '#4299e1',
-                        '#a0aec0'
+                        '#48bb78', // Present - Green
+                        '#f56565', // Absent - Red
+                        '#4299e1', // Leave - Blue
+                        '#cbd5e0'  // Holiday - Grey
                     ],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'bottom',
                         labels: {
+                            usePointStyle: true,
                             padding: 20,
                             font: {
-                                size: 14,
+                                size: 12,
                                 family: 'Roboto'
                             }
                         }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = <?= $totalRecords ?>;
-                                const value = context.parsed;
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return context.label + ': ' + value + ' (' + percentage + '%)';
-                            }
-                        }
                     }
-                }
+                },
+                cutout: '70%'
             }
         });
     </script>

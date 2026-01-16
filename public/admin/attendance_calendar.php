@@ -7,8 +7,6 @@ if (!isset($_SESSION['role'])) {
     exit;
 }
 
-$username = $_SESSION['username'] ?? 'Admin';
-
 require_once "../../app/Models/Employee.php";
 require_once "../../app/Models/Attendance.php";
 
@@ -46,7 +44,7 @@ while ($holiday = $holidayStmt->fetch(PDO::FETCH_ASSOC)) {
     $holidays[$holiday['holiday_date']] = $holiday;
 }
 
-// Get leave requests for the month with day counts
+// Get leave requests for the month
 $leaveStmt = $db->prepare("SELECT lr.employee_id, 
                                   lr.start_date, 
                                   lr.end_date,
@@ -74,6 +72,7 @@ while ($leave = $leaveStmt->fetch(PDO::FETCH_ASSOC)) {
     $leaveRequests[] = $leave;
 }
 
+// Attendance Query
 if ($filterEmployee) {
     $sql = "SELECT 
                 DATE(a.date) as attendance_date,
@@ -119,7 +118,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $attendanceData[$date][] = $row;
 }
 
-// Calculate summary
+// Summary Calculation
 $totalPresent = 0;
 $totalAbsent = 0;
 $totalLeave = 0;
@@ -151,742 +150,304 @@ foreach ($attendanceData as $date => $records) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Calendar - Admin Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include 'includes/admin_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: #f7fafc;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1100px;
+        .page-container {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 30px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .breadcrumb {
-            font-size: 14px;
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-
-        .breadcrumb a {
-            color: white;
-            text-decoration: none;
-            transition: opacity 0.3s;
-        }
-
-        .breadcrumb a:hover {
-            opacity: 0.8;
-        }
-
-        .breadcrumb i {
-            margin: 0 8px;
-            font-size: 10px;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .stats-grid {
+        .stats-overview {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
 
-        .stat-card {
+        .calendar-wrapper {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-        }
-
-        .stat-icon.present {
-            background: #48bb78;
-        }
-
-        .stat-icon.absent {
-            background: #f56565;
-        }
-
-        .stat-icon.leave {
-            background: #4299e1;
-        }
-
-        .stat-icon.holiday {
-            background: #718096;
-        }
-
-        .stat-details {
-            flex: 1;
-        }
-
-        .stat-number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2d3748;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-            margin-bottom: 25px;
-        }
-
-        .card-header {
-            padding: 20px 25px;
-            background: #f7fafc;
-            border-bottom: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .card-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-header i {
-            color: #667eea;
-            font-size: 20px;
-        }
-
-        .card-body {
+            border-radius: 16px;
             padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
-        .filters {
+        .calendar-toolbar {
             display: flex;
-            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 25px;
             flex-wrap: wrap;
+            gap: 15px;
         }
 
-        .form-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .form-group label {
-            display: block;
+        .cal-nav-btn {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 13px;
             color: #4a5568;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            text-decoration: none;
+            transition: all 0.2s;
         }
 
-        .form-group select,
-        .form-group input {
-            width: 100%;
-            padding: 10px 15px;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Roboto', sans-serif;
-            transition: all 0.3s;
-        }
-
-        .form-group select:focus,
-        .form-group input:focus {
-            outline: none;
+        .cal-nav-btn:hover {
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            background: white;
         }
 
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .calendar {
+        .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
+            gap: 12px;
         }
 
-        .calendar-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px;
+        .cal-head {
             text-align: center;
             font-weight: 700;
-            font-size: 13px;
-            border-radius: 8px;
+            color: #718096;
+            padding: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 13px;
         }
 
-        .calendar-day {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 8px;
-            min-height: 70px;
+        .cal-day {
+            min-height: 120px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            transition: all 0.3s ease;
             position: relative;
-            transition: all 0.3s;
-            cursor: pointer;
+            background: white;
+            display: flex;
+            flex-direction: column;
         }
 
-        .calendar-day:hover {
+        .cal-day:not(.empty):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
             border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
+            z-index: 2;
         }
 
-        .calendar-day.empty {
-            background: #f7fafc;
-            cursor: default;
+        .cal-day.today {
+            border: 2px solid #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02));
         }
 
-        .calendar-day.empty:hover {
-            border-color: #e2e8f0;
-            box-shadow: none;
-            transform: none;
+        .cal-day.empty {
+            background: #f8f9fa;
+            border: none;
         }
 
-        .calendar-day.today {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-        }
-
-        .day-number {
+        .day-num {
             font-size: 18px;
             font-weight: 700;
             color: #2d3748;
             margin-bottom: 8px;
         }
 
-        .calendar-day.today .day-number {
+        .cal-day.today .day-num {
             color: #667eea;
         }
 
-        .day-status {
+        .events-list {
             display: flex;
             flex-direction: column;
             gap: 4px;
+            flex: 1;
         }
 
-        .status-dot {
-            width: 100%;
-            height: 4px;
-            border-radius: 2px;
-            transition: all 0.3s;
-        }
-
-        .status-dot.present {
-            background: #48bb78;
-        }
-
-        .status-dot.absent {
-            background: #f56565;
-        }
-
-        .status-dot.leave {
-            background: #4299e1;
-        }
-
-        .status-dot.holiday {
-            background: #718096;
-        }
-
-        .status-count {
+        .badge-event {
             font-size: 11px;
-            color: #718096;
-            margin-top: 4px;
-        }
-
-        /* Holiday and Leave styles */
-        .calendar-day.has-holiday {
-            background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 100%);
-            border-color: #f39c12;
-        }
-
-        .holiday-badge {
-            font-size: 9px;
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-            padding: 3px 5px;
+            padding: 3px 6px;
             border-radius: 4px;
-            margin: 3px 0;
+            margin-bottom: 2px;
             display: flex;
             align-items: center;
-            gap: 3px;
-            font-weight: 600;
+            gap: 4px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .holiday-badge i {
-            font-size: 10px;
-        }
-
-        .leave-info {
-            margin-top: 4px;
-        }
-
-        .leave-badge {
-            font-size: 9px;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2px 4px;
-            border-radius: 3px;
-            margin: 2px 0;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            font-weight: 600;
-        }
-
-        .leave-badge i {
-            font-size: 9px;
-        }
-
-        .legend {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            padding: 20px;
-            background: #f7fafc;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-        }
-
-        .legend-dot {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-        .back-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .back-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-
-        .month-nav {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .month-nav a {
-            padding: 8px 16px;
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            text-decoration: none;
-            color: #2d3748;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .month-nav a:hover {
-            border-color: #667eea;
-            color: #667eea;
-        }
-
-        .month-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #2d3748;
-        }
-
-        @media (max-width: 968px) {
-            .calendar {
-                gap: 5px;
-            }
-
-            .calendar-day {
-                min-height: 80px;
-                padding: 8px;
-            }
-
-            .day-number {
-                font-size: 14px;
-            }
-        }
+        .badge-holiday { background: #fefcbf; color: #b7791f; border: 1px solid #f6e05e; }
+        .badge-present { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
+        .badge-absent { background: #fed7d7; color: #742a2a; border: 1px solid #feb2b2; }
+        .badge-leave { background: #bee3f8; color: #2c5282; border: 1px solid #90cdf4; }
+        .badge-gov { background: #fdebd0; color: #9c640c; border: 1px solid #fbd38d; }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .filters {
-                flex-direction: column;
-            }
+            .calendar-grid { display: flex; flex-direction: column; }
+            .cal-day { min-height: auto; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="breadcrumb">
-                <a href="admin_dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
-                <i class="fas fa-chevron-right"></i>
-                <span>Attendance Calendar</span>
-            </div>
-            <h1><i class="fas fa-calendar-alt"></i> Attendance Calendar</h1>
-        </div>
+    <?php include 'includes/admin_navbar.php'; ?>
+    <?php include 'includes/admin_sidebar.php'; ?>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon present">
-                    <i class="fas fa-check"></i>
-                </div>
-                <div class="stat-details">
-                    <div class="stat-number"><?= $totalPresent ?></div>
-                    <div class="stat-label">Present</div>
-                </div>
+    <main class="main-content">
+        <div class="page-container">
+            <div class="page-header">
+                <h1>Attendance Calendar</h1>
+                <p>Overview of employee attendance and leaves for <?= $monthName ?></p>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon absent">
-                    <i class="fas fa-times"></i>
+            <!-- Stats Overview -->
+            <div class="stats-overview">
+                <div class="glass-card" style="padding: 20px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 50px; height: 50px; background: #c6f6d5; color: #22543d; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 24px; font-weight: 700; margin: 0; color: #2d3748;"><?= $totalPresent ?></h3>
+                        <span style="font-size: 13px; color: #718096; text-transform: uppercase; font-weight: 500;">Present</span>
+                    </div>
                 </div>
-                <div class="stat-details">
-                    <div class="stat-number"><?= $totalAbsent ?></div>
-                    <div class="stat-label">Absent</div>
+                <div class="glass-card" style="padding: 20px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 50px; height: 50px; background: #fed7d7; color: #742a2a; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 24px; font-weight: 700; margin: 0; color: #2d3748;"><?= $totalAbsent ?></h3>
+                        <span style="font-size: 13px; color: #718096; text-transform: uppercase; font-weight: 500;">Absent</span>
+                    </div>
                 </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon leave">
-                    <i class="fas fa-calendar-day"></i>
+                <div class="glass-card" style="padding: 20px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 50px; height: 50px; background: #bee3f8; color: #2c5282; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="fas fa-umbrella-beach"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 24px; font-weight: 700; margin: 0; color: #2d3748;"><?= $totalLeave ?></h3>
+                        <span style="font-size: 13px; color: #718096; text-transform: uppercase; font-weight: 500;">Leave</span>
+                    </div>
                 </div>
-                <div class="stat-details">
-                    <div class="stat-number"><?= $totalLeave ?></div>
-                    <div class="stat-label">Leave</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon holiday">
-                    <i class="fas fa-umbrella-beach"></i>
-                </div>
-                <div class="stat-details">
-                    <div class="stat-number"><?= $totalHoliday ?></div>
-                    <div class="stat-label">Holiday</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Calendar Card -->
-        <div class="card">
-            <div class="card-header">
-                <h2>
-                    <i class="fas fa-calendar"></i>
-                    Calendar View
-                </h2>
-                <div class="month-nav">
-                    <?php
-                    $prevMonth = date('Y-m', strtotime($filterMonth . '-01 -1 month'));
-                    $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
-                    $currentMonth = date('Y-m');
-                    ?>
-                    <a href="?month=<?= $prevMonth ?><?= $filterEmployee ? '&employee_id=' . $filterEmployee : '' ?>">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </a>
-                    <span class="month-title"><?= $monthName ?></span>
-                    <a href="?month=<?= $nextMonth ?><?= $filterEmployee ? '&employee_id=' . $filterEmployee : '' ?>">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </a>
+                <div class="glass-card" style="padding: 20px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 50px; height: 50px; background: #fefcbf; color: #b7791f; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 24px; font-weight: 700; margin: 0; color: #2d3748;"><?= $totalHoliday ?></h3>
+                        <span style="font-size: 13px; color: #718096; text-transform: uppercase; font-weight: 500;">Holidays</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-body">
-                <!-- Filters -->
-                <form method="GET" action="">
-                    <div class="filters">
-                        <div class="form-group">
-                            <label for="month">
-                                <i class="far fa-calendar"></i> Month
-                            </label>
-                            <input type="month" 
-                                   id="month" 
-                                   name="month" 
-                                   value="<?= htmlspecialchars($filterMonth) ?>">
+            <!-- Calendar -->
+            <div class="calendar-wrapper">
+                <div class="calendar-toolbar">
+                    <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; flex: 1;">
+                        <div style="position: relative;">
+                            <i class="far fa-calendar" style="position: absolute; left: 12px; top: 11px; color: #a0aec0;"></i>
+                            <input type="month" name="month" value="<?= $filterMonth ?>" 
+                                   style="padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
                         </div>
-
-                        <div class="form-group">
-                            <label for="employee_id">
-                                <i class="fas fa-user"></i> Employee
-                            </label>
-                            <select id="employee_id" name="employee_id">
+                        <div style="position: relative;">
+                             <i class="fas fa-user" style="position: absolute; left: 12px; top: 11px; color: #a0aec0;"></i>
+                             <select name="employee_id" style="padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; min-width: 200px;">
                                 <option value="">All Employees</option>
-                                <?php foreach ($allEmployees as $emp): ?>
-                                    <option value="<?= $emp['employee_id'] ?>" 
-                                            <?= $filterEmployee == $emp['employee_id'] ? 'selected' : '' ?>>
+                                <?php foreach($allEmployees as $emp): ?>
+                                    <option value="<?= $emp['employee_id'] ?>" <?= $filterEmployee == $emp['employee_id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($emp['full_name']) ?>
                                     </option>
                                 <?php endforeach; ?>
-                            </select>
+                             </select>
                         </div>
+                        <button type="submit" class="cal-nav-btn" style="background: #667eea; color: white; border: none;">Apply</button>
+                    </form>
 
-                        <div class="form-group" style="align-self: flex-end;">
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">
-                                <i class="fas fa-filter"></i> Apply Filter
-                            </button>
-                        </div>
+                    <div style="display: flex; gap: 10px;">
+                        <?php
+                            $prev = date('Y-m', strtotime($filterMonth . ' -1 month'));
+                            $next = date('Y-m', strtotime($filterMonth . ' +1 month'));
+                        ?>
+                        <a href="?month=<?= $prev ?><?= $filterEmployee ? '&employee_id='.$filterEmployee : '' ?>" class="cal-nav-btn">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <span style="font-size: 18px; font-weight: 700; display: flex; align-items: center;"><?= $monthName ?></span>
+                        <a href="?month=<?= $next ?><?= $filterEmployee ? '&employee_id='.$filterEmployee : '' ?>" class="cal-nav-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
                     </div>
-                </form>
+                </div>
 
-                <!-- Calendar Grid -->
-                <div class="calendar">
-                    <!-- Day Headers -->
-                    <div class="calendar-header">Sun</div>
-                    <div class="calendar-header">Mon</div>
-                    <div class="calendar-header">Tue</div>
-                    <div class="calendar-header">Wed</div>
-                    <div class="calendar-header">Thu</div>
-                    <div class="calendar-header">Fri</div>
-                    <div class="calendar-header">Sat</div>
+                <div class="calendar-grid">
+                    <div class="cal-head">Sun</div>
+                    <div class="cal-head">Mon</div>
+                    <div class="cal-head">Tue</div>
+                    <div class="cal-head">Wed</div>
+                    <div class="cal-head">Thu</div>
+                    <div class="cal-head">Fri</div>
+                    <div class="cal-head">Sat</div>
 
-                    <!-- Empty cells before first day -->
-                    <?php for ($i = 0; $i < $dayOfWeek; $i++): ?>
-                        <div class="calendar-day empty"></div>
+                    <!-- Empty -->
+                    <?php for($i=0; $i<$dayOfWeek; $i++): ?>
+                        <div class="cal-day empty"></div>
                     <?php endfor; ?>
 
-                    <!-- Days of month -->
-                    <?php for ($day = 1; $day <= $daysInMonth; $day++): 
-                        $currentDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
+                    <!-- Days -->
+                    <?php for($d=1; $d<=$daysInMonth; $d++): 
+                        $currentDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
                         $isToday = $currentDate === date('Y-m-d');
-                        $dayRecords = $attendanceData[$currentDate] ?? [];
-                        $isHoliday = isset($holidays[$currentDate]);
-                        $holidayInfo = $isHoliday ? $holidays[$currentDate] : null;
+                        $dayData = $attendanceData[$currentDate] ?? [];
                         
-                        // Check if any approved leave falls on this date
-                        $leavesOnDate = [];
-                        foreach ($leaveRequests as $leave) {
-                            if ($currentDate >= $leave['start_date'] && $currentDate <= $leave['end_date']) {
-                                $leavesOnDate[] = $leave;
+                        // Check Holiday
+                        $isHoliday = isset($holidays[$currentDate]);
+                        $holidayInfo = $holidays[$currentDate] ?? null;
+
+                        // Check Leave
+                        $leaves = [];
+                        foreach($leaveRequests as $lr) {
+                            if($currentDate >= $lr['start_date'] && $currentDate <= $lr['end_date']) {
+                                $leaves[] = $lr;
                             }
                         }
-                        
-                        // Group by status
-                        $statusCounts = ['present' => 0, 'absent' => 0, 'leave' => 0, 'holiday' => 0];
-                        foreach ($dayRecords as $record) {
-                            $status = strtolower($record['status']);
-                            if ($filterEmployee) {
-                                $statusCounts[$status]++;
-                            } else {
-                                $statusCounts[$status] += ($record['count'] ?? 1);
-                            }
+
+                        // Counts
+                        $counts = ['present'=>0, 'absent'=>0, 'leave'=>0, 'holiday'=>0];
+                        foreach($dayData as $rec) {
+                            $st = strtolower($rec['status']);
+                            if($filterEmployee) $counts[$st]++;
+                            else $counts[$st] += ($rec['count'] ?? 1);
                         }
                     ?>
-                        <div class="calendar-day <?= $isToday ? 'today' : '' ?> <?= $isHoliday ? 'has-holiday' : '' ?>" 
-                             title="<?= date('l, F j, Y', strtotime($currentDate)) ?>">
-                            <div class="day-number"><?= $day ?></div>
-                            
-                            <?php if ($isHoliday): ?>
-                                <div class="holiday-badge" title="<?= htmlspecialchars($holidayInfo['holiday_name']) ?> (<?= ucfirst($holidayInfo['holiday_type']) ?>)">
-                                    <i class="fas fa-gift"></i> <?= htmlspecialchars($holidayInfo['holiday_name']) ?>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <?php if (!empty($leavesOnDate)): ?>
-                                <div class="leave-info">
-                                    <?php foreach ($leavesOnDate as $leave): ?>
-                                        <div class="leave-badge" title="<?= htmlspecialchars($leave['employee_name']) ?>: <?= $leave['leave_days'] ?> days (<?= ucfirst($leave['leave_type']) ?>)">
-                                            <i class="fas fa-umbrella-beach"></i> 
-                                            <?= $filterEmployee ? '' : substr($leave['employee_name'], 0, 15) . ': ' ?>
-                                            <?= $leave['leave_days'] ?> day<?= $leave['leave_days'] > 1 ? 's' : '' ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <?php if (!empty($dayRecords)): ?>
-                                <div class="day-status">
-                                    <?php if ($statusCounts['present'] > 0): ?>
-                                        <div class="status-dot present" title="Present: <?= $statusCounts['present'] ?>"></div>
-                                    <?php endif; ?>
-                                    <?php if ($statusCounts['absent'] > 0): ?>
-                                        <div class="status-dot absent" title="Absent: <?= $statusCounts['absent'] ?>"></div>
-                                    <?php endif; ?>
-                                    <?php if ($statusCounts['leave'] > 0): ?>
-                                        <div class="status-dot leave" title="Leave: <?= $statusCounts['leave'] ?>"></div>
-                                    <?php endif; ?>
-                                    <?php if ($statusCounts['holiday'] > 0): ?>
-                                        <div class="status-dot holiday" title="Holiday: <?= $statusCounts['holiday'] ?>"></div>
-                                    <?php endif; ?>
-                                </div>
-                                <?php if (!$filterEmployee): ?>
-                                    <div class="status-count">
-                                        <?= array_sum($statusCounts) ?> records
+                        <div class="cal-day <?= $isToday ? 'today' : '' ?>">
+                            <div class="day-num"><?= $d ?></div>
+                            <div class="events-list">
+                                <?php if($isHoliday): ?>
+                                    <div class="badge-event badge-gov" title="<?= $holidayInfo['holiday_name'] ?>">
+                                        <i class="fas fa-gift"></i> <?= substr($holidayInfo['holiday_name'], 0, 15) ?>
                                     </div>
                                 <?php endif; ?>
-                            <?php endif; ?>
+
+                                <?php foreach($leaves as $l): ?>
+                                    <div class="badge-event badge-leave" title="<?= $l['employee_name'] ?> (<?= $l['leave_type'] ?>)">
+                                        <i class="fas fa-user-clock"></i> <?= $filterEmployee ? $l['leave_type'] : substr($l['employee_name'],0,10) ?>
+                                    </div>
+                                <?php endforeach; ?>
+
+                                <!-- Attendance Badges -->
+                                <?php if($counts['present'] > 0): ?>
+                                    <div class="badge-event badge-present">
+                                        <i class="fas fa-check"></i> Present: <?= $counts['present'] ?>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if($counts['absent'] > 0): ?>
+                                    <div class="badge-event badge-absent">
+                                        <i class="fas fa-times"></i> Absent: <?= $counts['absent'] ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php endfor; ?>
                 </div>
-
-                <!-- Legend -->
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-dot present"></div>
-                        <span>Present</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot absent"></div>
-                        <span>Absent</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot leave"></div>
-                        <span>Leave</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot holiday"></div>
-                        <span>Holiday</span>
-                    </div>
-                    <div class="legend-item">
-                        <div style="width: 16px; height: 16px; border: 2px solid #667eea; border-radius: 4px;"></div>
-                        <span>Today</span>
-                    </div>
-                    <div class="legend-item">
-                        <i class="fas fa-gift" style="color: #f39c12; font-size: 14px;"></i>
-                        <span>Govt Holiday</span>
-                    </div>
-                    <div class="legend-item">
-                        <i class="fas fa-umbrella-beach" style="color: #4299e1; font-size: 14px;"></i>
-                        <span>Approved Leave</span>
-                    </div>
-                </div>
-                
-                <!-- Holidays List for Current Month -->
-                <?php if (!empty($holidays)): ?>
-                    <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #f39c12;">
-                        <h4 style="margin: 0 0 10px 0; color: #2d3748; font-size: 14px; font-weight: 600;">
-                            <i class="fas fa-calendar-star"></i> Central Government Holidays (<?= $monthName ?>)
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
-                            <?php foreach ($holidays as $holiday): ?>
-                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                                    <i class="fas fa-gift" style="color: #f39c12;"></i>
-                                    <strong><?= date('M d', strtotime($holiday['holiday_date'])) ?>:</strong>
-                                    <span><?= htmlspecialchars($holiday['holiday_name']) ?></span>
-                                    <?php if ($holiday['holiday_type'] === 'optional'): ?>
-                                        <span style="font-size: 10px; background: #e2e8f0; padding: 1px 4px; border-radius: 3px;">optional</span>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
             </div>
         </div>
-    </div>
-
-    <!-- Back Button -->
-    <a href="admin_dashboard.php" class="back-btn" title="Back to Dashboard">
-        <i class="fas fa-arrow-left"></i>
-    </a>
+    </main>
 </body>
 </html>
