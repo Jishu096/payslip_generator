@@ -67,6 +67,7 @@ class LeaveRequest {
     public function getAllLeaveRequests($status = null, $employeeId = null) {
         try {
             $sql = "SELECT lr.*, 
+                           e.full_name,
                            e.designation, 
                            d.department_name 
                     FROM leave_requests lr

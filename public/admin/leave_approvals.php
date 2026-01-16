@@ -302,8 +302,9 @@ $rejectedRequests = $leaveModel->getAllLeaveRequests('rejected');
                         <?php foreach ($leaveRequests as $request): 
                             $days = (strtotime($request['end_date']) - strtotime($request['start_date'])) / 86400 + 1;
                             $initials = '';
-                            if ($request['employee_name']) {
-                                $nameParts = explode(' ', $request['employee_name']);
+                            $displayName = $request['full_name'] ?? $request['employee_name'];
+                            if ($displayName) {
+                                $nameParts = explode(' ', $displayName);
                                 $initials = strtoupper(substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : ''));
                             }
                         ?>
@@ -312,7 +313,7 @@ $rejectedRequests = $leaveModel->getAllLeaveRequests('rejected');
                                 <div class="emp-profile">
                                     <div class="emp-avatar"><?= $initials ?></div>
                                     <div>
-                                        <h3 style="margin: 0; font-size: 16px; color: #2d3748;"><?= htmlspecialchars($request['employee_name']) ?></h3>
+                                        <h3 style="margin: 0; font-size: 16px; color: #2d3748;"><?= htmlspecialchars($displayName) ?></h3>
                                         <div style="font-size: 12px; color: #718096; margin-top: 4px;"><?= htmlspecialchars($request['designation']) ?> • <?= htmlspecialchars($request['department_name'] ?? 'N/A') ?></div>
                                     </div>
                                 </div>
