@@ -20,8 +20,11 @@ class AttendanceStatementHelper {
      * @return array Summary data
      */
     public function calculateMonthlySummary($employeeId, $month, $year) {
-        // Get employee details
-        $empStmt = $this->db->prepare("SELECT employee_type, status FROM employees WHERE employee_id = ?");
+        // Get employee details - Update to fetch joining/resignation dates
+        // Note: Using 'join_date' as seen in Employee model. Assuming 'resignation_date' or 'contract_end_date' might exist.
+        // If resignation_date logic is needed, ensure the column exists. For now using contract_end_date for non-regular if needed, 
+        // or assuming join_date is the primary one for pro-rata.
+        $empStmt = $this->db->prepare("SELECT employee_type, status, join_date, contract_end_date FROM employees WHERE employee_id = ?");
         $empStmt->execute([$employeeId]);
         $employee = $empStmt->fetch(PDO::FETCH_ASSOC);
         
@@ -29,11 +32,41 @@ class AttendanceStatementHelper {
             throw new Exception("Employee not found");
         }
         
+        // Determine active period in the month
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $monthStartDate = "$year-$month-01";
+        $monthEndDate = "$year-$month-$daysInMonth";
         
-        // Calculate Saturdays, Sundays, and Government Holidays
-        $weekendHolidays = $this->calculateWeekendAndHolidays($month, $year);
+        // Start Date = Max(MonthStart, JoinDate)
+        $calcStartDate = $monthStartDate;
+        if (!empty($employee['join_date']) && $employee['join_date'] > $monthStartDate) {
+            $calcStartDate = $employee['join_date'];
+        }
         
+        // End Date = Min(MonthEnd, Resignation/ContractEnd)
+        // If employee is inactive, we might check a resignation date if it exists, or rely on status.
+        // For now, checking contract_end_date for all types if present and earlier than month end.
+        $calcEndDate = $monthEndDate;
+        if (!empty($employee['contract_end_date']) && $employee['contract_end_date'] < $monthEndDate) {
+            $calcEndDate = $employee['contract_end_date'];
+        }
+        
+        // Ensure start <= end (case where joined after month end or left before month start)
+        if ($calcStartDate > $calcEndDate) {
+             // Employee not active in this month
+             $daysInMonth = 0; // effectively 0 working days
+             $weekendHolidays = ['saturdays' => 0, 'sundays' => 0, 'govt_holidays' => 0];
+        } else {
+             // Calculate working days & holidays specific to this active period
+             $weekendHolidays = $this->calculateWeekendAndHolidaysForPeriod($calcStartDate, $calcEndDate);
+             
+             // The 'daysInMonth' for calculation purposes is now the number of days in the active period
+             // converting to DateTime to calculate difference
+             $start = new DateTime($calcStartDate);
+             $end = new DateTime($calcEndDate);
+             $daysInMonth = $end->diff($start)->days + 1;
+        }
+
         // Get all leave/absence records for the month
         $leaveData = $this->getMonthlyLeaveData($employeeId, $month, $year);
         
@@ -87,8 +120,9 @@ class AttendanceStatementHelper {
             }
         }
         
-        // Working days = Total days in month
-        $workingDays = $daysInMonth;
+        // Working days = Total days - Weekends - Holidays (Standard working days in month)
+        $standardWorkingDays = $daysInMonth - ($weekendHolidays['saturdays'] + $weekendHolidays['sundays'] + $weekendHolidays['govt_holidays']);
+        $workingDays = $standardWorkingDays;
         
         // Net Working Days = Working Days - (EL + CCL + PL + CL + RH)
         // OD and Tour are payable, so they're included in net working days
@@ -151,25 +185,39 @@ class AttendanceStatementHelper {
      */
     private function calculateWeekendAndHolidays($month, $year) {
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $startDate = "$year-$month-01";
+        $endDate = "$year-$month-$daysInMonth";
+        return $this->calculateWeekendAndHolidaysForPeriod($startDate, $endDate);
+    }
+
+    /**
+     * Calculate Saturdays, Sundays, and Government Holidays in a date range
+     */
+    private function calculateWeekendAndHolidaysForPeriod($startDate, $endDate) {
+        $start = new DateTime($startDate);
+        $end = new DateTime($endDate);
+        
         $saturdays = 0;
         $sundays = 0;
         
-        for ($day = 1; $day <= $daysInMonth; $day++) {
-            $dayOfWeek = date('w', mktime(0, 0, 0, $month, $day, $year));
+        // Loop through days to count weekends
+        $period = new DatePeriod($start, new DateInterval('P1D'), $end->modify('+1 day'));
+        
+        foreach ($period as $dt) {
+            $dayOfWeek = $dt->format('w'); // 0 (Sun) - 6 (Sat)
             if ($dayOfWeek == 0) $sundays++;
             if ($dayOfWeek == 6) $saturdays++;
         }
         
-        // Count government holidays from holidays table
+        // Count government holidays from holidays table within range
         $stmt = $this->db->prepare("
             SELECT COUNT(*) as holiday_count
             FROM holidays
-            WHERE YEAR(holiday_date) = :year
-            AND MONTH(holiday_date) = :month
+            WHERE holiday_date BETWEEN :start_date AND :end_date
             AND is_active = 1
             AND holiday_type = 'national'
         ");
-        $stmt->execute([':year' => $year, ':month' => $month]);
+        $stmt->execute([':start_date' => $startDate, ':end_date' => $endDate]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         return [

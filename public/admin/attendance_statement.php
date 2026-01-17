@@ -52,6 +52,8 @@ function getRegularEmployeesStatement($db, $month, $year) {
                 e.full_name,
                 e.designation,
                 e.location,
+                e.resignation_date,
+                e.retirement_date,
                 COALESCE(mas.od_days, 0) as od_days,
                 COALESCE(mas.tour_days, 0) as tour_days,
                 COALESCE(mas.el_days, 0) as el_days,
@@ -94,6 +96,8 @@ function getContractEmployeesStatement($db, $month, $year) {
                 e.employee_group,
                 e.location,
                 e.contract_end_date,
+                e.internship_duration,
+                e.join_date,
                 COALESCE(mas.total_days, 0) as total_days,
                 COALESCE(mas.absent_days, 0) as absent_days,
                 COALESCE(mas.payable_days, 0) as payable_days,
@@ -109,7 +113,7 @@ function getContractEmployeesStatement($db, $month, $year) {
                 ON e.employee_id = mas.employee_id 
                 AND mas.month = :month 
                 AND mas.year = :year
-            WHERE e.employee_type IN ('contract', 'project', 'daily_wage')
+            WHERE e.employee_type IN ('contract', 'project', 'daily_wage', 'intern')
             AND (e.status = 'active' OR 
                  (e.status = 'inactive' AND e.contract_end_date >= :start_date))
             ORDER BY e.employee_group, e.location, e.full_name";
@@ -377,6 +381,29 @@ if (!empty($contractEmployees)) {
                                     $clRh = $emp['cl_days'] + $emp['rh_days'];
                                     $satSunGh = $emp['sat_days'] + $emp['sun_days'] + $emp['gh_days'];
                                     $totalDays = $odTour + $elCclPl + $clRh + $satSunGh;
+
+                                    // Auto-Remarks Logic
+                                    $generatedRemarks = [];
+                                    if ($emp['remarks']) $generatedRemarks[] = $emp['remarks'];
+                                    
+                                    $monthEndTs = strtotime("$selectedYear-$selectedMonth-01 +1 month -1 day");
+                                    $monthStartTs = strtotime("$selectedYear-$selectedMonth-01");
+                                    $todayTs = time();
+                                    
+                                    if (!empty($emp['resignation_date'])) {
+                                        $resTs = strtotime($emp['resignation_date']);
+                                        if ($resTs >= $monthStartTs && $resTs <= $monthEndTs && $resTs <= $todayTs) {
+                                            $generatedRemarks[] = "Resigned on " . date('d/m/Y', $resTs);
+                                        }
+                                    }
+                                    if (!empty($emp['retirement_date'])) {
+                                        $retTs = strtotime($emp['retirement_date']);
+                                        if ($retTs >= $monthStartTs && $retTs <= $monthEndTs && $retTs <= $todayTs) {
+                                            $generatedRemarks[] = "Retired on " . date('d/m/Y', $retTs);
+                                        }
+                                    }
+                                    
+                                    $finalRemarks = implode('; ', $generatedRemarks);
                                 ?>
                                     <tr>
                                         <td><?= $serialNo++ ?></td>
@@ -393,7 +420,7 @@ if (!empty($contractEmployees)) {
                                         <td><?= $totalDays > 0 ? $totalDays : '---' ?></td>
                                         <td><?= $emp['working_days'] ?: $daysInMonth ?></td>
                                         <td><strong><?= $emp['net_working_days'] ?: $daysInMonth ?></strong></td>
-                                        <td class="text-left"><?= htmlspecialchars($emp['remarks'] ?: '') ?></td>
+                                        <td class="text-left"><?= htmlspecialchars($finalRemarks) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -443,9 +470,25 @@ if (!empty($contractEmployees)) {
                                         $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
                                         $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
                                         
-                                        $remarks = $emp['remarks'] ?: '';
-                                        if ($emp['contract_end_date'] && strtotime($emp['contract_end_date']) < strtotime("$selectedYear-$selectedMonth-$daysInMonth")) {
-                                            $remarks = 'Contract ended on ' . date('d/m/Y', strtotime($emp['contract_end_date']));
+                                        // Auto-Remarks for Contract
+                                        $finalRemarks = $emp['remarks'] ?: '';
+                                        $monthEndTs = strtotime("$selectedYear-$selectedMonth-01 +1 month -1 day");
+                                        $monthStartTs = strtotime("$selectedYear-$selectedMonth-01");
+                                        $todayTs = time();
+
+                                        $extras = [];
+                                        if ($emp['contract_end_date']) {
+                                            $contractTs = strtotime($emp['contract_end_date']);
+                                            if ($contractTs >= $monthStartTs && $contractTs <= $monthEndTs && $contractTs <= $todayTs) {
+                                                $extras[] = 'Contract ended on ' . date('d/m/Y', $contractTs);
+                                            }
+                                        }
+                                        if ($emp['internship_duration']) {
+                                            $extras[] = $emp['internship_duration'] . " Months Internship";
+                                        }
+
+                                        if (!empty($extras)) {
+                                            $finalRemarks = ($finalRemarks ? $finalRemarks . '; ' : '') . implode('; ', $extras);
                                         }
                                     ?>
                                         <tr>
@@ -458,7 +501,7 @@ if (!empty($contractEmployees)) {
                                             <td class="text-left"><?= $leaveNatStr ?></td>
                                             <td><?= $absenceStr ?></td>
                                             <td><strong><?= $emp['absent_days'] > 0 ? $emp['absent_days'] : '---' ?></strong></td>
-                                            <td class="text-left"><?= htmlspecialchars($remarks) ?></td>
+                                            <td class="text-left"><?= htmlspecialchars($finalRemarks) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php endforeach; ?>

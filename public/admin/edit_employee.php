@@ -244,6 +244,28 @@ $username = $_SESSION['username'] ?? 'Admin';
                         </select>
                     </div>
 
+                    <!-- Dynamic Fields based on Employment Type -->
+                    <div class="form-group" id="contract_date_group" style="display: none;">
+                        <label for="contract_end_date"><i class="fas fa-file-contract"></i> Contract End Date</label>
+                        <input type="date" id="contract_end_date" name="contract_end_date" value="<?php echo htmlspecialchars($emp['contract_end_date'] ?? ''); ?>">
+                    </div>
+
+                    <div class="form-group" id="permanent_fields_group" style="display: none;">
+                        <div style="margin-bottom: 15px;">
+                            <label for="resignation_date"><i class="fas fa-sign-out-alt"></i> Resignation Date</label>
+                            <input type="date" id="resignation_date" name="resignation_date" value="<?php echo htmlspecialchars($emp['resignation_date'] ?? ''); ?>">
+                        </div>
+                        <div>
+                            <label for="retirement_date"><i class="fas fa-user-clock"></i> Retirement Date</label>
+                            <input type="date" id="retirement_date" name="retirement_date" value="<?php echo htmlspecialchars($emp['retirement_date'] ?? ''); ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="intern_fields_group" style="display: none;">
+                        <label for="internship_duration"><i class="fas fa-hourglass-half"></i> Internship Duration (Months)</label>
+                        <input type="number" id="internship_duration" name="internship_duration" value="<?php echo htmlspecialchars($emp['internship_duration'] ?? ''); ?>" placeholder="e.g. 6">
+                    </div>
+
                     <div class="form-group">
                         <label for="status"><i class="fas fa-toggle-on"></i> Status</label>
                         <select id="status" name="status" required>
@@ -254,7 +276,7 @@ $username = $_SESSION['username'] ?? 'Admin';
                     </div>
 
                     <div class="form-group">
-                        <label for="basic_salary"><i class="fas fa-dollar-sign"></i> Basic Salary</label>
+                        <label for="basic_salary" id="salary_label"><i class="fas fa-dollar-sign"></i> Basic Salary</label>
                         <input type="number" id="basic_salary" name="basic_salary" step="0.01" required value="<?php echo htmlspecialchars($emp['basic_salary']); ?>" data-original="<?php echo htmlspecialchars($emp['basic_salary']); ?>">
                         <p class="form-hint" style="color: #e74c3c; font-weight: 500; display: none;" id="salary_warning">
                             <i class="fas fa-exclamation-triangle"></i> Salary changes require Director approval
@@ -390,22 +412,36 @@ $username = $_SESSION['username'] ?? 'Admin';
         
         function handleEmploymentTypeSalary() {
             const salaryInput = document.getElementById('basic_salary');
+            
+            // Get Groups
+            const contractGroup = document.getElementById('contract_date_group');
+            const permanentGroup = document.getElementById('permanent_fields_group');
+            const internGroup = document.getElementById('intern_fields_group');
+            
+            // Reset Display
+            contractGroup.style.display = 'none';
+            permanentGroup.style.display = 'none';
+            internGroup.style.display = 'none';
+
             if (employmentTypeSelect.value === 'intern') {
-                // Interns: Fixed stipend of 10,000
+                // Interns: Fixed stipend of 10,000 + Show Intern Fields
                 salaryInput.value = '10000.00';
                 salaryInput.readOnly = true;
                 salaryInput.placeholder = '10000.00 (Fixed)';
                 salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Stipend (Fixed for Interns)';
+                internGroup.style.display = 'block';
             } else if (employmentTypeSelect.value === 'contract') {
-                // Contract: Manual entry (contractual basis)
+                // Contract: Manual entry + Show Contract Date
                 salaryInput.readOnly = false;
                 salaryInput.placeholder = 'Enter contractual amount';
                 salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Contractual Pay (Manual Entry)';
+                contractGroup.style.display = 'block';
             } else if (employmentTypeSelect.value === 'permanent') {
-                // Permanent: Standard basic salary
+                // Permanent: Standard basics + Show Perm Fields
                 salaryInput.readOnly = false;
                 salaryInput.placeholder = 'Enter basic salary';
                 salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+                permanentGroup.style.display = 'block';
             } else {
                 // Default
                 salaryInput.readOnly = false;

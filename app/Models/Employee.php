@@ -175,7 +175,7 @@ class Employee {
     public function updateEmployee($id, $data) {
         $sql = "UPDATE employees SET full_name=:full_name, email=:email, phone=:phone,
             designation=:designation, department_id=:department_id,
-            employment_type=:employment_type, basic_salary=:basic_salary,
+            employment_type=:employment_type, employee_type=:employee_type, basic_salary=:basic_salary,
             address=:address, city=:city, state=:state, pincode=:pincode,
             emergency_contact_name=:emergency_contact_name,
             emergency_contact_phone=:emergency_contact_phone,
@@ -183,7 +183,11 @@ class Employee {
             aadhaar_no=:aadhaar_no, pan_no=:pan_no,
             bank_account_no=:bank_account_no, ifsc_code=:ifsc_code,
             experience_years=:experience_years, last_appraisal_date=:last_appraisal_date,
-            remarks=:remarks
+            remarks=:remarks,
+            contract_end_date=:contract_end_date,
+            resignation_date=:resignation_date,
+            retirement_date=:retirement_date,
+            internship_duration=:internship_duration
             WHERE employee_id=:id";
 
         $stmt = $this->conn->prepare($sql);
@@ -191,6 +195,20 @@ class Employee {
         // Handle empty date strings - convert to NULL
         $last_appraisal_date = isset($data['last_appraisal_date']) && $data['last_appraisal_date'] !== '' ? $data['last_appraisal_date'] : null;
         $experience_years = isset($data['experience_years']) && $data['experience_years'] !== '' ? $data['experience_years'] : null;
+        $contract_end_date = !empty($data['contract_end_date']) ? $data['contract_end_date'] : null;
+        $resignation_date = !empty($data['resignation_date']) ? $data['resignation_date'] : null;
+        $retirement_date = !empty($data['retirement_date']) ? $data['retirement_date'] : null;
+        $internship_duration = !empty($data['internship_duration']) ? $data['internship_duration'] : null;
+
+        // Map employment_type to employee_type for report filtering
+        $employee_type = 'regular'; // Default
+        if ($data['employment_type'] === 'contract') {
+            $employee_type = 'contract';
+        } elseif ($data['employment_type'] === 'intern') {
+            $employee_type = 'intern';
+        } elseif ($data['employment_type'] === 'permanent') {
+            $employee_type = 'regular';
+        }
 
         return $stmt->execute([
             ':id' => $id,
@@ -200,6 +218,7 @@ class Employee {
             ':designation' => $data['designation'],
             ':department_id' => $data['department_id'],
             ':employment_type' => $data['employment_type'],
+            ':employee_type' => $employee_type,
             ':basic_salary' => $data['basic_salary'],
             ':address' => $data['address'] ?? null,
             ':city' => $data['city'] ?? null,
@@ -214,7 +233,11 @@ class Employee {
             ':ifsc_code' => $data['ifsc_code'] ?? null,
             ':experience_years' => $experience_years,
             ':last_appraisal_date' => $last_appraisal_date,
-            ':remarks' => $data['remarks'] ?? null
+            ':remarks' => $data['remarks'] ?? null,
+            ':contract_end_date' => $contract_end_date,
+            ':resignation_date' => $resignation_date,
+            ':retirement_date' => $retirement_date,
+            ':internship_duration' => $internship_duration
         ]);
     }
     public function getEmployeeById($id) {
