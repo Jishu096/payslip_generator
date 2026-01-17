@@ -175,7 +175,7 @@ foreach ($employees as $emp) {
 
         .status-buttons {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 8px;
             background: #f7fafc;
             padding: 5px;
@@ -203,6 +203,7 @@ foreach ($employees as $emp) {
         .status-btn.active.absent { background: #fed7d7; color: #742a2a; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .status-btn.active.leave { background: #bee3f8; color: #2c5282; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .status-btn.active.holiday { background: #e2e8f0; color: #2d3748; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .status-btn.active.clear { background: #fee2e2; color: #991b1b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
         .spinner {
             display: none;
@@ -271,9 +272,9 @@ foreach ($employees as $emp) {
                      <button class="btn" onclick="markAll('present')" style="background: #48bb78;">
                         <i class="fas fa-check-double"></i> All Present
                     </button>
-                    <!-- <button class="btn" onclick="markAll('holiday')" style="background: #a0aec0;">
-                         <i class="fas fa-umbrella-beach"></i> All Holiday
-                    </button> -->
+                    <button class="btn" onclick="markAll('clear')" style="background: #e53e3e;">
+                         <i class="fas fa-undo"></i> Reset All
+                    </button>
                 </div>
             </div>
 
@@ -311,6 +312,10 @@ foreach ($employees as $emp) {
                         
                         <button class="status-btn <?= $currentStatus === 'holiday' ? 'active holiday' : '' ?>" 
                                 onclick="updateStatus(<?= $emp['employee_id'] ?>, 'holiday', this)">Holiday</button>
+
+                        <button class="status-btn" onclick="updateStatus(<?= $emp['employee_id'] ?>, 'clear', this)">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -394,7 +399,8 @@ foreach ($employees as $emp) {
         }
 
         function markAll(status) {
-            if(!confirm(`Are you sure you want to mark ALL displayed employees as ${status}?`)) return;
+            const actionText = status === 'clear' ? 'RESET (Delete)' : `mark as ${status}`;
+            if(!confirm(`Are you sure you want to ${actionText} ALL displayed employees?`)) return;
 
             const cards = document.querySelectorAll('.employee-card');
             cards.forEach(card => {
@@ -402,10 +408,12 @@ foreach ($employees as $emp) {
                     // Find the button for the target status
                     const buttons = card.querySelectorAll('.status-btn');
                     buttons.forEach(btn => {
-                        if(btn.textContent.toLowerCase() === status) {
-                             // Programmatically click to trigger updateStatus
-                             // Note: Triggering many fetch requests at once might overwhelm the server slightly but fine for <50 employees
-                             // For production, a bulk-update API would be better.
+                        // Handle 'clear' button which has only icon
+                        if (status === 'clear') {
+                            if (btn.querySelector('.fa-times')) {
+                                btn.click();
+                            }
+                        } else if(btn.textContent.toLowerCase() === status) {
                              btn.click();
                         }
                     });

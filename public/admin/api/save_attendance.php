@@ -31,10 +31,17 @@ if (!$employeeId || !$date || !$status) {
 
 try {
     $attendanceModel = new Attendance();
-    $result = $attendanceModel->markAttendance($employeeId, $date, $status);
+    
+    if ($status === 'clear' || $status === 'unmarked') {
+        $result = $attendanceModel->deleteAttendance($employeeId, $date);
+        $action = 'cleared';
+    } else {
+        $result = $attendanceModel->markAttendance($employeeId, $date, $status);
+        $action = 'saved';
+    }
     
     if ($result) {
-        echo json_encode(['success' => true, 'message' => 'Attendance saved']);
+        echo json_encode(['success' => true, 'message' => "Attendance $action"]);
     } else {
         // Get the last error
         $db = getDBConnection();

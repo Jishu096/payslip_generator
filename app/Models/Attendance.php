@@ -92,6 +92,28 @@ class Attendance {
     }
 
     /**
+     * Delete attendance record for an employee
+     * @param int $employeeId
+     * @param string $date
+     * @return bool
+     */
+    public function deleteAttendance($employeeId, $date) {
+        try {
+            $query = "DELETE FROM " . $this->table . " 
+                      WHERE employee_id = :employee_id AND date = :date";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':employee_id', $employeeId, PDO::PARAM_INT);
+            $stmt->bindParam(':date', $date);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Delete Attendance Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Get attendance summary for an employee
      * @param int $employeeId
      * @param string $month (format: YYYY-MM)
