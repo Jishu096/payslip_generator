@@ -9,8 +9,32 @@ if (!isset($_SESSION['role'])) {
 
 require_once "../../app/Config/database.php";
 require_once "../../app/Models/Employee.php";
+require_once "../../app/Helpers/AttendanceStatementHelper.php";
 
 $db = getDBConnection();
+
+// Handle Generate Summary Action
+$generateMessage = '';
+$generateError = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_summary'])) {
+    $genMonth = $_POST['gen_month'] ?? date('n');
+    $genYear = $_POST['gen_year'] ?? date('Y');
+    
+    try {
+        $helper = new AttendanceStatementHelper($db);
+        $result = $helper->processMonthlyAttendance($genMonth, $genYear);
+        
+        if ($result['success']) {
+            $generateMessage = "Successfully processed {$result['processed']} employees for " . date('F', mktime(0, 0, 0, $genMonth, 1)) . " $genYear";
+            if (!empty($result['errors'])) {
+                $generateMessage .= ". Errors: " . implode('; ', $result['errors']);
+            }
+        }
+    } catch (Exception $e) {
+        $generateError = "Failed to generate summary: " . $e->getMessage();
+    }
+}
 
 // Get filter parameters
 $selectedMonth = $_GET['month'] ?? date('n');
@@ -40,7 +64,13 @@ function getRegularEmployeesStatement($db, $month, $year) {
                 COALESCE(mas.gh_days, 0) as gh_days,
                 COALESCE(mas.working_days, 0) as working_days,
                 COALESCE(mas.net_working_days, 0) as net_working_days,
-                mas.remarks
+                (SELECT GROUP_CONCAT(DISTINCT remarks SEPARATOR '; ')
+                 FROM attendance_leave_details ald
+                 WHERE ald.employee_id = e.employee_id
+                 AND YEAR(ald.start_date) = $year
+                 AND MONTH(ald.start_date) = $month
+                 AND ald.remarks IS NOT NULL
+                 AND ald.remarks != '') as remarks
             FROM employees e
             LEFT JOIN monthly_attendance_summary mas 
                 ON e.employee_id = mas.employee_id 
@@ -67,7 +97,13 @@ function getContractEmployeesStatement($db, $month, $year) {
                 COALESCE(mas.total_days, 0) as total_days,
                 COALESCE(mas.absent_days, 0) as absent_days,
                 COALESCE(mas.payable_days, 0) as payable_days,
-                mas.remarks
+                (SELECT GROUP_CONCAT(DISTINCT remarks SEPARATOR '; ')
+                 FROM attendance_leave_details ald
+                 WHERE ald.employee_id = e.employee_id
+                 AND YEAR(ald.start_date) = $year
+                 AND MONTH(ald.start_date) = $month
+                 AND ald.remarks IS NOT NULL
+                 AND ald.remarks != '') as remarks
             FROM employees e
             LEFT JOIN monthly_attendance_summary mas 
                 ON e.employee_id = mas.employee_id 
@@ -214,6 +250,17 @@ if (!empty($contractEmployees)) {
                 <p>Generate formal monthly attendance and absentee statements.</p>
             </div>
 
+            <?php if ($generateMessage): ?>
+                <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-check-circle"></i> <?= htmlspecialchars($generateMessage) ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($generateError): ?>
+                <div class="alert alert-error" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($generateError) ?>
+                </div>
+            <?php endif; ?>
+
             <!-- Filter Card -->
             <div class="glass-card no-print" style="padding: 25px; margin-bottom: 20px;">
                 <form method="GET" class="filter-section">
@@ -253,6 +300,18 @@ if (!empty($contractEmployees)) {
                             <i class="fas fa-plus"></i> Add Manual Record
                         </a>
                     </div>
+                </form>
+                
+                <!-- Generate Summary Form -->
+                <form method="POST" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                    <input type="hidden" name="gen_month" value="<?= $selectedMonth ?>">
+                    <input type="hidden" name="gen_year" value="<?= $selectedYear ?>">
+                    <button type="submit" name="generate_summary" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 100%;">
+                        <i class="fas fa-sync-alt"></i> Generate Summary for <?= date('F', mktime(0, 0, 0, $selectedMonth, 1)) ?> <?= $selectedYear ?>
+                    </button>
+                    <p style="font-size: 12px; color: #718096; margin-top: 8px; text-align: center;">
+                        <i class="fas fa-info-circle"></i> Click this to calculate and populate attendance data from daily records
+                    </p>
                 </form>
             </div>
 

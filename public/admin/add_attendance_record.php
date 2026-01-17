@@ -22,6 +22,24 @@ $attendanceHelper = new AttendanceStatementHelper($db);
 $message = '';
 $messageType = '';
 
+// Check if editing
+$editMode = isset($_GET['id']) && !empty($_GET['id']);
+$recordId = $_GET['id'] ?? null;
+$existingRecord = null;
+
+if ($editMode) {
+    // Fetch existing record
+    $stmt = $db->prepare("SELECT * FROM attendance_leave_details WHERE detail_id = :id");
+    $stmt->execute([':id' => $recordId]);
+    $existingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$existingRecord) {
+        $message = "Record not found!";
+        $messageType = "error";
+        $editMode = false;
+    }
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -30,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $startDate = $_POST['start_date'];
         $endDate = $_POST['end_date'];
         $natureOfLeave = $_POST['nature_of_leave'] ?? null;
+        $remarks = $_POST['remarks'] ?? null;
         $isHalfDay = isset($_POST['is_half_day']) ? 1 : 0;
         $halfDayType = $_POST['half_day_type'] ?? null;
         
@@ -43,27 +62,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $totalDays = 0.5;
         }
         
-        // Insert leave record
-        $stmt = $db->prepare("
-            INSERT INTO attendance_leave_details 
-            (employee_id, leave_type, start_date, end_date, total_days, is_half_day, 
-             half_day_type, nature_of_leave, status, approved_by)
-            VALUES 
-            (:employee_id, :leave_type, :start_date, :end_date, :total_days, :is_half_day,
-             :half_day_type, :nature_of_leave, 'approved', :approved_by)
-        ");
-        
-        $stmt->execute([
-            ':employee_id' => $employeeId,
-            ':leave_type' => $leaveType,
-            ':start_date' => $startDate,
-            ':end_date' => $endDate,
-            ':total_days' => $totalDays,
-            ':is_half_day' => $isHalfDay,
-            ':half_day_type' => $halfDayType,
-            ':nature_of_leave' => $natureOfLeave,
-            ':approved_by' => $_SESSION['user_id'] ?? null
-        ]);
+        if (isset($_POST['record_id']) && !empty($_POST['record_id'])) {
+            // UPDATE existing record
+            $stmt = $db->prepare("
+                UPDATE attendance_leave_details 
+                SET employee_id = :employee_id,
+                    leave_type = :leave_type,
+                    start_date = :start_date,
+                    end_date = :end_date,
+                    total_days = :total_days,
+                    is_half_day = :is_half_day,
+                    half_day_type = :half_day_type,
+                    nature_of_leave = :nature_of_leave,
+                    remarks = :remarks
+                WHERE detail_id = :id
+            ");
+            
+            $stmt->execute([
+                ':id' => $_POST['record_id'],
+                ':employee_id' => $employeeId,
+                ':leave_type' => $leaveType,
+                ':start_date' => $startDate,
+                ':end_date' => $endDate,
+                ':total_days' => $totalDays,
+                ':is_half_day' => $isHalfDay,
+                ':half_day_type' => $halfDayType,
+                ':nature_of_leave' => $natureOfLeave,
+                ':remarks' => $remarks
+            ]);
+            
+            $message = "Record updated successfully!";
+        } else {
+            // INSERT new record
+            $stmt = $db->prepare("
+                INSERT INTO attendance_leave_details 
+                (employee_id, leave_type, start_date, end_date, total_days, is_half_day, 
+                 half_day_type, nature_of_leave, remarks, status, approved_by)
+                VALUES 
+                (:employee_id, :leave_type, :start_date, :end_date, :total_days, :is_half_day,
+                 :half_day_type, :nature_of_leave, :remarks, 'approved', :approved_by)
+            ");
+            
+            $stmt->execute([
+                ':employee_id' => $employeeId,
+                ':leave_type' => $leaveType,
+                ':start_date' => $startDate,
+                ':end_date' => $endDate,
+                ':total_days' => $totalDays,
+                ':is_half_day' => $isHalfDay,
+                ':half_day_type' => $halfDayType,
+                ':nature_of_leave' => $natureOfLeave,
+                ':remarks' => $remarks,
+                ':approved_by' => $_SESSION['user_id'] ?? null
+            ]);
+            
+            $message = "Record added successfully!";
+        }
         
         // Recalculate monthly summary
         $month = date('n', strtotime($startDate));
@@ -71,8 +125,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $summary = $attendanceHelper->calculateMonthlySummary($employeeId, $month, $year);
         $attendanceHelper->saveMonthlySummary($summary);
         
-        $message = "Record added successfully!";
         $messageType = "success";
+        
+        // Clear edit mode after successful update
+        if (isset($_POST['record_id'])) {
+            $editMode = false;
+            $existingRecord = null;
+        }
         
     } catch (Exception $e) {
         $message = "Error: " . $e->getMessage();
@@ -197,8 +256,8 @@ $employees = $employeeModel->getAllEmployees();
                 <a href="attendance_statement.php" class="back-link" style="display: inline-block; margin-bottom: 10px; color: #718096; text-decoration: none; font-size: 14px;">
                     <i class="fas fa-arrow-left"></i> Back to Statement
                 </a>
-                <h1>Add Attendance Record</h1>
-                <p>Manually add past leave or attendance records.</p>
+                <h1><?= $editMode ? 'Edit' : 'Add' ?> Attendance Record</h1>
+                <p><?= $editMode ? 'Update existing leave or attendance record.' : 'Manually add past leave or attendance records.' ?></p>
             </div>
 
             <?php if ($message): ?>
@@ -212,6 +271,9 @@ $employees = $employeeModel->getAllEmployees();
 
             <div class="glass-card form-section">
                 <form method="POST" action="" id="leaveForm">
+                    <?php if ($editMode && $existingRecord): ?>
+                        <input type="hidden" name="record_id" value="<?= $existingRecord['detail_id'] ?>">
+                    <?php endif; ?>
                     <div class="form-grid">
                         <!-- Employee Selection -->
                         <div class="form-group">
@@ -219,7 +281,7 @@ $employees = $employeeModel->getAllEmployees();
                             <select name="employee_id" class="form-control" required>
                                 <option value="">-- Choose Employee --</option>
                                 <?php foreach ($employees as $emp): ?>
-                                    <option value="<?= $emp['employee_id'] ?>">
+                                    <option value="<?= $emp['employee_id'] ?>" <?= ($editMode && $existingRecord['employee_id'] == $emp['employee_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($emp['full_name']) ?> (<?= htmlspecialchars($emp['designation']) ?>)
                                     </option>
                                 <?php endforeach; ?>
@@ -252,11 +314,11 @@ $employees = $employeeModel->getAllEmployees();
                         <div class="form-row-2">
                             <div class="form-group">
                                 <label>Start Date <span class="required">*</span></label>
-                                <input type="date" name="start_date" id="startDate" class="form-control" required>
+                                <input type="date" name="start_date" id="startDate" class="form-control" value="<?= $editMode ? $existingRecord['start_date'] : '' ?>" required>
                             </div>
                             <div class="form-group">
                                 <label>End Date <span class="required">*</span></label>
-                                <input type="date" name="end_date" id="endDate" class="form-control" required>
+                                <input type="date" name="end_date" id="endDate" class="form-control" value="<?= $editMode ? $existingRecord['end_date'] : '' ?>" required>
                             </div>
                         </div>
 
@@ -264,7 +326,7 @@ $employees = $employeeModel->getAllEmployees();
                         <div class="form-group" id="halfDaySection" style="display: none;">
                             <label>Half Day Details</label>
                             <div class="checkbox-wrapper">
-                                <input type="checkbox" name="is_half_day" id="isHalfDay">
+                                <input type="checkbox" name="is_half_day" id="isHalfDay" <?= ($editMode && $existingRecord['is_half_day']) ? 'checked' : '' ?>>
                                 <label for="isHalfDay" style="margin:0; font-weight:normal;">Mark as Half Day</label>
                             </div>
                             <div style="margin-top: 10px;">
@@ -276,16 +338,24 @@ $employees = $employeeModel->getAllEmployees();
                             </div>
                         </div>
 
-                        <!-- Reason -->
+                        <!-- Nature of Leave -->
                         <div class="form-group">
-                            <label>Nature of Leave / Remarks</label>
-                            <textarea name="nature_of_leave" rows="3" class="form-control" placeholder="E.g., Medical emergency, Official meeting..."></textarea>
+                            <label>Nature of Leave</label>
+                            <input type="text" name="nature_of_leave" class="form-control" value="<?= $editMode ? htmlspecialchars($existingRecord['nature_of_leave'] ?? '') : '' ?>" placeholder="E.g., Medical emergency, Official meeting, Personal work...">
+                            <div class="help-text">Brief description of the leave type or reason</div>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="form-group">
+                            <label>Remarks (Optional)</label>
+                            <textarea name="remarks" rows="3" class="form-control" placeholder="Additional notes or comments..."><?= $editMode ? htmlspecialchars($existingRecord['remarks'] ?? '') : '' ?></textarea>
+                            <div class="help-text">Any additional information or administrative notes</div>
                         </div>
 
                         <!-- Submit -->
                         <div style="margin-top: 10px;">
                             <button type="submit" class="btn-submit">
-                                <i class="fas fa-save"></i> Save Record
+                                <i class="fas fa-save"></i> <?= $editMode ? 'Update' : 'Save' ?> Record
                             </button>
                         </div>
                     </div>

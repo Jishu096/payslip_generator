@@ -1,6 +1,6 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-$attendance_pages = ['manage_attendance.php', 'add_attendance_record.php', 'attendance_statement.php', 'attendance_reports.php', 'attendance_calendar.php', 'leave_approvals.php'];
+$attendance_pages = ['manage_attendance.php', 'add_attendance_record.php', 'manage_records.php', 'attendance_statement.php', 'attendance_reports.php', 'attendance_calendar.php', 'leave_approvals.php'];
 $is_attendance_active = in_array($current_page, $attendance_pages);
 ?>
 <aside class="sidebar" id="sidebar">
@@ -21,6 +21,7 @@ $is_attendance_active = in_array($current_page, $attendance_pages);
             <ul class="submenu">
                 <li><a href="manage_attendance.php" class="<?php echo $current_page == 'manage_attendance.php' ? 'active' : ''; ?>">Mark Attendance</a></li>
                 <li><a href="add_attendance_record.php" class="<?php echo $current_page == 'add_attendance_record.php' ? 'active' : ''; ?>">Add Record</a></li>
+                <li><a href="manage_records.php" class="<?php echo $current_page == 'manage_records.php' ? 'active' : ''; ?>">Manage Records</a></li>
                 <li><a href="attendance_statement.php" class="<?php echo $current_page == 'attendance_statement.php' ? 'active' : ''; ?>">Attendance Statement</a></li>
                 <li><a href="attendance_reports.php" class="<?php echo $current_page == 'attendance_reports.php' ? 'active' : ''; ?>">Reports</a></li>
                 <li><a href="attendance_calendar.php" class="<?php echo $current_page == 'attendance_calendar.php' ? 'active' : ''; ?>">Calendar</a></li>
