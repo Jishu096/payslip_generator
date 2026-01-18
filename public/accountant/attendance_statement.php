@@ -188,11 +188,11 @@ if (!empty($contractEmployees)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Statement - Admin Portal</title>
+    <title>Attendance Statement - Accountant Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <?php include 'includes/admin_styles.php'; ?>
+    <?php include '../admin/includes/admin_styles.php'; ?>
     <style>
         .page-container {
             max-width: 100%; /* Use full width for big tables */
@@ -256,15 +256,8 @@ if (!empty($contractEmployees)) {
 </head>
 <body>
     <?php if (!$isExport): ?>
-    <?php 
-    if (isset($_SESSION['role']) && $_SESSION['role'] === 'accountant') {
-        include '../accountant/includes/accountant_navbar.php';
-        include '../accountant/includes/accountant_sidebar.php';
-    } else {
-        include 'includes/admin_navbar.php';
-        include 'includes/admin_sidebar.php';
-    }
-    ?>
+    <?php include 'includes/accountant_navbar.php'; ?>
+    <?php include 'includes/accountant_sidebar.php'; ?>
 
     <main class="main-content">
         <div class="page-container">
@@ -324,7 +317,7 @@ if (!empty($contractEmployees)) {
                         </a>
                     </div>
                      <div style="padding-bottom: 2px;">
-                        <a href="add_attendance_record.php" class="btn" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
+                        <a href="../admin/add_attendance_record.php" class="btn" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
                             <i class="fas fa-plus"></i> Add Manual Record
                         </a>
                     </div>

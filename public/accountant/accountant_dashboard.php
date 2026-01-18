@@ -146,6 +146,14 @@ $monthLabel = date('F Y');
                 <i class="fas fa-chart-pie icon-bg"></i>
             </a>
 
+            <a href="attendance_statement.php" class="action-card bg-gradient-pink">
+                <div class="card-content">
+                    <div class="card-title">Attendance Statement</div>
+                    <div class="card-desc">View and export attendance registers.</div>
+                </div>
+                <i class="fas fa-file-contract icon-bg"></i>
+            </a>
+
             <a href="../admin/employees.php" class="action-card bg-gradient-blue">
                 <div class="card-content">
                     <div class="card-title">Employee Directory</div>
