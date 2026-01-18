@@ -162,20 +162,20 @@ $error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generate Payslip - Accountant Portal</title>
+    <?php include '../admin/includes/admin_styles.php'; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .payslip-form {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             margin-bottom: 30px;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -183,37 +183,40 @@ $error = $_GET['error'] ?? '';
         .form-group {
             display: flex;
             flex-direction: column;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             font-weight: 600;
-            color: #333;
+            color: #4a5568;
             margin-bottom: 8px;
             font-size: 14px;
         }
 
         .form-group input,
         .form-group select {
-            padding: 10px 12px;
-            border: 2px solid #e0e0e0;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
             font-size: 14px;
-            transition: all 0.3s ease;
+            color: #2d3748;
+            transition: all 0.2s;
         }
 
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 8px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin: 30px 0 20px 0;
+            background: #f7fafc;
+            color: #2d3748;
+            padding: 12px 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            margin: 25px 0 20px 0;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -221,31 +224,33 @@ $error = $_GET['error'] ?? '';
         }
 
         .calculation-summary {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #e0e0e0;
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
             margin-top: 20px;
         }
 
         .calc-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 14px;
         }
 
         .calc-row.total {
             font-weight: 700;
             font-size: 18px;
-            color: #28a745;
+            color: #0f766e;
             border-bottom: none;
-            border-top: 2px solid #333;
-            margin-top: 10px;
+            border-top: 2px solid #e2e8f0;
+            margin-top: 15px;
+            padding-top: 15px;
         }
 
         .btn-generate {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             padding: 15px 30px;
@@ -254,110 +259,48 @@ $error = $_GET['error'] ?? '';
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
+            width: 100%;
         }
 
         .btn-generate:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-        }
-
-        .recent-payslips {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            padding: 25px;
-        }
-
-        .payslip-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            transition: all 0.3s ease;
-        }
-
-        .payslip-card:hover {
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .payslip-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 10px;
-        }
-
-        .payslip-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            font-size: 13px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info-label {
-            color: #666;
-            font-size: 11px;
-            text-transform: uppercase;
-            margin-bottom: 3px;
-        }
-
-        .info-value {
-            color: #333;
-            font-weight: 600;
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-generated {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-sent {
-            background: #cce5ff;
-            color: #004085;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         .success-banner {
-            background: #d4edda;
-            color: #155724;
+            background: #f0fff4;
+            color: #2f855a;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #28a745;
+            border: 1px solid #9ae6b4;
         }
 
         .error-banner {
-            background: #f8d7da;
-            color: #721c24;
+            background: #fff5f5;
+            color: #c53030;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #dc3545;
+            border: 1px solid #feb2b2;
         }
-
-        .required {
-            color: #dc3545;
+        
+        .recent-list-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+        .recent-list-item:hover { transform: translateX(5px); border-color: #cbd5e0; }
     </style>
 </head>
 <body>
+    <?php include 'includes/accountant_navbar.php'; ?>
     <?php include 'includes/accountant_sidebar.php'; ?>
 
     <main class="main-content" id="mainContent">
@@ -380,16 +323,16 @@ $error = $_GET['error'] ?? '';
 
         <!-- Payslip Generation Form -->
         <div class="payslip-form">
-            <h2><i class="fas fa-plus-circle"></i> New Payslip</h2>
+            <h2 style="margin-bottom: 20px; font-size: 20px; color: #2d3748;"><i class="fas fa-plus-circle"></i> New Payslip Entry</h2>
             
             <form method="POST" id="payslipForm">
                 <input type="hidden" name="generate_payslip" value="1">
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="employee_id"><i class="fas fa-user"></i> Employee <span class="required">*</span></label>
+                        <label for="employee_id"><i class="fas fa-user"></i> Select Employee <span style="color:red">*</span></label>
                         <select id="employee_id" name="employee_id" required>
-                            <option value="">Select Employee</option>
+                            <option value="">-- Choose Employee --</option>
                             <?php foreach($employees as $emp): ?>
                                 <option value="<?php echo $emp['employee_id']; ?>" 
                                         data-salary="<?php echo $emp['basic_salary']; ?>"
@@ -397,28 +340,23 @@ $error = $_GET['error'] ?? '';
                                         data-department="<?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?>"
                                         data-email="<?php echo htmlspecialchars($emp['email']); ?>"
                                         data-employment-type="<?php echo $emp['employment_type']; ?>">
-                                    <?php echo htmlspecialchars($emp['full_name']); ?> - <?php echo htmlspecialchars($emp['designation']); ?> (<?php echo ucfirst($emp['employment_type']); ?>)
+                                    <?php echo htmlspecialchars($emp['full_name']); ?> - <?php echo htmlspecialchars($emp['designation']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <small style="color: #666; display: block; margin-top: 5px;">
-                            <i class="fas fa-info-circle"></i> All components auto-calc using current government rates; you can edit any value.
-                        </small>
                     </div>
 
                     <div class="form-group">
-                        <label for="employee_info"><i class="fas fa-id-card"></i> Employee Details</label>
-                        <div id="employee_info" style="background: #f8f9fa; padding: 12px; border-radius: 6px; font-size: 13px; color: #555;">
-                            <div id="emp_designation">Designation: -</div>
-                            <div id="emp_department">Department: -</div>
-                            <div id="emp_email">Email: -</div>
+                        <label>Employee Details</label>
+                        <div id="employee_info" style="background: #f8fafc; padding: 10px; border-radius: 6px; font-size: 13px; color: #4a5568; border: 1px solid #edf2f7; min-height: 46px;">
+                            <span id="emp_designation">Select an employee...</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
                     <div class="form-group">
-                        <label for="month"><i class="fas fa-calendar"></i> Month <span class="required">*</span></label>
+                        <label for="month">Month</label>
                         <select id="month" name="month" required>
                             <?php
                             $months = ['January', 'February', 'March', 'April', 'May', 'June', 
@@ -432,250 +370,109 @@ $error = $_GET['error'] ?? '';
                     </div>
 
                     <div class="form-group">
-                        <label for="year"><i class="fas fa-calendar-alt"></i> Year <span class="required">*</span></label>
+                        <label for="year">Year</label>
                         <input type="number" id="year" name="year" value="<?php echo date('Y'); ?>" min="2020" max="2030" required>
                     </div>
                 </div>
 
                 <div class="section-header">
-                    <i class="fas fa-dollar-sign"></i> Earnings
-                    <small style="font-size: 12px; font-weight: 400; opacity: 0.9; margin-left: 15px;">
-                        Auto-calculated (govt. rates) — you can edit any value
-                    </small>
+                    <i class="fas fa-coins"></i> Earnings
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="basic_salary">
-                            <i class="fas fa-money-bill-wave"></i> Basic Salary <span class="required">*</span>
-                        </label>
+                        <label>Basic Salary <span style="color:red">*</span></label>
                         <input type="number" id="basic_salary" name="basic_salary" step="0.01" required>
-                        <small style="color: #666;">From employee record</small>
                     </div>
-
                     <div class="form-group">
-                        <label for="hra">
-                            <i class="fas fa-home"></i> HRA (House Rent Allowance)
-                            <span style="color: #28a745; font-size: 11px;">20% of Basic</span>
-                        </label>
-                        <input type="number" id="hra" name="hra" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Auto-calculated, editable</small>
+                        <label>HRA (20%)</label>
+                        <input type="number" id="hra" name="hra" step="0.01" value="0">
                     </div>
-
                     <div class="form-group">
-                        <label for="da">
-                            <i class="fas fa-coins"></i> DA (Dearness Allowance)
-                            <span style="color: #28a745; font-size: 11px;">58% of Basic</span>
-                        </label>
-                        <input type="number" id="da" name="da" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Auto-calculated, editable</small>
+                        <label>DA (58%)</label>
+                        <input type="number" id="da" name="da" step="0.01" value="0">
                     </div>
-
                     <div class="form-group">
-                        <label for="ta_amount">
-                            <i class="fas fa-bus"></i> Transport Allowance (TA)
-                            <span style="color: #28a745; font-size: 11px;">Govt slabs</span>
-                        </label>
+                        <label>Transport Allowance (TA)</label>
                         <select id="ta_amount" name="ta_amount">
                             <option value="3600">₹3,600</option>
                             <option value="1800">₹1,800</option>
                             <option value="900">₹900</option>
                         </select>
-                        <small style="color: #666;">Change if employee TA slab differs</small>
                     </div>
-
                     <div class="form-group">
-                        <label for="da_ta">
-                            <i class="fas fa-percentage"></i> DA on TA
-                            <span style="color: #28a745; font-size: 11px;">58% of TA</span>
-                        </label>
-                        <input type="number" id="da_ta" name="da_ta" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Auto-calculated, editable</small>
+                        <label>DA on TA</label>
+                        <input type="number" id="da_ta" name="da_ta" step="0.01" value="0">
                     </div>
-
                     <div class="form-group">
-                        <label for="bonus"><i class="fas fa-gift"></i> Bonus</label>
-                        <input type="number" id="bonus" name="bonus" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Optional, enter manually</small>
+                        <label>Bonus</label>
+                        <input type="number" id="bonus" name="bonus" step="0.01" value="0">
                     </div>
                 </div>
 
-                <div class="section-header">
+                <div class="section-header" style="border-left-color: #ef4444;">
                     <i class="fas fa-minus-circle"></i> Deductions
-                    <small style="font-size: 12px; font-weight: 400; opacity: 0.9; margin-left: 15px;">
-                        Auto-calculated (govt. rates) — you can edit any value
-                    </small>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="tax_deduction">
-                            <i class="fas fa-receipt"></i> Tax Deduction (TDS)
-                            <span style="color: #dc3545; font-size: 11px;">10% of Gross</span>
-                        </label>
-                        <input type="number" id="tax_deduction" name="tax_deduction" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Auto-calculated, editable</small>
+                        <label>Tax (TDS)</label>
+                        <input type="number" id="tax_deduction" name="tax_deduction" step="0.01" value="0">
                     </div>
-
                     <div class="form-group">
-                        <label for="pf_deduction">
-                            <i class="fas fa-piggy-bank"></i> EPF
-                            <span style="color: #dc3545; font-size: 11px;">12% of Basic</span>
-                        </label>
-                        <input type="number" id="pf_deduction" name="pf_deduction" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Auto-calculated, editable</small>
+                        <label>EPF (12%)</label>
+                        <input type="number" id="pf_deduction" name="pf_deduction" step="0.01" value="0">
                     </div>
-
                     <div class="form-group">
-                        <label for="nps_deduction">
-                            <i class="fas fa-university"></i> NPS
-                            <span style="color: #dc3545; font-size: 11px;">10% of Basic</span>
-                        </label>
-                        <input type="number" id="nps_deduction" name="nps_deduction" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Auto-calculated, editable</small>
+                        <label>NPS (10%)</label>
+                        <input type="number" id="nps_deduction" name="nps_deduction" step="0.01" value="0">
                     </div>
-
                     <div class="form-group">
-                        <label for="professional_tax">
-                            <i class="fas fa-id-badge"></i> Professional Tax
-                            <span style="color: #dc3545; font-size: 11px;">Flat (state)</span>
-                        </label>
-                        <input type="number" id="professional_tax" name="professional_tax" step="0.01" value="<?php echo $standardRates['professional_tax']; ?>" min="0">
-                        <small style="color: #666;">Edit if different state rate</small>
+                        <label>Professional Tax</label>
+                        <input type="number" id="professional_tax" name="professional_tax" step="0.01" value="<?php echo $standardRates['professional_tax']; ?>">
                     </div>
-
                     <div class="form-group">
-                        <label for="other_deductions"><i class="fas fa-hand-holding-usd"></i> Other Deductions</label>
-                        <input type="number" id="other_deductions" name="other_deductions" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Insurance, loans, etc.</small>
+                        <label>Other Deductions</label>
+                        <input type="number" id="other_deductions" name="other_deductions" step="0.01" value="0">
                     </div>
                 </div>
 
                 <div class="calculation-summary">
-                    <h3 style="margin-bottom: 15px;"><i class="fas fa-calculator"></i> Salary Summary</h3>
-                    
-                    <div class="calc-row">
-                        <span>Basic Salary:</span>
-                        <span id="display_basic">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span>HRA (20%):</span>
-                        <span id="display_hra">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span>DA (58% of Basic):</span>
-                        <span id="display_da">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span>TA (Slab):</span>
-                        <span id="display_ta">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span>DA on TA (58%):</span>
-                        <span id="display_da_ta">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span>Bonus:</span>
-                        <span id="display_bonus">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span><strong>Gross Salary:</strong></span>
-                        <span id="display_gross"><strong>₹0.00</strong></span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">Tax Deduction (10%):</span>
-                        <span id="display_tax" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">EPF (12% of Basic):</span>
-                        <span id="display_pf" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">NPS (10% of Basic):</span>
-                        <span id="display_nps" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">Professional Tax:</span>
-                        <span id="display_pt" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">Other Deductions:</span>
-                        <span id="display_other" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row total">
-                        <span>NET SALARY:</span>
-                        <span id="display_net">₹0.00</span>
-                    </div>
+                    <h3 style="margin-bottom: 15px; font-size: 16px;">Summary</h3>
+                    <div class="calc-row"><span>Basic:</span><span id="display_basic">₹0.00</span></div>
+                    <div class="calc-row"><span>HRA:</span><span id="display_hra">₹0.00</span></div>
+                    <div class="calc-row"><span>DA:</span><span id="display_da">₹0.00</span></div>
+                    <div class="calc-row"><span>TA + DA on TA:</span><span id="display_ta_total">₹0.00</span></div>
+                    <div class="calc-row" style="font-weight: 600;"><span>Gross Salary:</span><span id="display_gross">₹0.00</span></div>
+                    <div class="calc-row" style="color: #e53e3e;"><span>Total Deductions:</span><span id="display_deductions">-₹0.00</span></div>
+                    <div class="calc-row total"><span>NET SALARY:</span><span id="display_net">₹0.00</span></div>
                 </div>
 
-                <div style="margin-top: 30px;">
-                    <button type="submit" class="btn-generate">
-                        <i class="fas fa-file-invoice"></i> Generate Payslip
-                    </button>
+                <div style="margin-top: 25px;">
+                    <button type="submit" class="btn-generate"><i class="fas fa-check"></i> Generate Payslip</button>
                 </div>
             </form>
         </div>
 
         <!-- Recent Payslips -->
-        <div class="recent-payslips">
-            <h2><i class="fas fa-history"></i> Recent Payslips</h2>
-            
-            <?php if (count($recentPayslips) > 0): ?>
-                <?php foreach($recentPayslips as $payslip): ?>
-                    <div class="payslip-card">
-                        <div class="payslip-header">
-                            <div>
-                                <h3 style="margin: 0 0 5px 0;"><?php echo htmlspecialchars($payslip['full_name']); ?></h3>
-                                <small style="color: #666;"><?php echo htmlspecialchars($payslip['designation']); ?> - <?php echo htmlspecialchars($payslip['department_name'] ?? 'N/A'); ?></small>
-                            </div>
-                            <div>
-                                <span class="status-badge status-generated">
-                                    Generated
-                                </span>
-                                <div style="margin-top: 8px;">
-                                    <a href="generate_payslip_pdf.php?payslip_id=<?php echo $payslip['payslip_id']; ?>" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 12px;">
-                                        <i class="fas fa-download"></i> Download PDF
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="payslip-info">
-                            <div class="info-item">
-                                <span class="info-label">Period</span>
-                                <span class="info-value"><?php echo $payslip['month']; ?> <?php echo $payslip['year']; ?></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Gross Salary</span>
-                                <span class="info-value">₹<?php echo number_format($payslip['gross_salary'], 2); ?></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Deductions</span>
-                                <span class="info-value" style="color: #dc3545;">-₹<?php echo number_format($payslip['total_deductions'], 2); ?></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Net Salary</span>
-                                <span class="info-value" style="color: #28a745;">₹<?php echo number_format($payslip['net_salary'], 2); ?></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Generated</span>
-                                <span class="info-value"><?php echo date('d M Y', strtotime($payslip['generated_at'])); ?></span>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div style="text-align: center; padding: 40px; color: #999;">
-                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px;"></i>
-                    <p>No payslips generated yet</p>
+        <h3 style="font-size: 18px; color: #2d3748; margin-bottom: 15px;">Recent Payslips</h3>
+        <?php foreach($recentPayslips as $payslip): ?>
+            <div class="recent-list-item">
+                <div>
+                    <div style="font-weight: 600; font-size: 15px; color: #2d3748;"><?= htmlspecialchars($payslip['full_name']) ?></div>
+                    <div style="font-size: 13px; color: #718096;"><?= $payslip['month'] . ' ' . $payslip['year'] ?> • <?= htmlspecialchars($payslip['designation']) ?></div>
                 </div>
-            <?php endif; ?>
-        </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 700; color: #2d3748;">₹<?= number_format($payslip['net_salary']) ?></div>
+                    <a href="generate_payslip_pdf.php?payslip_id=<?= $payslip['payslip_id'] ?>" target="_blank" style="font-size: 12px; color: #667eea; font-weight: 600;">Download PDF</a>
+                </div>
+            </div>
+        <?php endforeach; ?>
+
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Standard percentage rates (kept in JS to mirror PHP config)
+        // Standard percentage rates
         const rates = {
             hra: 20,         // HRA = 20% of Basic
             da: 58,          // DA = 58% of Basic
@@ -685,239 +482,95 @@ $error = $_GET['error'] ?? '';
             nps: 10          // NPS = 10% of Basic
         };
 
-        // Auto-fill salary components when employee is selected
         const employeeSelect = document.getElementById('employee_id');
-        const basicSalaryInput = document.getElementById('basic_salary');
+        const basicInput = document.getElementById('basic_salary');
         const hraInput = document.getElementById('hra');
         const daInput = document.getElementById('da');
         const taSelect = document.getElementById('ta_amount');
         const daTaInput = document.getElementById('da_ta');
+        const bonusInput = document.getElementById('bonus');
+        
+        const taxInput = document.getElementById('tax_deduction');
         const pfInput = document.getElementById('pf_deduction');
         const npsInput = document.getElementById('nps_deduction');
-        const professionalTaxInput = document.getElementById('professional_tax');
-        
-        employeeSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            
-            if (!selectedOption.value) {
-                // Clear all fields if no employee selected
-                basicSalaryInput.value = '';
-                hraInput.value = 0;
-                daInput.value = 0;
-                taSelect.value = '3600';
-                daTaInput.value = 0;
-                pfInput.value = 0;
-                npsInput.value = 0;
-                document.getElementById('tax_deduction').value = 0;
-                professionalTaxInput.value = <?php echo $standardRates['professional_tax']; ?>;
-                document.getElementById('other_deductions').value = 0;
-                document.getElementById('bonus').value = 0;
-                document.getElementById('emp_designation').textContent = 'Designation: -';
-                document.getElementById('emp_department').textContent = 'Department: -';
-                document.getElementById('emp_email').textContent = 'Email: -';
-                
-                // Show all fields
-                showAllFields();
-                updateCalculations();
-                return;
-            }
-            
-            const salary = parseFloat(selectedOption.dataset.salary) || 0;
-            const designation = selectedOption.dataset.designation || '-';
-            const department = selectedOption.dataset.department || '-';
-            const email = selectedOption.dataset.email || '-';
-            const employmentType = selectedOption.dataset.employmentType || 'permanent';
-            
-            // Update employee info display
-            document.getElementById('emp_designation').innerHTML = '<i class="fas fa-briefcase"></i> Designation: <strong>' + designation + '</strong>';
-            document.getElementById('emp_department').innerHTML = '<i class="fas fa-building"></i> Department: <strong>' + department + '</strong>';
-            document.getElementById('emp_email').innerHTML = '<i class="fas fa-envelope"></i> Email: <strong>' + email + '</strong>';
-            
-            // Set basic salary
-            basicSalaryInput.value = salary.toFixed(2);
-
-            // Check if employee is an intern or contract
-            if (employmentType === 'intern') {
-                // For interns: Only stipend (10,000), no allowances, no deductions
-                // But allow manual bonus/DA/TA if needed
-                hraInput.value = 0;
-                daInput.value = 0;
-                taSelect.value = '0';
-                daTaInput.value = 0;
-                pfInput.value = 0;
-                npsInput.value = 0;
-                document.getElementById('tax_deduction').value = 0;
-                professionalTaxInput.value = 0;
-                document.getElementById('other_deductions').value = 0;
-                document.getElementById('bonus').value = 0;
-                
-                // Disable automatic allowances for interns (but keep them editable if needed)
-                basicSalaryInput.readOnly = true;
-                basicSalaryInput.style.background = '#f8f9fa';
-                
-                // Remove any existing employment note first
-                const existingNote = document.getElementById('employment-note');
-                if (existingNote) existingNote.remove();
-                
-                // Show info message for intern
-                const earningsHeader = document.querySelector('.section-header');
-                const employmentNote = document.createElement('div');
-                employmentNote.id = 'employment-note';
-                employmentNote.style.cssText = 'background: #fff8e1; border: 2px solid #ffd54f; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #f57c00;';
-                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Intern:</strong> Fixed stipend of ₹10,000. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
-                earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
-            } else if (employmentType === 'contract') {
-                // For contract employees: Only basic salary, no allowances or deductions
-                // But allow manual bonus/DA/TA if needed
-                hraInput.value = 0;
-                daInput.value = 0;
-                taSelect.value = '0';
-                daTaInput.value = 0;
-                pfInput.value = 0;
-                npsInput.value = 0;
-                document.getElementById('tax_deduction').value = 0;
-                professionalTaxInput.value = 0;
-                document.getElementById('other_deductions').value = 0;
-                document.getElementById('bonus').value = 0;
-                
-                basicSalaryInput.readOnly = false;
-                basicSalaryInput.style.background = '#ffffff';
-                
-                // Remove any existing employment note first
-                const existingNote = document.getElementById('employment-note');
-                if (existingNote) existingNote.remove();
-                
-                // Show info message for contract
-                const earningsHeader = document.querySelector('.section-header');
-                const employmentNote = document.createElement('div');
-                employmentNote.id = 'employment-note';
-                employmentNote.style.cssText = 'background: #e3f2fd; border: 2px solid #64b5f6; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #1976d2;';
-                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Contract Employee:</strong> Only basic salary. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
-                earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
-            } else {
-                // For permanent employees: Full breakdown with HRA, DA, TA, etc.
-                basicSalaryInput.readOnly = false;
-                basicSalaryInput.style.background = '#ffffff';
-                
-                // Remove employment note if exists
-                const employmentNote = document.getElementById('employment-note');
-                if (employmentNote) employmentNote.remove();
-
-                // Transport Allowance default (highest slab); user can change
-                const taVal = parseFloat(taSelect.value) || 0;
-
-                // Auto-calculate components based on rules
-                hraInput.value = (salary * rates.hra / 100).toFixed(2);
-                daInput.value = (salary * rates.da / 100).toFixed(2);
-                taSelect.value = '3600';
-                daTaInput.value = (3600 * rates.daOnTa / 100).toFixed(2);
-                pfInput.value = (salary * rates.epf / 100).toFixed(2);
-                npsInput.value = (salary * rates.nps / 100).toFixed(2);
-
-                // Calculate gross to get tax
-                const gross = salary +
-                             parseFloat(hraInput.value) +
-                             parseFloat(daInput.value) +
-                             3600 +
-                             parseFloat(daTaInput.value);
-
-                document.getElementById('tax_deduction').value = (gross * rates.tax / 100).toFixed(2);
-                professionalTaxInput.value = <?php echo $standardRates['professional_tax']; ?>;
-            }
-
-            showAllFields();
-            updateCalculations();
-        });
-
-        function showAllFields() {
-            // Show all fields (in case they were hidden before)
-            const allInputs = document.querySelectorAll('.form-group');
-            allInputs.forEach(group => {
-                group.style.display = '';
-            });
-        }
-
-        // Update calculations in real-time
-        const numericInputs = [
-            'basic_salary', 'hra', 'da', 'da_ta', 'bonus', 'tax_deduction',
-            'pf_deduction', 'nps_deduction', 'professional_tax', 'other_deductions'
-        ];
-        
-        numericInputs.forEach(inputId => {
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.addEventListener('input', updateCalculations);
-            }
-        });
-
-        // TA select also triggers recalculation (DA on TA depends on this)
-        taSelect.addEventListener('change', () => {
-            const taVal = parseFloat(taSelect.value) || 0;
-            const daTaVal = taVal * rates.daOnTa / 100;
-            daTaInput.value = daTaVal.toFixed(2);
-            const basic = parseFloat(basicSalaryInput.value) || 0;
-            const hra = parseFloat(hraInput.value) || 0;
-            const da = parseFloat(daInput.value) || 0;
-            const bonus = parseFloat(document.getElementById('bonus').value) || 0;
-            const gross = basic + hra + da + taVal + daTaVal + bonus;
-            document.getElementById('tax_deduction').value = (gross * rates.tax / 100).toFixed(2);
-            updateCalculations();
-        });
+        const ptInput = document.getElementById('professional_tax');
+        const otherInput = document.getElementById('other_deductions');
 
         function updateCalculations() {
-            const basic = parseFloat(document.getElementById('basic_salary').value) || 0;
-            const hra = parseFloat(document.getElementById('hra').value) || 0;
-            const da = parseFloat(document.getElementById('da').value) || 0;
-            const ta = parseFloat(document.getElementById('ta_amount').value) || 0;
-            const daOnTa = parseFloat(document.getElementById('da_ta').value) || 0;
-            const bonus = parseFloat(document.getElementById('bonus').value) || 0;
-            const tax = parseFloat(document.getElementById('tax_deduction').value) || 0;
-            const epf = parseFloat(document.getElementById('pf_deduction').value) || 0;
-            const nps = parseFloat(document.getElementById('nps_deduction').value) || 0;
-            const pt = parseFloat(document.getElementById('professional_tax').value) || 0;
-            const other = parseFloat(document.getElementById('other_deductions').value) || 0;
+            const basic = parseFloat(basicInput.value) || 0;
+            const hra = parseFloat(hraInput.value) || 0;
+            const da = parseFloat(daInput.value) || 0;
+            const ta = parseFloat(taSelect.value) || 0;
+            const daTa = parseFloat(daTaInput.value) || 0;
+            const bonus = parseFloat(bonusInput.value) || 0;
 
-            const gross = basic + hra + da + ta + daOnTa + bonus;
-            const totalDeductions = tax + epf + nps + pt + other;
-            const net = gross - totalDeductions;
+            const gross = basic + hra + da + ta + daTa + bonus;
 
-            // Format currency
-            const formatCurrency = (amount) => '₹' + amount.toLocaleString('en-IN', {
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2
-            });
+            const tax = parseFloat(taxInput.value) || 0;
+            const pf = parseFloat(pfInput.value) || 0;
+            const nps = parseFloat(npsInput.value) || 0;
+            const pt = parseFloat(ptInput.value) || 0;
+            const other = parseFloat(otherInput.value) || 0;
 
-            document.getElementById('display_basic').textContent = formatCurrency(basic);
-            document.getElementById('display_hra').textContent = formatCurrency(hra);
-            document.getElementById('display_da').textContent = formatCurrency(da);
-            document.getElementById('display_ta').textContent = formatCurrency(ta);
-            document.getElementById('display_da_ta').textContent = formatCurrency(daOnTa);
-            document.getElementById('display_bonus').textContent = formatCurrency(bonus);
-            document.getElementById('display_gross').textContent = formatCurrency(gross);
-            document.getElementById('display_tax').textContent = '-' + formatCurrency(tax);
-            document.getElementById('display_pf').textContent = '-' + formatCurrency(epf);
-            document.getElementById('display_nps').textContent = '-' + formatCurrency(nps);
-            document.getElementById('display_pt').textContent = '-' + formatCurrency(pt);
-            document.getElementById('display_other').textContent = '-' + formatCurrency(other);
-            document.getElementById('display_net').textContent = formatCurrency(net);
+            const deductions = tax + pf + nps + pt + other;
+            const net = gross - deductions;
+
+            // Display
+            document.getElementById('display_basic').textContent = '₹' + basic.toFixed(2);
+            document.getElementById('display_hra').textContent = '₹' + hra.toFixed(2);
+            document.getElementById('display_da').textContent = '₹' + da.toFixed(2);
+            document.getElementById('display_ta_total').textContent = '₹' + (ta + daTa).toFixed(2);
+            document.getElementById('display_gross').textContent = '₹' + gross.toFixed(2);
+            document.getElementById('display_deductions').textContent = '-₹' + deductions.toFixed(2);
+            document.getElementById('display_net').textContent = '₹' + net.toFixed(2);
         }
 
-        // Form validation
-        document.getElementById('payslipForm').addEventListener('submit', function(e) {
-            const employeeId = document.getElementById('employee_id').value;
-            const basicSalary = parseFloat(document.getElementById('basic_salary').value);
+        // Auto-fill and Calc Logic
+        employeeSelect.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            if (!opt.value) return;
 
-            if (!employeeId) {
-                e.preventDefault();
-                alert('Please select an employee');
-                return false;
-            }
+            const salary = parseFloat(opt.dataset.salary) || 0;
+            const type = opt.dataset.employmentType || 'permanent';
 
-            if (!basicSalary || basicSalary <= 0) {
-                e.preventDefault();
-                alert('Basic salary must be greater than 0');
-                return false;
+            // Display Info
+            document.getElementById('emp_designation').innerHTML = `
+                <strong>${opt.dataset.designation}</strong> • ${opt.dataset.department} <br> 
+                <span style="font-size:11px; color: #718096">${opt.dataset.email} • ${type.toUpperCase()}</span>
+            `;
+
+            basicInput.value = salary.toFixed(2);
+
+            if (type === 'permanent') {
+                hraInput.value = (salary * rates.hra / 100).toFixed(2);
+                daInput.value = (salary * rates.da / 100).toFixed(2);
+                
+                // Assuming standard TA logic (simplified)
+                const taVal = parseFloat(taSelect.value);
+                daTaInput.value = (taVal * rates.daOnTa / 100).toFixed(2);
+
+                pfInput.value = (salary * rates.epf / 100).toFixed(2);
+                npsInput.value = (salary * rates.nps / 100).toFixed(2);
+                
+                // Gross for tax calc (approx)
+                const tempGross = salary + parseFloat(hraInput.value) + parseFloat(daInput.value) + taVal + parseFloat(daTaInput.value);
+                taxInput.value = (tempGross * rates.tax / 100).toFixed(2);
+            } else {
+                // Interns/Contracts get flat salary usually
+                hraInput.value = 0;
+                daInput.value = 0;
+                daTaInput.value = 0;
+                pfInput.value = 0;
+                npsInput.value = 0;
+                taxInput.value = 0;
             }
+            
+            updateCalculations();
+        });
+
+        [basicInput, hraInput, daInput, taSelect, daTaInput, bonusInput, taxInput, pfInput, npsInput, ptInput, otherInput].forEach(el => {
+            el.addEventListener('input', updateCalculations);
+            el.addEventListener('change', updateCalculations);
         });
     </script>
 </body>
