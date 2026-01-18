@@ -41,17 +41,6 @@ $selectedMonth = $_GET['month'] ?? date('n');
 $selectedYear = $_GET['year'] ?? date('Y');
 $reportType = $_GET['report_type'] ?? 'regular'; // 'regular' or 'contract'
 
-// Export Logic
-$isExport = isset($_GET['export']) && $_GET['export'] === 'excel';
-if ($isExport) {
-    $monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
-    $filename = "Attendance_Statement_{$reportType}_{$monthName}_{$selectedYear}.xls";
-    header("Content-Type: application/vnd.ms-excel");
-    header("Content-Disposition: attachment; filename=\"$filename\"");
-    header("Pragma: no-cache");
-    header("Expires: 0");
-}
-
 // Calculate days in month
 $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
 $monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
@@ -255,7 +244,6 @@ if (!empty($contractEmployees)) {
     </style>
 </head>
 <body>
-    <?php if (!$isExport): ?>
     <?php include 'includes/admin_navbar.php'; ?>
     <?php include 'includes/admin_sidebar.php'; ?>
 
@@ -311,11 +299,6 @@ if (!empty($contractEmployees)) {
                             <i class="fas fa-print"></i> Print Statement
                         </button>
                     </div>
-                    <div style="padding-bottom: 2px;">
-                        <a href="?month=<?= $selectedMonth ?>&year=<?= $selectedYear ?>&report_type=<?= $reportType ?>&export=excel" class="btn" style="background: #2dce89; color: white;">
-                             <i class="fas fa-file-excel"></i> Export Excel
-                        </a>
-                    </div>
                      <div style="padding-bottom: 2px;">
                         <a href="add_attendance_record.php" class="btn" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">
                             <i class="fas fa-plus"></i> Add Manual Record
@@ -335,10 +318,9 @@ if (!empty($contractEmployees)) {
                     </p>
                 </form>
             </div>
-            <?php endif; ?>
 
             <!-- Print Preview Area -->
-                <?php if (!$isExport): ?>
+            <div class="print-preview-container">
                 <div class="register-header">
                     <h1>NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</h1>
                     <h2>NIELIT BHUBANESWAR</h2>
@@ -353,18 +335,10 @@ if (!empty($contractEmployees)) {
                         For the month of <strong><?= $monthName ?> <?= $selectedYear ?></strong>
                     </div>
                 </div>
-                <?php endif; ?>
 
                 <?php if ($reportType === 'regular'): ?>
-                    <table class="govt-table" border="1">
+                    <table class="govt-table">
                         <thead>
-                            <?php if ($isExport): ?>
-                                <tr><th colspan="12" style="border:none; font-size:16px; font-weight:bold;">NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</th></tr>
-                                <tr><th colspan="12" style="border:none; font-size:14px;">NIELIT BHUBANESWAR</th></tr>
-                                <tr><th colspan="12" style="border:none; font-weight:bold;">ATTENDANCE STATEMENT OF REGULAR EMPLOYEES</th></tr>
-                                <tr><th colspan="12" style="border:none;">For the month of <?= $monthName ?> <?= $selectedYear ?></th></tr>
-                                <tr><th colspan="12" style="border:none;"></th></tr>
-                            <?php endif; ?>
                             <tr>
                                 <th rowspan="2">S.No.</th>
                                 <th rowspan="2">Name & Designation</th>
@@ -454,15 +428,8 @@ if (!empty($contractEmployees)) {
                     </table>
 
                 <?php else: ?>
-                    <table class="govt-table" border="1">
+                    <table class="govt-table">
                         <thead>
-                            <?php if ($isExport): ?>
-                                <tr><th colspan="7" style="border:none; font-size:16px; font-weight:bold;">NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</th></tr>
-                                <tr><th colspan="7" style="border:none; font-size:14px;">NIELIT BHUBANESWAR</th></tr>
-                                <tr><th colspan="7" style="border:none; font-weight:bold;">ABSENTEE STATEMENT OF CONTRACT EMPLOYEES</th></tr>
-                                <tr><th colspan="7" style="border:none;">For the month of <?= $monthName ?> <?= $selectedYear ?></th></tr>
-                                <tr><th colspan="7" style="border:none;"></th></tr>
-                            <?php endif; ?>
                             <tr>
                                 <th>S.No.</th>
                                 <th>Name & Designation</th>
@@ -543,23 +510,20 @@ if (!empty($contractEmployees)) {
                     </table>
                 <?php endif; ?>
 
-                <br><br>
-                <table style="width: 100%; border: none; margin-top: 40px;">
-                    <tr style="border: none;">
-                        <td style="border: none; text-align: center; width: 33%;">
-                            <div style="border-bottom: 1px solid #000; display: inline-block; min-width: 150px; margin-bottom: 5px;"></div><br>
-                            <strong>Prepared By</strong><br>HR Department
-                        </td>
-                        <td style="border: none; text-align: center; width: 33%;">
-                            <div style="border-bottom: 1px solid #000; display: inline-block; min-width: 150px; margin-bottom: 5px;"></div><br>
-                            <strong>Checked By</strong><br>HOD/Admin
-                        </td>
-                        <td style="border: none; text-align: center; width: 33%;">
-                            <div style="border-bottom: 1px solid #000; display: inline-block; min-width: 150px; margin-bottom: 5px;"></div><br>
-                            <strong>Approved By</strong><br>Director
-                        </td>
-                    </tr>
-                </table>
+                <div class="signature-footer">
+                    <div class="sig-block">
+                        <div class="sig-line"></div>
+                        <strong>Prepared By</strong><br>HR Department
+                    </div>
+                    <div class="sig-block">
+                        <div class="sig-line"></div>
+                        <strong>Checked By</strong><br>HOD/Admin
+                    </div>
+                    <div class="sig-block">
+                        <div class="sig-line"></div>
+                        <strong>Approved By</strong><br>Director
+                    </div>
+                </div>
             </div>
         </div>
     </main>
