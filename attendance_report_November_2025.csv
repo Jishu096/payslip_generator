@@ -1,0 +1,121 @@
+Date,"Employee Name",Department,Designation,"Employment Type",Status
+2025-11-03,"Harihar Dash",Administration,Scientist-C,Permanent,Leave
+2025-11-03,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-03,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-03,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-03,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-03,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-04,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-04,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-04,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Leave
+2025-11-04,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-04,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-04,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-05,"Harihar Dash",Administration,Scientist-C,Permanent,Absent
+2025-11-05,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-05,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-05,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-05,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-05,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-06,"Harihar Dash",Administration,Scientist-C,Permanent,Leave
+2025-11-06,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-06,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-06,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-06,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-06,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-07,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-07,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-07,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-07,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-07,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-07,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-10,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-10,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-10,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-10,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-10,"Saimon Raj Patro",IT,WBL-Intern,Intern,Absent
+2025-11-10,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-11,"Harihar Dash",Administration,Scientist-C,Permanent,Leave
+2025-11-11,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-11,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-11,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-11,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-11,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-12,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-12,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-12,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-12,"Namita Barik",IT,WBL-Intern,Intern,Absent
+2025-11-12,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-12,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-13,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-13,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-13,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-13,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-13,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-13,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-14,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-14,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-14,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-14,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-14,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-14,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-17,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-17,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-17,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-17,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-17,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-17,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-18,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-18,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-18,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-18,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-18,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-18,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Absent
+2025-11-19,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-19,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-19,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-19,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-19,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-19,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-20,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-20,"Jishu Sahoo",IT,WBL-Intern,Intern,Absent
+2025-11-20,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Absent
+2025-11-20,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-20,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-20,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-21,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-21,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-21,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-21,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-21,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-21,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-24,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-24,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-24,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-24,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-24,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-24,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-25,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-25,"Jishu Sahoo",IT,WBL-Intern,Intern,Leave
+2025-11-25,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-25,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-25,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-25,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-26,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-26,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-26,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-26,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-26,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-26,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-27,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-27,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-27,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-27,"Namita Barik",IT,WBL-Intern,Intern,Present
+2025-11-27,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-27,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Present
+2025-11-28,"Harihar Dash",Administration,Scientist-C,Permanent,Present
+2025-11-28,"Jishu Sahoo",IT,WBL-Intern,Intern,Present
+2025-11-28,"Kumar Dinesh Behera",IT,"Junior Resource Person Tech. Asst.",Contract,Present
+2025-11-28,"Namita Barik",IT,WBL-Intern,Intern,Absent
+2025-11-28,"Saimon Raj Patro",IT,WBL-Intern,Intern,Present
+2025-11-28,"Suraj Kumar Mahali",IT,WBL-Intern,Intern,Leave
