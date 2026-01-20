@@ -10,51 +10,14 @@ if (!isset($_SESSION['role'])) {
 require_once "../../app/Config/database.php";
 require_once "../../app/Models/Employee.php";
 require_once "../../app/Helpers/AttendanceStatementHelper.php";
+require_once "../../vendor/autoload.php";
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 $db = getDBConnection();
-
-// Handle Generate Summary Action
-$generateMessage = '';
-$generateError = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_summary'])) {
-    $genMonth = $_POST['gen_month'] ?? date('n');
-    $genYear = $_POST['gen_year'] ?? date('Y');
-    
-    try {
-        $helper = new AttendanceStatementHelper($db);
-        $result = $helper->processMonthlyAttendance($genMonth, $genYear);
-        
-        if ($result['success']) {
-            $generateMessage = "Successfully processed {$result['processed']} employees for " . date('F', mktime(0, 0, 0, $genMonth, 1)) . " $genYear";
-            if (!empty($result['errors'])) {
-                $generateMessage .= ". Errors: " . implode('; ', $result['errors']);
-            }
-        }
-    } catch (Exception $e) {
-        $generateError = "Failed to generate summary: " . $e->getMessage();
-    }
-}
-
-// Get filter parameters
-$selectedMonth = $_GET['month'] ?? date('n');
-$selectedYear = $_GET['year'] ?? date('Y');
-$reportType = $_GET['report_type'] ?? 'regular'; // 'regular' or 'contract'
-
-// Export Logic
-$isExport = isset($_GET['export']) && $_GET['export'] === 'excel';
-if ($isExport) {
-    $monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
-    $filename = "Attendance_Statement_{$reportType}_{$monthName}_{$selectedYear}.xls";
-    header("Content-Type: application/vnd.ms-excel");
-    header("Content-Disposition: attachment; filename=\"$filename\"");
-    header("Pragma: no-cache");
-    header("Expires: 0");
-}
-
-// Calculate days in month
-$daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
-$monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
 
 // Fetch Regular Employees Attendance Statement
 function getRegularEmployeesStatement($db, $month, $year) {
@@ -163,6 +126,365 @@ function getLeaveDetails($db, $employeeId, $month, $year) {
     ]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// Function to generate Regular Employees Excel
+function generateRegularEmployeesExcel($regularEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth) {
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    
+    // Set title
+    $spreadsheet->getProperties()->setTitle("Attendance Statement {$monthName} {$selectedYear}");
+    
+    // Merge cells for header
+    $sheet->mergeCells('A1:L1');
+    $sheet->mergeCells('A2:L2');
+    $sheet->mergeCells('A3:L3');
+    $sheet->mergeCells('A4:L4');
+    
+    // Header styling
+    $sheet->getCell('A1')->setValue('NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY');
+    $sheet->getStyle('A1')->getFont()->applyFromArray(['bold' => true, 'size' => 12]);
+    
+    $sheet->getCell('A2')->setValue('NIELIT BHUBANESWAR');
+    $sheet->getStyle('A2')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
+    
+    $sheet->getCell('A3')->setValue('ATTENDANCE STATEMENT OF REGULAR EMPLOYEES');
+    $sheet->getStyle('A3')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
+    
+    $sheet->getCell('A4')->setValue("For the month of {$monthName} {$selectedYear}");
+    $sheet->getStyle('A4')->getFont()->applyFromArray(['size' => 10]);
+    
+    // Set column widths
+    $sheet->getColumnDimension('A')->setWidth(6);
+    $sheet->getColumnDimension('B')->setWidth(20);
+    $sheet->getColumnDimension('C')->setWidth(15);
+    $sheet->getColumnDimension('D')->setWidth(15);
+    $sheet->getColumnDimension('E')->setWidth(8);
+    $sheet->getColumnDimension('F')->setWidth(10);
+    $sheet->getColumnDimension('G')->setWidth(8);
+    $sheet->getColumnDimension('H')->setWidth(10);
+    $sheet->getColumnDimension('I')->setWidth(8);
+    $sheet->getColumnDimension('J')->setWidth(10);
+    $sheet->getColumnDimension('K')->setWidth(10);
+    $sheet->getColumnDimension('L')->setWidth(20);
+    
+    // Header row
+    $row = 6;
+    $headers = ['S.No.', 'Name & Designation', 'Period of Absence/OD/Tour', 'Nature of Leave/OD/Tour', 
+                'OD/Tour', 'EL/CCL/PL', 'CL/RH', 'Sat/Sun/GH', 'Total', 'Working Days', 'Net Working Days', 'Remarks'];
+    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+    
+    foreach ($headers as $idx => $header) {
+        $cellRef = $cols[$idx] . $row;
+        $sheet->getCell($cellRef)->setValue($header);
+        $style = $sheet->getStyle($cellRef);
+        $style->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
+        $style->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $style->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $style->getAlignment()->setWrapText(true);
+    }
+    
+    // Apply borders to header
+    $borderStyle = [
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+            ],
+        ],
+    ];
+    $sheet->getStyle("A6:L6")->applyFromArray($borderStyle);
+    
+    // Data rows
+    $row = 7;
+    $serialNo = 1;
+    
+    foreach ($regularEmployees as $emp) {
+        $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
+        
+        $periods = [];
+        $natures = [];
+        foreach ($leaveDetails as $leave) {
+            $periods[] = $leave['period'];
+            $natures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
+        }
+        $periodStr = !empty($periods) ? implode(', ', $periods) : '---';
+        $natureStr = !empty($natures) ? implode('; ', $natures) : '---';
+        
+        $odTour = $emp['od_days'] + $emp['tour_days'];
+        $elCclPl = $emp['el_days'] + $emp['ccl_days'] + $emp['pl_days'];
+        $clRh = $emp['cl_days'] + $emp['rh_days'];
+        $satSunGh = $emp['sat_days'] + $emp['sun_days'] + $emp['gh_days'];
+        $totalDays = $odTour + $elCclPl + $clRh + $satSunGh;
+        
+        // Auto-Remarks Logic
+        $generatedRemarks = [];
+        if ($emp['remarks']) $generatedRemarks[] = $emp['remarks'];
+        
+        $monthEndTs = strtotime("$selectedYear-$selectedMonth-01 +1 month -1 day");
+        $monthStartTs = strtotime("$selectedYear-$selectedMonth-01");
+        $todayTs = time();
+        
+        if (!empty($emp['resignation_date'])) {
+            $resTs = strtotime($emp['resignation_date']);
+            if ($resTs >= $monthStartTs && $resTs <= $monthEndTs && $resTs <= $todayTs) {
+                $generatedRemarks[] = "Resigned on " . date('d/m/Y', $resTs);
+            }
+        }
+        if (!empty($emp['retirement_date'])) {
+            $retTs = strtotime($emp['retirement_date']);
+            if ($retTs >= $monthStartTs && $retTs <= $monthEndTs && $retTs <= $todayTs) {
+                $generatedRemarks[] = "Retired on " . date('d/m/Y', $retTs);
+            }
+        }
+        
+        $finalRemarks = implode('; ', $generatedRemarks);
+        
+        // Add row data
+        $sheet->getCell('A' . $row)->setValue($serialNo++);
+        $sheet->getCell('B' . $row)->setValue($emp['full_name'] . ' (' . $emp['designation'] . ')');
+        $sheet->getCell('C' . $row)->setValue($periodStr);
+        $sheet->getCell('D' . $row)->setValue($natureStr);
+        $sheet->getCell('E' . $row)->setValue($odTour > 0 ? $odTour : '---');
+        $sheet->getCell('F' . $row)->setValue($elCclPl > 0 ? $elCclPl : '---');
+        $sheet->getCell('G' . $row)->setValue($clRh > 0 ? $clRh : '---');
+        $sheet->getCell('H' . $row)->setValue($satSunGh > 0 ? $satSunGh : '---');
+        $sheet->getCell('I' . $row)->setValue($totalDays > 0 ? $totalDays : '---');
+        $sheet->getCell('J' . $row)->setValue($emp['working_days'] ?: $daysInMonth);
+        $sheet->getCell('K' . $row)->setValue($emp['net_working_days'] ?: $daysInMonth);
+        $sheet->getCell('L' . $row)->setValue($finalRemarks);
+        
+        // Apply borders and alignment
+        $sheet->getStyle("A$row:L$row")->applyFromArray($borderStyle);
+        $sheet->getStyle("A$row:L$row")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+        $sheet->getStyle("A$row:L$row")->getAlignment()->setWrapText(true);
+        
+        $row++;
+    }
+    
+    // Set row height for header
+    $sheet->getRowDimension(6)->setRowHeight(40);
+    
+    return $spreadsheet;
+}
+
+// Function to generate Contract Employees Excel
+function generateContractEmployeesExcel($groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName) {
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    
+    // Set title
+    $spreadsheet->getProperties()->setTitle("Absentee Statement {$monthName} {$selectedYear}");
+    
+    // Merge cells for header
+    $sheet->mergeCells('A1:G1');
+    $sheet->mergeCells('A2:G2');
+    $sheet->mergeCells('A3:G3');
+    $sheet->mergeCells('A4:G4');
+    
+    // Header styling
+    $sheet->getCell('A1')->setValue('NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY');
+    $sheet->getStyle('A1')->getFont()->applyFromArray(['bold' => true, 'size' => 12]);
+    
+    $sheet->getCell('A2')->setValue('NIELIT BHUBANESWAR');
+    $sheet->getStyle('A2')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
+    
+    $sheet->getCell('A3')->setValue('ABSENTEE STATEMENT OF CONTRACT EMPLOYEES');
+    $sheet->getStyle('A3')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
+    
+    $sheet->getCell('A4')->setValue("For the month of {$monthName} {$selectedYear}");
+    $sheet->getStyle('A4')->getFont()->applyFromArray(['size' => 10]);
+    
+    // Set column widths
+    $sheet->getColumnDimension('A')->setWidth(6);
+    $sheet->getColumnDimension('B')->setWidth(20);
+    $sheet->getColumnDimension('C')->setWidth(15);
+    $sheet->getColumnDimension('D')->setWidth(15);
+    $sheet->getColumnDimension('E')->setWidth(15);
+    $sheet->getColumnDimension('F')->setWidth(8);
+    $sheet->getColumnDimension('G')->setWidth(20);
+    
+    // Header row
+    $row = 6;
+    $headers = ['S.No.', 'Name & Designation', 'Period of Leave (From – To)', 'Nature of Leave/OD', 
+                'Period of Absence (From – To)', 'Absent Days', 'Remarks'];
+    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+    
+    foreach ($headers as $idx => $header) {
+        $cellRef = $cols[$idx] . $row;
+        $sheet->getCell($cellRef)->setValue($header);
+        $style = $sheet->getStyle($cellRef);
+        $style->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
+        $style->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $style->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $style->getAlignment()->setWrapText(true);
+    }
+    
+    // Apply borders to header
+    $borderStyle = [
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+            ],
+        ],
+    ];
+    $sheet->getStyle("A6:G6")->applyFromArray($borderStyle);
+    
+    // Data rows
+    $row = 7;
+    $serialNo = 1;
+    
+    foreach ($groupedContractEmployees as $groupName => $employees) {
+        // Group header
+        $sheet->mergeCells("A$row:G$row");
+        $cell = $sheet->getCell("A$row");
+        $cell->setValue($groupName);
+        $groupStyle = $sheet->getStyle("A$row");
+        $groupStyle->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
+        $groupStyle->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle("A$row:G$row")->applyFromArray([
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'EEEEEE']],
+        ])->applyFromArray($borderStyle);
+        $row++;
+        
+        foreach ($employees as $emp) {
+            $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
+            $leavePeriods = [];
+            $leaveNatures = [];
+            $absencePeriods = [];
+            
+            foreach ($leaveDetails as $leave) {
+                if ($leave['leave_type'] === 'Absent') {
+                    $absencePeriods[] = $leave['period'];
+                } else {
+                    $leavePeriods[] = $leave['period'];
+                    $leaveNatures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
+                }
+            }
+            
+            $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '---';
+            $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
+            $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
+            
+            // Auto-Remarks for Contract
+            $finalRemarks = $emp['remarks'] ?: '';
+            $monthEndTs = strtotime("$selectedYear-$selectedMonth-01 +1 month -1 day");
+            $monthStartTs = strtotime("$selectedYear-$selectedMonth-01");
+            $todayTs = time();
+            
+            $extras = [];
+            if ($emp['contract_end_date']) {
+                $contractTs = strtotime($emp['contract_end_date']);
+                if ($contractTs >= $monthStartTs && $contractTs <= $monthEndTs && $contractTs <= $todayTs) {
+                    $extras[] = 'Contract ended on ' . date('d/m/Y', $contractTs);
+                }
+            }
+            if ($emp['internship_duration']) {
+                $extras[] = $emp['internship_duration'] . " Months Internship";
+            }
+            
+            if (!empty($extras)) {
+                $finalRemarks = ($finalRemarks ? $finalRemarks . '; ' : '') . implode('; ', $extras);
+            }
+            
+            // Add row data
+            $sheet->getCell('A' . $row)->setValue($serialNo++);
+            $sheet->getCell('B' . $row)->setValue($emp['full_name'] . ' (' . $emp['designation'] . ')');
+            $sheet->getCell('C' . $row)->setValue($leavePerStr);
+            $sheet->getCell('D' . $row)->setValue($leaveNatStr);
+            $sheet->getCell('E' . $row)->setValue($absenceStr);
+            $sheet->getCell('F' . $row)->setValue($emp['absent_days'] > 0 ? $emp['absent_days'] : '---');
+            $sheet->getCell('G' . $row)->setValue($finalRemarks);
+            
+            // Apply borders and alignment
+            $sheet->getStyle("A$row:G$row")->applyFromArray($borderStyle);
+            $sheet->getStyle("A$row:G$row")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+            $sheet->getStyle("A$row:G$row")->getAlignment()->setWrapText(true);
+            
+            $row++;
+        }
+    }
+    
+    // Set row height for header
+    $sheet->getRowDimension(6)->setRowHeight(40);
+    
+    return $spreadsheet;
+}
+
+// Handle Generate Summary Action
+$generateMessage = '';
+$generateError = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_summary'])) {
+    $genMonth = $_POST['gen_month'] ?? date('n');
+    $genYear = $_POST['gen_year'] ?? date('Y');
+    
+    try {
+        $helper = new AttendanceStatementHelper($db);
+        $result = $helper->processMonthlyAttendance($genMonth, $genYear);
+        
+        if ($result['success']) {
+            $generateMessage = "Successfully processed {$result['processed']} employees for " . date('F', mktime(0, 0, 0, $genMonth, 1)) . " $genYear";
+            if (!empty($result['errors'])) {
+                $generateMessage .= ". Errors: " . implode('; ', $result['errors']);
+            }
+        }
+    } catch (Exception $e) {
+        $generateError = "Failed to generate summary: " . $e->getMessage();
+    }
+}
+
+// Get filter parameters
+$selectedMonth = $_GET['month'] ?? date('n');
+$selectedYear = $_GET['year'] ?? date('Y');
+$reportType = $_GET['report_type'] ?? 'regular'; // 'regular' or 'contract'
+
+// Export Logic
+$isExport = isset($_GET['export']) && $_GET['export'] === 'excel';
+if ($isExport) {
+    $monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
+    
+    // Get data first
+    $regularEmployees = ($reportType === 'regular') ? getRegularEmployeesStatement($db, $selectedMonth, $selectedYear) : [];
+    $contractEmployees = ($reportType === 'contract') ? getContractEmployeesStatement($db, $selectedMonth, $selectedYear) : [];
+    
+    // Group contract employees
+    $groupedContractEmployees = [];
+    if (!empty($contractEmployees)) {
+        foreach ($contractEmployees as $emp) {
+            $group = $emp['employee_group'] ?? 'Others';
+            $location = $emp['location'] ?? 'NIELIT Bhubaneswar';
+            $key = "$location - $group";
+            if (!isset($groupedContractEmployees[$key])) {
+                $groupedContractEmployees[$key] = [];
+            }
+            $groupedContractEmployees[$key][] = $emp;
+        }
+    }
+    
+    // Calculate days in month
+    $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
+    
+    // Generate appropriate Excel file
+    if ($reportType === 'regular') {
+        $spreadsheet = generateRegularEmployeesExcel($regularEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth);
+    } else {
+        $spreadsheet = generateContractEmployeesExcel($groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName);
+    }
+    
+    // Download Excel file
+    $filename = "Attendance_Statement_{$reportType}_{$monthName}_{$selectedYear}.xlsx";
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: max-age=0');
+    
+    $writer = new Xlsx($spreadsheet);
+    $writer->save('php://output');
+    exit;
+}
+
+// Calculate days in month
+$daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
+$monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
 
 // Fetch data based on report type
 $regularEmployees = ($reportType === 'regular') ? getRegularEmployeesStatement($db, $selectedMonth, $selectedYear) : [];
