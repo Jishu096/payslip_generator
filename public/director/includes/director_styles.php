@@ -174,16 +174,116 @@
         margin-top: 5px;
     }
 
+    /* Mobile Menu Toggle */
+    .mobile-menu-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1100;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: white;
+        border: none;
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+
+    .mobile-menu-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+
+    .mobile-menu-toggle i {
+        font-size: 20px;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+    }
+
+    /* Tablet Responsive */
+    @media (max-width: 1199px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Mobile & Tablet - Sidebar Toggle */
     @media (max-width: 768px) {
+        .mobile-menu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-overlay {
+            display: block;
+        }
+
         .sidebar {
-            width: 100%;
-            min-height: auto;
-            position: relative;
+            position: fixed;
+            left: -260px;
+            transition: left 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar.active {
+            left: 0;
         }
 
         .main-content {
             margin-left: 0;
+            padding: 80px 20px 20px 20px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .content-header {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .content-header h1 {
+            font-size: 22px;
+        }
+
+        table {
+            font-size: 13px;
+        }
+
+        .stat-card {
             padding: 20px;
+        }
+    }
+
+    /* Small Mobile */
+    @media (max-width: 480px) {
+        .main-content {
+            padding: 70px 15px 15px 15px;
+        }
+
+        .content-header h1 {
+            font-size: 20px;
+        }
+
+        table {
+            font-size: 12px;
         }
     }
 </style>

@@ -4,7 +4,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 $username = $_SESSION['username'] ?? 'Director';
 ?>
 
-<div class="sidebar">
+<!-- Mobile Menu Toggle -->
+<button class="mobile-menu-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <h3><i class="fas fa-user-tie"></i> Director Portal</h3>
         <p>Approval & Management</p>
@@ -53,3 +61,21 @@ $username = $_SESSION['username'] ?? 'Director';
         </a>
     </div>
 </div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+if (window.innerWidth <= 768) {
+    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('active');
+            document.querySelector('.sidebar-overlay').classList.remove('active');
+        });
+    });
+}
+</script>
