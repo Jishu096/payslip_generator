@@ -264,12 +264,12 @@ $availableRoles = $rolesStmt->fetchAll(PDO::FETCH_ASSOC);
     <?php include 'includes/superadmin_navbar.php'; ?>
     
     <div class="main-content">
-            <div class="page-header">
-                <div>
-                    <h1><i class="fas fa-users"></i> User Management</h1>
-                    <p>Create, manage, and monitor user accounts</p>
-                </div>
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-users"></i> User Management</h1>
+                <p>Create, manage, and monitor user accounts</p>
             </div>
+        </div>
 
             <div id="alertBox" class="alert"></div>
 

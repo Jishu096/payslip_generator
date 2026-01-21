@@ -286,12 +286,12 @@ foreach ($assignments as $assignment) {
     <?php include 'includes/superadmin_navbar.php'; ?>
     
     <div class="main-content">
-            <div class="page-header">
-                <div>
-                    <h1><i class="fas fa-user-tag"></i> Role Management</h1>
-                    <p>Assign and manage user roles across the system</p>
-                </div>
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-user-tag"></i> Role Management</h1>
+                <p>Assign and manage user roles across the system</p>
             </div>
+        </div>
 
             <div id="alertBox" class="alert"></div>
 

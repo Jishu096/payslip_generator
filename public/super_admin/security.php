@@ -202,12 +202,12 @@ $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
     <?php include 'includes/superadmin_navbar.php'; ?>
     
     <div class="main-content">
-            <div class="page-header">
-                <div>
-                    <h1><i class="fas fa-shield-alt"></i> Security & Audit Logs</h1>
-                    <p>Monitor system activity and security events</p>
-                </div>
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-shield-alt"></i> Security & Audit Logs</h1>
+                <p>Monitor system activity and security events</p>
             </div>
+        </div>
 
             <!-- Security Stats -->
             <div class="stats-grid">
