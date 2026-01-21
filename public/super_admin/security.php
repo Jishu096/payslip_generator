@@ -201,10 +201,7 @@ $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 <body>
     <?php include 'includes/superadmin_navbar.php'; ?>
     
-    <div class="container">
-        <?php include 'includes/superadmin_sidebar.php'; ?>
-        
-        <div class="main-content">
+    <div class="main-content">
             <div class="page-header">
                 <div>
                     <h1><i class="fas fa-shield-alt"></i> Security & Audit Logs</h1>
@@ -310,7 +307,6 @@ $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
                 </table>
             </div>
         </div>
-    </div>
 
     <?php include 'includes/superadmin_scripts.php'; ?>
     <script>

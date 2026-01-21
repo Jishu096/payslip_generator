@@ -263,10 +263,7 @@ $availableRoles = $rolesStmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
     <?php include 'includes/superadmin_navbar.php'; ?>
     
-    <div class="container">
-        <?php include 'includes/superadmin_sidebar.php'; ?>
-        
-        <div class="main-content">
+    <div class="main-content">
             <div class="page-header">
                 <div>
                     <h1><i class="fas fa-users"></i> User Management</h1>
@@ -345,7 +342,6 @@ $availableRoles = $rolesStmt->fetchAll(PDO::FETCH_ASSOC);
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
-                </table>
             </div>
         </div>
     </div>

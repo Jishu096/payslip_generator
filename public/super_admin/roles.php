@@ -285,10 +285,7 @@ foreach ($assignments as $assignment) {
 <body>
     <?php include 'includes/superadmin_navbar.php'; ?>
     
-    <div class="container">
-        <?php include 'includes/superadmin_sidebar.php'; ?>
-        
-        <div class="main-content">
+    <div class="main-content">
             <div class="page-header">
                 <div>
                     <h1><i class="fas fa-user-tag"></i> Role Management</h1>
@@ -388,7 +385,6 @@ foreach ($assignments as $assignment) {
                 </table>
             </div>
         </div>
-    </div>
 
     <!-- Assign Role Modal -->
     <div id="assignRoleModal" class="modal">
