@@ -24,15 +24,9 @@ $username = $_SESSION['username'] ?? 'Accountant';
             <span>Dashboard</span>
         </a>
         
-        <a href="<?php echo $baseURL; ?>accountant/payroll_management.php" class="<?php echo $currentPage === 'payroll_management.php' ? 'active' : ''; ?>">
-            <i class="fas fa-money-bill-wave"></i>
-            <span>Payroll Management</span>
-        </a>
-        
-        <a href="<?php echo $baseURL; ?>accountant/payroll.php" class="<?php echo $currentPage === 'payroll.php' ? 'active' : ''; ?>">
-            <i class="fas fa-calculator"></i>
-            <span>Process Payroll</span>
-        </a>
+        <div style="margin: 20px 15px 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            Payroll Management
+        </div>
         
         <a href="<?php echo $baseURL; ?>accountant/generate_payslip.php" class="<?php echo $currentPage === 'generate_payslip.php' ? 'active' : ''; ?>">
             <i class="fas fa-file-invoice-dollar"></i>
@@ -44,8 +38,13 @@ $username = $_SESSION['username'] ?? 'Accountant';
             <span>View Payslips</span>
         </a>
         
-        <a href="<?php echo $baseURL; ?>accountant/salary_structure.php" class="<?php echo $currentPage === 'salary_structure.php' ? 'active' : ''; ?>">
+        <a href="<?php echo $baseURL; ?>accountant/payroll_management.php" class="<?php echo $currentPage === 'payroll_management.php' ? 'active' : ''; ?>">
             <i class="fas fa-money-bill-wave"></i>
+            <span>Payroll Records</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>accountant/salary_structure.php" class="<?php echo $currentPage === 'salary_structure.php' ? 'active' : ''; ?>">
+            <i class="fas fa-wallet"></i>
             <span>Salary Structure</span>
         </a>
         
@@ -53,6 +52,10 @@ $username = $_SESSION['username'] ?? 'Accountant';
             <i class="fas fa-cog"></i>
             <span>Salary Configuration</span>
         </a>
+        
+        <div style="margin: 20px 15px 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            Attendance & Reports
+        </div>
         
         <a href="<?php echo $baseURL; ?>accountant/generate_attendance_statement.php" class="<?php echo $currentPage === 'generate_attendance_statement.php' ? 'active' : ''; ?>">
             <i class="fas fa-file-excel"></i>
