@@ -56,10 +56,7 @@ $error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salary Approvals - Director Portal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include 'includes/director_styles.php'; ?>
     <style>
         :root {
             --bg-primary: #ffffff;
@@ -522,18 +519,19 @@ $error = $_GET['error'] ?? '';
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1><i class="fas fa-hand-holding-usd"></i> Salary Change Approvals</h1>
+    <?php include 'includes/director_sidebar.php'; ?>
+
+    <div class="main-content" id="mainContent">
+        <div class="content-area">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1><i class="fas fa-hand-holding-usd"></i> Salary Change Approvals</h1>
+                    <p>Review and approve salary modification requests</p>
+                </div>
+                <div class="page-header-right">
+                    <span style="color: #666;">Welcome, <strong><?php echo htmlspecialchars($username); ?></strong></span>
+                </div>
             </div>
-            <div class="user-info">
-                <a href="director_dashboard.php" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-                <span style="color: #666;">Welcome, <strong><?php echo htmlspecialchars($username); ?></strong></span>
-            </div>
-        </div>
 
         <?php if ($approved): ?>
             <div style="background:#d4edda;border:1px solid #b6e0c5;color:#155724;padding:15px 20px;border-radius:8px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
@@ -686,6 +684,7 @@ $error = $_GET['error'] ?? '';
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+        </div>
     </div>
 
     <!-- Approve Modal -->
@@ -765,5 +764,7 @@ $error = $_GET['error'] ?? '';
             }
         });
     </script>
+
+    <?php include 'includes/director_scripts.php'; ?>
 </body>
 </html>

@@ -71,7 +71,7 @@ $avatarLetter = strtoupper(substr($emp['full_name'], 0, 1));
             <div class="profile-avatar"><?= $avatarLetter ?></div>
             <div class="profile-details">
                 <h2><?= htmlspecialchars($emp['full_name']) ?></h2>
-                <p><i class="fas fa-id-badge"></i> Employee ID: <?= htmlspecialchars($emp['employee_id']) ?></p>
+                <p><i class="fas fa-id-badge"></i> <?= htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)) ?></p>
                 <p><i class="fas fa-briefcase"></i> <?= val($emp, 'designation') ?> • <?= val($emp, 'department_name') ?></p>
                 <p><i class="fas fa-envelope"></i> <?= val($emp, 'email') ?></p>
             </div>
@@ -134,8 +134,8 @@ $avatarLetter = strtoupper(substr($emp['full_name'], 0, 1));
             <div class="section-body">
                 <div class="info-grid">
                     <div class="info-item">
-                        <label>Employee ID</label>
-                        <div class="value"><?= htmlspecialchars($emp['employee_id']) ?></div>
+                        <label>Employee Code</label>
+                        <div class="value"><?= htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)) ?></div>
                     </div>
                     <div class="info-item">
                         <label>Designation</label>
@@ -168,30 +168,54 @@ $avatarLetter = strtoupper(substr($emp['full_name'], 0, 1));
                 <span>Compensation & Benefits</span>
             </div>
             <div class="section-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Basic Salary</label>
-                        <div class="value">₹<?= number_format((float)$emp['basic_salary']) ?></div>
-                    </div>
-                    <div class="info-item">
-                        <label>DA (58%)</label>
-                        <div class="value">
-                            ₹<?php
-                                $da = (float)$emp['basic_salary'] * 0.58;
-                                echo number_format($da);
-                            ?>
+                <?php 
+                $employmentType = strtolower($emp['employment_type'] ?? 'full-time');
+                $isIntern = ($employmentType === 'intern' || $employmentType === 'internship');
+                ?>
+                
+                <?php if ($isIntern): ?>
+                    <!-- Simplified compensation for interns -->
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Monthly Stipend</label>
+                            <div class="value">₹<?= number_format((float)$emp['basic_salary']) ?></div>
+                        </div>
+                        <div class="info-item">
+                            <label>Employment Type</label>
+                            <div class="value"><?= ucfirst($emp['employment_type']) ?></div>
+                        </div>
+                        <div class="info-item">
+                            <label>Benefits</label>
+                            <div class="value">As per internship terms</div>
                         </div>
                     </div>
-                    <div class="info-item">
-                        <label>Estimated Total (Basic + DA)</label>
-                        <div class="value">
-                            ₹<?php
-                                $total = (float)$emp['basic_salary'] + $da;
-                                echo number_format($total);
-                            ?>
+                <?php else: ?>
+                    <!-- Full compensation breakdown for regular employees -->
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Basic Salary</label>
+                            <div class="value">₹<?= number_format((float)$emp['basic_salary']) ?></div>
+                        </div>
+                        <div class="info-item">
+                            <label>DA (58%)</label>
+                            <div class="value">
+                                ₹<?php
+                                    $da = (float)$emp['basic_salary'] * 0.58;
+                                    echo number_format($da);
+                                ?>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <label>Estimated Total (Basic + DA)</label>
+                            <div class="value">
+                                ₹<?php
+                                    $total = (float)$emp['basic_salary'] + $da;
+                                    echo number_format($total);
+                                ?>
+                            </div>
                         </div>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
 

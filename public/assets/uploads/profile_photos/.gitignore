@@ -1,0 +1,6 @@
+# Profile Photos - Exclude from Git
+*.jpg
+*.jpeg
+*.png
+*.gif
+!.gitkeep

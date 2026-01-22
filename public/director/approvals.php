@@ -493,7 +493,6 @@ $years = range(date('Y'), date('Y') - 3);
     </style>
 </head>
 <body>
-    <?php include 'includes/director_navbar.php'; ?>
     <?php include 'includes/director_sidebar.php'; ?>
 
     <div class="main-content">

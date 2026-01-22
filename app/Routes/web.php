@@ -79,6 +79,18 @@ switch ($request) {
         $controller->deleteDepartment();
         break;
 
+    case 'restore-department':
+        require_once __DIR__ . "/../Controllers/DepartmentController.php";
+        $controller = new DepartmentController();
+        $controller->restoreDepartment();
+        break;
+
+    case 'permanently-delete-department':
+        require_once __DIR__ . "/../Controllers/DepartmentController.php";
+        $controller = new DepartmentController();
+        $controller->permanentlyDeleteDepartment();
+        break;
+
     case 'approve-salary-change':
     case 'reject-salary-change':
         require_once __DIR__ . "/../Controllers/SalaryApprovalController.php";

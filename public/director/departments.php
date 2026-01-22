@@ -12,258 +12,390 @@ if (!$hasDirectorRole && $_SESSION['role'] !== 'director') {
 
 $username = $_SESSION['username'] ?? 'Director';
 
+require_once __DIR__ . '/../../app/Models/Department.php';
 require_once __DIR__ . '/../../app/Config/database.php';
 $db = new Database();
 $conn = $db->connect();
 
-// Get all departments with employee count
-$query = "SELECT d.*, COUNT(e.employee_id) as employee_count 
-          FROM departments d 
-          LEFT JOIN employees e ON d.department_id = e.department_id 
-          GROUP BY d.department_id 
-          ORDER BY d.department_name";
-$stmt = $conn->query($query);
-$departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$created = isset($_GET['created']);
+$updated = isset($_GET['updated']);
+$deleted = isset($_GET['deleted']);
+$restored = isset($_GET['restored']);
+$error = $_GET['error'] ?? '';
+$showDeleted = isset($_GET['show_deleted']);
+
+// Fetch departments using the model
+$departmentModel = new Department($conn);
+$departments = $showDeleted ? $departmentModel->getDeletedDepartments() : $departmentModel->getAllDepartments();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Departments - Director Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Departments - Director Portal</title>
+    <?php include 'includes/director_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: #ffffff;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
         }
 
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
+        .page-header-left h1 {
+            font-size: 28px;
+            color: var(--text);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .header p {
-            font-size: 16px;
-            opacity: 0.95;
+        .page-header-left p {
+            color: var(--muted);
+            font-size: 14px;
         }
 
-        .back-btn {
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
         }
 
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .content-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
         }
 
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #2d3748;
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
         }
 
         .dept-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
-            margin-top: 20px;
         }
 
         .dept-card {
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            padding: 25px;
-            border-radius: 12px;
-            border: 2px solid #e2e8f0;
+            background: var(--card);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
         }
 
         .dept-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
         }
 
         .dept-header {
             display: flex;
-            align-items: center;
-            gap: 15px;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 15px;
         }
 
         .dept-icon {
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
             font-size: 24px;
         }
 
-        .dept-info h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 4px;
+        .dept-actions {
+            display: flex;
+            gap: 8px;
         }
 
-        .dept-info p {
-            font-size: 13px;
-            color: #718096;
+        .btn-action {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-restore {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-restore:hover {
+            background: #059669;
+            transform: scale(1.1);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .dept-card h3 {
+            font-size: 18px;
+            color: var(--text);
+            margin-bottom: 10px;
         }
 
         .dept-stats {
-            display: flex;
-            gap: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
             padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border);
         }
 
-        .dept-stat {
-            flex: 1;
+        .stat-item {
+            text-align: center;
         }
 
-        .dept-stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .dept-stat-label {
+        .stat-item label {
+            display: block;
             font-size: 12px;
-            color: #718096;
-            margin-top: 4px;
+            color: var(--muted);
+            margin-bottom: 5px;
         }
 
-        .logout-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
+        .stat-item strong {
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .badge-deleted {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 5px;
+            font-size: 11px;
             font-weight: 600;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
+            margin-left: 8px;
         }
 
         @media (max-width: 768px) {
             .dept-grid {
                 grid-template-columns: 1fr;
             }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="director_dashboard.php" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-            <h1><i class="fas fa-building"></i> Departments</h1>
-            <p>Organization departments and structure</p>
-        </div>
 
-        <div class="content-card">
-            <div class="section-title">
-                <i class="fas fa-sitemap"></i> All Departments (<?php echo count($departments); ?>)
+    <?php include 'includes/director_sidebar.php'; ?>
+
+    <div class="main-content" id="mainContent">
+
+        <div class="content-area">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1><i class="fas fa-building"></i> Departments</h1>
+                    <p>View and manage organizational departments</p>
+                </div>
+                <div class="btn-group">
+                    <?php if ($showDeleted): ?>
+                        <a href="departments.php" class="btn btn-secondary">
+                            <i class="fas fa-list"></i> Active Departments
+                        </a>
+                    <?php else: ?>
+                        <a href="departments.php?show_deleted=1" class="btn btn-secondary">
+                            <i class="fas fa-trash-restore"></i> Deleted Departments
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <div class="dept-grid">
-                <?php if (empty($departments)): ?>
-                    <p style="text-align: center; padding: 40px; color: #a0aec0; grid-column: 1 / -1;">
-                        No departments found
-                    </p>
-                <?php else: ?>
+            <?php if ($created): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Department created successfully.
+                </div>
+            <?php elseif ($restored): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Department restored successfully.
+                </div>
+            <?php elseif ($updated): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Department updated successfully.
+                </div>
+            <?php elseif ($deleted): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Department deleted successfully.
+                </div>
+            <?php elseif ($error === 'has_employees'): ?>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Cannot delete department with employees. Reassign employees first.
+                </div>
+            <?php elseif ($error === 'unauthorized'): ?>
+                <div class="alert alert-danger">
+                    <i class="fas fa-lock"></i> Unauthorized action.
+                </div>
+            <?php endif; ?>
+
+            <?php if ($showDeleted): ?>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> <strong>Deleted Departments:</strong> You can restore departments that were previously deleted.
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($departments)): ?>
+                <div class="dept-grid">
                     <?php foreach ($departments as $dept): ?>
                         <div class="dept-card">
                             <div class="dept-header">
                                 <div class="dept-icon">
                                     <i class="fas fa-building"></i>
                                 </div>
-                                <div class="dept-info">
-                                    <h3><?php echo htmlspecialchars($dept['department_name']); ?></h3>
-                                    <p>Department ID: #<?php echo $dept['department_id']; ?></p>
+                                <div class="dept-actions">
+                                    <?php if ($showDeleted): ?>
+                                        <a href="../index.php?page=restore-department&id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action btn-restore" title="Restore Department">
+                                            <i class="fas fa-undo"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="../index.php?page=delete-department&id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action btn-delete confirm-delete" data-name="<?php echo htmlspecialchars($dept['department_name']); ?>" title="Delete Department">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
+                            <h3>
+                                <?php echo htmlspecialchars($dept['department_name']); ?>
+                                <?php if ($showDeleted): ?>
+                                    <span class="badge-deleted">
+                                        <i class="fas fa-trash"></i> Deleted
+                                    </span>
+                                <?php endif; ?>
+                            </h3>
                             <div class="dept-stats">
-                                <div class="dept-stat">
-                                    <div class="dept-stat-value"><?php echo $dept['employee_count']; ?></div>
-                                    <div class="dept-stat-label">Employees</div>
+                                <div class="stat-item">
+                                    <label><?php echo $showDeleted ? 'Deleted By' : 'Employees'; ?></label>
+                                    <strong><?php echo $showDeleted ? htmlspecialchars($dept['deleted_by_username'] ?? 'Unknown') : $dept['employee_count']; ?></strong>
+                                </div>
+                                <div class="stat-item">
+                                    <label><?php echo $showDeleted ? 'Deleted On' : 'Dept ID'; ?></label>
+                                    <strong><?php echo $showDeleted ? date('M d, Y', strtotime($dept['deleted_at'])) : '#' . $dept['department_id']; ?></strong>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h3><?php echo $showDeleted ? 'No Deleted Departments' : 'No Departments Available'; ?></h3>
+                    <p><?php echo $showDeleted ? 'There are no deleted departments to restore' : 'No departments found in the system'; ?></p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
-    <a href="../auth/logout.php" class="logout-btn">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
+    <?php include 'includes/director_scripts.php'; ?>
+
+    <script>
+        // Delete confirmation
+        document.querySelectorAll('.confirm-delete').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const deptName = this.getAttribute('data-name');
+                if (confirm('Are you sure you want to delete the department "' + deptName + '"?\n\nThis can be restored later by Directors.')) {
+                    window.location.href = this.href;
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>

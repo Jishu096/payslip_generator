@@ -10,6 +10,33 @@ require_once __DIR__ . "/../../app/Config/database.php";
 
 $db = getDBConnection();
 $username = $_SESSION['username'] ?? 'Director';
+$userId = $_SESSION['user_id'] ?? null;
+$baseURL = "/payslip_generator/public/";
+
+// Get Director's employee details
+$directorInfo = null;
+try {
+    $stmt = $db->prepare("
+        SELECT 
+            e.employee_code,
+            e.full_name,
+            e.designation,
+            e.email,
+            e.phone,
+            e.experience_years,
+            e.profile_photo,
+            d.department_name,
+            e.join_date
+        FROM users u
+        JOIN employees e ON u.employee_id = e.employee_id
+        LEFT JOIN departments d ON e.department_id = d.department_id
+        WHERE u.user_id = ?
+    ");
+    $stmt->execute([$userId]);
+    $directorInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $directorInfo = null;
+}
 
 // Get pending payroll approvals (payrolls awaiting director approval)
 try {
@@ -101,6 +128,110 @@ $currentMonth = date('F Y');
     <title>Director Dashboard</title>
     <?php include 'includes/director_styles.php'; ?>
     <style>
+        .director-profile-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 30px;
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-photo:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .profile-main {
+            flex: 1;
+        }
+
+        .profile-main h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .profile-designation {
+            font-size: 16px;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+
+        .profile-meta {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .profile-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -343,7 +474,7 @@ $currentMonth = date('F Y');
     </style>
 </head>
 <body>
-    <?php include 'includes/director_navbar.php'; ?>
+    <?php include 'includes/director_sidebar.php'; ?>
 
     <div class="main-content">
         <div class="content-header">
@@ -358,6 +489,73 @@ $currentMonth = date('F Y');
                 </div>
             </div>
         </div>
+
+        <?php if ($directorInfo): ?>
+        <!-- Director Profile Card -->
+        <div class="director-profile-card">
+            <div class="profile-header">
+                <a href="update_profile_photo.php" class="profile-photo" title="Click to update photo">
+                    <?php if ($directorInfo['profile_photo']): ?>
+                        <img src="<?php echo $baseURL; ?>assets/uploads/profile_photos/<?php echo htmlspecialchars($directorInfo['profile_photo']); ?>" alt="Director Photo">
+                    <?php else: ?>
+                        <i class="fas fa-user-tie"></i>
+                    <?php endif; ?>
+                </a>
+                <div class="profile-main">
+                    <h2><?php echo htmlspecialchars($directorInfo['full_name']); ?></h2>
+                    <div class="profile-designation">
+                        <?php echo htmlspecialchars($directorInfo['designation']); ?>
+                    </div>
+                    <div class="profile-meta">
+                        <div class="profile-meta-item">
+                            <i class="fas fa-id-badge"></i>
+                            <span><?php echo htmlspecialchars($directorInfo['employee_code']); ?></span>
+                        </div>
+                        <div class="profile-meta-item">
+                            <i class="fas fa-building"></i>
+                            <span><?php echo htmlspecialchars($directorInfo['department_name']); ?></span>
+                        </div>
+                        <div class="profile-meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span><?php echo $directorInfo['experience_years']; ?>+ Years Experience</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-details">
+                <div class="detail-item">
+                    <div class="detail-label">Email Address</div>
+                    <div class="detail-value">
+                        <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($directorInfo['email']); ?>
+                        <?php if (strpos($directorInfo['email'], 'dir-bbsr') !== false): ?>
+                            <br><small style="opacity: 0.8;">Alternative: anilshaw@nielit.gov.in</small>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php if ($directorInfo['phone']): ?>
+                <div class="detail-item">
+                    <div class="detail-label">Contact Number</div>
+                    <div class="detail-value">
+                        <i class="fas fa-phone"></i> <?php echo htmlspecialchars($directorInfo['phone']); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <div class="detail-item">
+                    <div class="detail-label">Qualification</div>
+                    <div class="detail-value">
+                        <i class="fas fa-graduation-cap"></i> MTech, BTech (ECE)
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Since</div>
+                    <div class="detail-value">
+                        <i class="fas fa-calendar-check"></i> <?php echo date('M Y', strtotime($directorInfo['join_date'])); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Stats -->
         <div class="stats-grid">

@@ -56,17 +56,13 @@ $approved = isset($_GET['approved']);
 $rejected = isset($_GET['rejected']);
 $error = $_GET['error'] ?? '';
 
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Role Change Approvals - Director Portal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include 'includes/director_styles.php'; ?>
     <style>
         :root {
             --bg-primary: #ffffff;
@@ -398,24 +394,19 @@ $error = $_GET['error'] ?? '';
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="director_dashboard.php" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+    <?php include 'includes/director_sidebar.php'; ?>
 
-        <div class="header">
-            <div>
-                <h1><i class="fas fa-user-check"></i> Role Change Approvals</h1>
-                <p style="color: #999; margin-top: 5px;">Review and approve employee role changes</p>
-            </div>
-            <div class="user-info">
-                <div style="text-align: right;">
-                    <p style="margin: 0; color: #333; font-weight: 600;">Welcome, <?php echo htmlspecialchars($username); ?></p>
-                    <small style="color: #999;">Director</small>
+    <div class="main-content" id="mainContent">
+        <div class="content-area">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1><i class="fas fa-user-check"></i> Role Change Approvals</h1>
+                    <p>Review and approve employee role changes</p>
                 </div>
-                <img src="https://via.placeholder.com/50" alt="User" style="width: 50px; height: 50px; border-radius: 50%;">
+                <div class="page-header-right">
+                    <span style="color: #333; font-weight: 600;">Welcome, <?php echo htmlspecialchars($username); ?></span>
+                </div>
             </div>
-        </div>
 
         <?php if ($approved): ?>
             <div class="success-banner">
@@ -546,6 +537,7 @@ $error = $_GET['error'] ?? '';
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
+        </div>
         </div>
     </div>
 
@@ -683,5 +675,7 @@ $error = $_GET['error'] ?? '';
             form.submit();
         }
     </script>
+
+    <?php include 'includes/director_scripts.php'; ?>
 </body>
 </html>

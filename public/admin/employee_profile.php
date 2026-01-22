@@ -291,7 +291,7 @@ $username = $_SESSION['username'] ?? 'Admin';
                 <div class="profile-details">
                     <h1><?php echo htmlspecialchars($emp['full_name']); ?></h1>
                     <div class="profile-meta">
-                        <span><i class="fas fa-id-badge"></i> ID: <?php echo htmlspecialchars($emp['employee_id']); ?></span>
+                        <span><i class="fas fa-id-badge"></i> <?php echo htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)); ?></span>
                         <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($emp['designation']); ?></span>
                         <span>
                             <?php 
@@ -388,8 +388,8 @@ $username = $_SESSION['username'] ?? 'Admin';
                 <h2 style="margin-bottom: 25px; color: var(--text-primary);">Employment Details</h2>
                 <div class="info-grid">
                     <div class="info-item">
-                        <label><i class="fas fa-id-badge"></i> Employee ID</label>
-                        <div class="value"><?php echo htmlspecialchars($emp['employee_id']); ?></div>
+                        <label><i class="fas fa-id-badge"></i> Employee Code</label>
+                        <div class="value"><?php echo htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)); ?></div>
                     </div>
                     <div class="info-item">
                         <label><i class="fas fa-briefcase"></i> Designation</label>

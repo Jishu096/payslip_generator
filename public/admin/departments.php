@@ -4,12 +4,17 @@ session_start();
 // Support both single-role and multi-role
 $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
 $hasAdminRole = in_array('administrator', $userRoles);
+$hasDirectorRole = in_array('director', $userRoles);
+$hasSuperAdminRole = in_array('super_admin', $userRoles);
+$canRestoreDepartments = $hasDirectorRole || $hasSuperAdminRole;
+
 if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
     header("Location: ../auth/login.php");
     exit;
 }
 
 require_once __DIR__ . '/../../app/Models/Employee.php';
+require_once __DIR__ . '/../../app/Models/Department.php';
 require_once __DIR__ . '/../../app/Config/database.php';
 $db = new Database();
 $conn = $db->connect();
@@ -18,17 +23,14 @@ $success = isset($_GET['success']);
 $created = isset($_GET['created']);
 $updated = isset($_GET['updated']);
 $deleted = isset($_GET['deleted']);
+$restored = isset($_GET['restored']);
+$permanentlyDeleted = isset($_GET['permanently_deleted']);
 $error = $_GET['error'] ?? '';
+$showDeleted = isset($_GET['show_deleted']);
 
-// Fetch all departments with employee count
-$sql = "SELECT d.*, COUNT(e.employee_id) as employee_count 
-        FROM departments d 
-        LEFT JOIN employees e ON d.department_id = e.department_id 
-        GROUP BY d.department_id 
-        ORDER BY d.department_name ASC";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch all departments using the model (excludes soft-deleted)
+$departmentModel = new Department($conn);
+$departments = $showDeleted ? $departmentModel->getDeletedDepartments() : $departmentModel->getAllDepartments();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -310,14 +312,35 @@ $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <h1><i class="fas fa-building"></i> Departments</h1>
                 <p>Manage organizational departments and structure</p>
             </div>
-            <a href="add_department.php" class="btn-add">
-                <i class="fas fa-plus"></i> Add Department
-            </a>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <?php if ($canRestoreDepartments): ?>
+                    <?php if ($showDeleted): ?>
+                        <a href="departments.php" class="btn-add" style="background: #6c757d;">
+                            <i class="fas fa-list"></i> Active Departments
+                        </a>
+                    <?php else: ?>
+                        <a href="departments.php?show_deleted=1" class="btn-add" style="background: #6c757d;">
+                            <i class="fas fa-trash-restore"></i> Deleted Departments
+                        </a>
+                    <?php endif; ?>
+                <?php endif; ?>
+                <a href="add_department.php" class="btn-add">
+                    <i class="fas fa-plus"></i> Add Department
+                </a>
+            </div>
         </div>
 
         <?php if ($created): ?>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> Department created successfully.
+            </div>
+        <?php elseif ($restored): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> Department restored successfully.
+            </div>
+        <?php elseif ($permanentlyDeleted): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> Department permanently deleted from database.
             </div>
         <?php elseif ($updated): ?>
             <div class="alert alert-success">
@@ -335,6 +358,20 @@ $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i> Cannot delete department with employees. Reassign employees first.
             </div>
+        <?php elseif ($error === 'unauthorized'): ?>
+            <div class="alert alert-danger">
+                <i class="fas fa-lock"></i> Unauthorized: Only Directors and Super Admins can restore departments.
+            </div>
+        <?php elseif ($error === 'unauthorized_permanent'): ?>
+            <div class="alert alert-danger">
+                <i class="fas fa-lock"></i> Unauthorized: Only Super Admins can permanently delete departments.
+            </div>
+        <?php endif; ?>
+
+        <?php if ($showDeleted && !$canRestoreDepartments): ?>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> <strong>View Only Mode:</strong> You can view deleted departments, but only Directors and Super Admins can restore them.
+            </div>
         <?php endif; ?>
 
         <?php if (!empty($departments)): ?>
@@ -346,24 +383,45 @@ $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <i class="fas fa-building"></i>
                             </div>
                             <div class="dept-actions">
-                                <a href="edit_department.php?id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action btn-edit" title="Edit Department">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="../index.php?page=delete-department&id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action btn-delete confirm-delete" data-name="<?php echo htmlspecialchars($dept['department_name']); ?>" title="Delete Department">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                                <?php if ($showDeleted && $canRestoreDepartments): ?>
+                                    <a href="../index.php?page=restore-department&id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action" style="background: #28a745; color: white;" title="Restore Department">
+                                        <i class="fas fa-undo"></i>
+                                    </a>
+                                    <?php if ($hasSuperAdminRole): ?>
+                                        <a href="../index.php?page=permanently-delete-department&id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action confirm-permanent-delete" style="background: #dc3545; color: white;" data-name="<?php echo htmlspecialchars($dept['department_name']); ?>" title="Permanently Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                <?php elseif ($showDeleted): ?>
+                                    <span style="color: #999; font-size: 12px; padding: 5px;">
+                                        <i class="fas fa-lock"></i> Director Only
+                                    </span>
+                                <?php else: ?>
+                                    <a href="edit_department.php?id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action btn-edit" title="Edit Department">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="../index.php?page=delete-department&id=<?php echo urlencode($dept['department_id']); ?>" class="btn-action btn-delete confirm-delete" data-name="<?php echo htmlspecialchars($dept['department_name']); ?>" title="Delete Department">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
-                        <h3><?php echo htmlspecialchars($dept['department_name']); ?></h3>
-                        <p class="dept-description"><?php echo htmlspecialchars($dept['description'] ?? 'No description available'); ?></p>
+                        <h3>
+                            <?php echo htmlspecialchars($dept['department_name']); ?>
+                            <?php if ($showDeleted): ?>
+                                <span style="font-size: 12px; color: #dc3545; margin-left: 8px;">
+                                    <i class="fas fa-trash"></i> Deleted
+                                </span>
+                            <?php endif; ?>
+                        </h3>
                         <div class="dept-stats">
                             <div class="stat-item">
-                                <label>Employees</label>
-                                <strong><?php echo $dept['employee_count']; ?></strong>
+                                <label><?php echo $showDeleted ? 'Deleted By' : 'Employees'; ?></label>
+                                <strong><?php echo $showDeleted ? htmlspecialchars($dept['deleted_by_username'] ?? 'Unknown') : $dept['employee_count']; ?></strong>
                             </div>
                             <div class="stat-item">
-                                <label>Dept ID</label>
-                                <strong>#<?php echo $dept['department_id']; ?></strong>
+                                <label><?php echo $showDeleted ? 'Deleted On' : 'Dept ID'; ?></label>
+                                <strong><?php echo $showDeleted ? date('M d, Y', strtotime($dept['deleted_at'])) : '#' . $dept['department_id']; ?></strong>
                             </div>
                         </div>
                     </div>
@@ -372,16 +430,47 @@ $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php else: ?>
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <h3>No Departments Yet</h3>
-                <p>Create your first department to organize your workforce</p>
-                <a href="add_department.php" class="btn-add">
-                    <i class="fas fa-plus"></i> Create First Department
-                </a>
+                <h3><?php echo $showDeleted ? 'No Deleted Departments' : 'No Departments Yet'; ?></h3>
+                <p><?php echo $showDeleted ? 'There are no deleted departments to restore' : 'Create your first department to organize your workforce'; ?></p>
+                <?php if (!$showDeleted): ?>
+                    <a href="add_department.php" class="btn-add">
+                        <i class="fas fa-plus"></i> Create First Department
+                    </a>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </main>
 
     <?php include 'includes/admin_scripts.php'; ?>
+
+    <script>
+        // Soft delete confirmation
+        document.querySelectorAll('.confirm-delete').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const deptName = this.getAttribute('data-name');
+                if (confirm('Are you sure you want to delete the department "' + deptName + '"?\n\nThis action can be undone by Directors.')) {
+                    window.location.href = this.href;
+                }
+            });
+        });
+
+        // Permanent delete confirmation (more serious warning)
+        document.querySelectorAll('.confirm-permanent-delete').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const deptName = this.getAttribute('data-name');
+                if (confirm('⚠️ PERMANENT DELETE WARNING ⚠️\n\nAre you ABSOLUTELY SURE you want to PERMANENTLY delete "' + deptName + '"?\n\n❌ This will COMPLETELY REMOVE the department from the database.\n❌ This action CANNOT BE UNDONE.\n❌ All records will be lost forever.\n\nType "DELETE" to confirm or Cancel to abort.')) {
+                    const confirmText = prompt('Type "DELETE" (in capital letters) to confirm permanent deletion:');
+                    if (confirmText === 'DELETE') {
+                        window.location.href = this.href;
+                    } else {
+                        alert('Permanent deletion cancelled. Department was NOT deleted.');
+                    }
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>

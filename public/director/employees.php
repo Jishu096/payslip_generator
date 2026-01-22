@@ -35,117 +35,277 @@ $departments = $deptStmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Employees - Director Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Employees - Director Portal</title>
+    <?php include 'includes/director_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: #ffffff;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.95;
-        }
-
-        .back-btn {
-            display: inline-flex;
+        .page-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
+            margin-bottom: 30px;
         }
 
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+        .page-header h1 {
+            margin: 0;
         }
 
-        .content-card {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
         }
 
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 20px;
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .stat-card .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-bottom: 15px;
         }
 
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .stat-box {
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .stat-box h3 {
-            font-size: 28px;
+        .stat-card .stat-value {
+            font-size: 32px;
             font-weight: 700;
-            color: #667eea;
+            color: var(--text);
             margin-bottom: 5px;
         }
 
-        .stat-box p {
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .search-filter-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             font-size: 14px;
-            color: #718096;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            min-width: 180px;
+        }
+
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .employee-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .employee-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .employee-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .employee-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .employee-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .employee-info .emp-code {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .employee-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .detail-row i {
+            width: 20px;
+            color: var(--accent);
+        }
+
+        .detail-row .label {
+            color: var(--muted);
+            min-width: 80px;
+        }
+
+        .detail-row .value {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .employee-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .salary-badge {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            background: #f7fafc;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .view-toggle button {
+            padding: 8px 15px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .view-toggle button.active {
+            background: white;
+            color: var(--accent);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .table-view {
+            display: none;
+        }
+
+        .table-view.active {
+            display: block;
+        }
+
+        .grid-view {
+            display: none;
+        }
+
+        .grid-view.active {
+            display: grid;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            background: white;
         }
 
         thead {
@@ -159,161 +319,284 @@ $departments = $deptStmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         th {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: #718096;
+            color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         td {
             font-size: 14px;
-            color: #2d3748;
+            color: var(--text);
         }
 
         tbody tr:hover {
             background: #f7fafc;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge-success {
-            background: #e6fffa;
-            color: #0f766e;
-        }
-
-        .badge-warning {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .logout-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-        }
-
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
+            .employee-grid {
+                grid-template-columns: 1fr;
             }
-
-            .header h1 {
-                font-size: 24px;
+            
+            .search-filter-bar {
+                flex-direction: column;
+                align-items: stretch;
             }
-
-            table {
-                font-size: 12px;
-            }
-
-            th, td {
-                padding: 10px;
+            
+            .search-box {
+                min-width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="director_dashboard.php" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+    <?php include 'includes/director_navbar.php'; ?>
+    <?php include 'includes/director_sidebar.php'; ?>
+
+    <div class="main-content">
+        <div class="page-header">
             <h1><i class="fas fa-users"></i> Employee Directory</h1>
-            <p>View all employees in the organization</p>
+            <div class="view-toggle">
+                <button class="toggle-grid active" onclick="switchView('grid')">
+                    <i class="fas fa-th"></i> Cards
+                </button>
+                <button class="toggle-table" onclick="switchView('table')">
+                    <i class="fas fa-table"></i> Table
+                </button>
+            </div>
         </div>
 
-        <div class="content-card">
-            <div class="section-title">
-                <i class="fas fa-chart-bar"></i> Overview
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value"><?php echo count($employees); ?></div>
+                <div class="stat-label">Total Employees</div>
             </div>
-            <div class="stats-row">
-                <div class="stat-box">
-                    <h3><?php echo count($employees); ?></h3>
-                    <p>Total Employees</p>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-check"></i>
                 </div>
-                <div class="stat-box">
-                    <h3><?php echo count(array_filter($employees, fn($e) => $e['status'] === 'active')); ?></h3>
-                    <p>Active Employees</p>
+                <div class="stat-value">
+                    <?php echo count(array_filter($employees, fn($e) => $e['status'] === 'active')); ?>
                 </div>
-                <div class="stat-box">
-                    <h3><?php echo count($departments); ?></h3>
-                    <p>Departments</p>
-                </div>
+                <div class="stat-label">Active Employees</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="stat-value">
+                    <?php
+                    $deptQuery = "SELECT COUNT(*) as dept_count FROM departments WHERE deleted_at IS NULL";
+                    $deptStmt = $db->query($deptQuery);
+                    $deptCount = $deptStmt->fetch(PDO::FETCH_ASSOC)['dept_count'];
+                    echo $deptCount;
+                    ?>
+                </div>
+                <div class="stat-label">Departments</div>
+            </div>
+        </div>
 
-            <div class="section-title">
-                <i class="fas fa-list"></i> Employee List
+        <!-- Search & Filter Bar -->
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search by name, email, or designation..." onkeyup="filterEmployees()">
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Employee ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Designation</th>
-                        <th>Status</th>
-                        <th>Salary</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($employees)): ?>
+            <select id="departmentFilter" class="filter-select" onchange="filterEmployees()">
+                <option value="">All Departments</option>
+                <?php
+                $deptQuery = "SELECT department_id, department_name FROM departments WHERE deleted_at IS NULL ORDER BY department_name";
+                $deptStmt = $db->query($deptQuery);
+                $departments = $deptStmt->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($departments as $dept):
+                ?>
+                <option value="<?php echo $dept['department_id']; ?>"><?php echo htmlspecialchars($dept['department_name']); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <select id="statusFilter" class="filter-select" onchange="filterEmployees()">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+
+        <!-- Grid View -->
+        <div class="employee-grid grid-view active" id="gridView">
+            <?php foreach ($employees as $emp): ?>
+            <div class="employee-card" 
+                 data-name="<?php echo strtolower($emp['full_name']); ?>"
+                 data-email="<?php echo strtolower($emp['email']); ?>"
+                 data-designation="<?php echo strtolower($emp['designation']); ?>"
+                 data-department="<?php echo $emp['department_id']; ?>"
+                 data-status="<?php echo $emp['status']; ?>">
+                <div class="employee-header">
+                    <div class="employee-avatar">
+                        <?php 
+                        $nameParts = explode(' ', $emp['full_name']);
+                        echo strtoupper(substr($nameParts[0], 0, 1));
+                        if (count($nameParts) > 1) {
+                            echo strtoupper(substr($nameParts[count($nameParts)-1], 0, 1));
+                        }
+                        ?>
+                    </div>
+                    <div class="employee-info">
+                        <h3><?php echo htmlspecialchars($emp['full_name']); ?></h3>
+                        <div class="emp-code"><?php echo htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)); ?></div>
+                    </div>
+                </div>
+                <div class="employee-details">
+                    <div class="detail-row">
+                        <i class="fas fa-briefcase"></i>
+                        <span class="label">Position:</span>
+                        <span class="value"><?php echo htmlspecialchars($emp['designation']); ?></span>
+                    </div>
+                    <div class="detail-row">
+                        <i class="fas fa-building"></i>
+                        <span class="label">Department:</span>
+                        <span class="value"><?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="detail-row">
+                        <i class="fas fa-envelope"></i>
+                        <span class="label">Email:</span>
+                        <span class="value"><?php echo htmlspecialchars($emp['email']); ?></span>
+                    </div>
+                    <div class="detail-row">
+                        <i class="fas fa-phone"></i>
+                        <span class="label">Phone:</span>
+                        <span class="value"><?php echo htmlspecialchars($emp['phone'] ?? 'N/A'); ?></span>
+                    </div>
+                </div>
+                <div class="employee-footer">
+                    <div class="salary-badge">
+                        ₹<?php echo number_format($emp['basic_salary'], 0); ?>
+                    </div>
+                    <span class="status-badge status-<?php echo $emp['status']; ?>">
+                        <?php echo ucfirst($emp['status']); ?>
+                    </span>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Table View -->
+        <div class="table-view" id="tableView">
+            <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <table>
+                    <thead>
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px; color: #a0aec0;">
-                                No employees found
-                            </td>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Designation</th>
+                            <th>Status</th>
+                            <th>Salary</th>
                         </tr>
-                    <?php else: ?>
+                    </thead>
+                    <tbody id="tableBody">
                         <?php foreach ($employees as $emp): ?>
-                            <tr>
-                                <td><strong>#<?php echo htmlspecialchars($emp['employee_id']); ?></strong></td>
-                                <td><?php echo htmlspecialchars($emp['full_name']); ?></td>
-                                <td><?php echo htmlspecialchars($emp['email']); ?></td>
-                                <td><?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($emp['designation']); ?></td>
-                                <td>
-                                    <?php if ($emp['status'] === 'active'): ?>
-                                        <span class="badge badge-success">Active</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-warning">Inactive</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>₹<?php echo number_format($emp['basic_salary'], 2); ?></td>
-                            </tr>
+                        <tr data-name="<?php echo strtolower($emp['full_name']); ?>"
+                            data-email="<?php echo strtolower($emp['email']); ?>"
+                            data-designation="<?php echo strtolower($emp['designation']); ?>"
+                            data-department="<?php echo $emp['department_id']; ?>"
+                            data-status="<?php echo $emp['status']; ?>">
+                            <td>#<?php echo htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                            <td><?php echo htmlspecialchars($emp['full_name']); ?></td>
+                            <td><?php echo htmlspecialchars($emp['email']); ?></td>
+                            <td><?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($emp['designation']); ?></td>
+                            <td>
+                                <span class="status-badge status-<?php echo $emp['status']; ?>">
+                                    <?php echo ucfirst($emp['status']); ?>
+                                </span>
+                            </td>
+                            <td>₹<?php echo number_format($emp['basic_salary'], 2); ?></td>
+                        </tr>
                         <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <a href="../auth/logout.php" class="logout-btn">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
+    <?php include 'includes/director_scripts.php'; ?>
+    <script>
+        // View switcher
+        function switchView(view) {
+            const gridView = document.getElementById('gridView');
+            const tableView = document.getElementById('tableView');
+            const gridBtn = document.querySelector('.toggle-grid');
+            const tableBtn = document.querySelector('.toggle-table');
+
+            if (view === 'grid') {
+                gridView.classList.add('active');
+                tableView.classList.remove('active');
+                gridBtn.classList.add('active');
+                tableBtn.classList.remove('active');
+            } else {
+                gridView.classList.remove('active');
+                tableView.classList.add('active');
+                gridBtn.classList.remove('active');
+                tableBtn.classList.add('active');
+            }
+        }
+
+        // Filter employees
+        function filterEmployees() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const departmentFilter = document.getElementById('departmentFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            // Filter grid view cards
+            const cards = document.querySelectorAll('.employee-card');
+            cards.forEach(card => {
+                const name = card.dataset.name || '';
+                const email = card.dataset.email || '';
+                const designation = card.dataset.designation || '';
+                const department = card.dataset.department || '';
+                const status = card.dataset.status || '';
+
+                const matchesSearch = name.includes(searchInput) || 
+                                     email.includes(searchInput) || 
+                                     designation.includes(searchInput);
+                const matchesDepartment = !departmentFilter || department === departmentFilter;
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                if (matchesSearch && matchesDepartment && matchesStatus) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Filter table view rows
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                const name = row.dataset.name || '';
+                const email = row.dataset.email || '';
+                const designation = row.dataset.designation || '';
+                const department = row.dataset.department || '';
+                const status = row.dataset.status || '';
+
+                const matchesSearch = name.includes(searchInput) || 
+                                     email.includes(searchInput) || 
+                                     designation.includes(searchInput);
+                const matchesDepartment = !departmentFilter || department === departmentFilter;
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                if (matchesSearch && matchesDepartment && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

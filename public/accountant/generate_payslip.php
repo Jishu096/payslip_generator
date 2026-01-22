@@ -35,6 +35,7 @@ $standardRates = [
 $stmt = $db->prepare("
     SELECT 
         e.employee_id,
+        e.employee_code,
         e.full_name,
         e.designation,
         e.department_id,
@@ -506,7 +507,7 @@ $error = $_GET['error'] ?? '';
                                         data-department="<?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?>"
                                         data-email="<?php echo htmlspecialchars($emp['email']); ?>"
                                         data-employment-type="<?php echo $emp['employment_type']; ?>">
-                                    <?php echo htmlspecialchars($emp['full_name']); ?> - <?php echo htmlspecialchars($emp['designation']); ?> (<?php echo ucfirst($emp['employment_type']); ?>)
+                                    <?php echo htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)); ?> - <?php echo htmlspecialchars($emp['full_name']); ?> (<?php echo htmlspecialchars($emp['designation']); ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>

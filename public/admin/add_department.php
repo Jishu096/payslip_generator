@@ -154,13 +154,6 @@ require_once __DIR__ . '/../../app/Config/database.php';
                            placeholder="e.g., Human Resources" maxlength="100">
                 </div>
 
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" 
-                              placeholder="Brief description of the department"></textarea>
-                    <p class="form-hint">Optional: Describe the department's role and responsibilities</p>
-                </div>
-
                 <div class="btn-group">
                     <a href="departments.php" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">
