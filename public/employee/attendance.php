@@ -37,91 +37,8 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Attendance - Payroll System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include 'includes/employee_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: #ffffff;
-            color: #2d3748;
-            line-height: 1.6;
-        }
-
-        .attendance-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .breadcrumb {
-            font-size: 14px;
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-
-        .breadcrumb a {
-            color: white;
-            text-decoration: none;
-            transition: opacity 0.3s;
-        }
-
-        .breadcrumb a:hover {
-            opacity: 0.8;
-        }
-
-        .breadcrumb i {
-            margin: 0 8px;
-            font-size: 10px;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .back-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .back-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-
         /* Summary Cards */
         .summary-grid {
             display: grid;
@@ -132,21 +49,240 @@ $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100
 
         .summary-card {
             background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
             padding: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.08);
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
         }
 
         .summary-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
         }
 
-        .summary-card.gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .summary-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-family: 'Roboto', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .summary-value.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .summary-value.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .summary-value.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .summary-subtext {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-present {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-absent {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-leave {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .date-text {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <?php include 'includes/employee_navbar.php'; ?>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>My Attendance</span>
+            </div>
+            <h1><i class="fas fa-calendar-check"></i> My Attendance</h1>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">Attendance Rate</div>
+                <div class="summary-value"><?= $attendancePercentage ?>%</div>
+                <div class="summary-subtext">Overall attendance</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Present Days</div>
+                <div class="summary-value success"><?= $presentDays ?></div>
+                <div class="summary-subtext">Total present</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Absent Days</div>
+                <div class="summary-value danger"><?= $absentDays ?></div>
+                <div class="summary-subtext">Total absent</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Leave Days</div>
+                <div class="summary-value warning"><?= $leaveDays ?></div>
+                <div class="summary-subtext">Total leaves</div>
+            </div>
+        </div>
+
+        <!-- Attendance Records -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i>
+                <h2>Attendance Records</h2>
+            </div>
+
+            <?php if (empty($rows)): ?>
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Attendance Records</h3>
+                    <p>Your attendance records will appear here once they are marked.</p>
+                </div>
+            <?php else: ?>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($rows as $r): 
+                                $date = $r['date'] ?? '';
+                                $dayName = date('l', strtotime($date));
+                                $formattedDate = date('M d, Y', strtotime($date));
+                                $status = strtolower($r['status'] ?? 'unknown');
+                            ?>
+                            <tr>
+                                <td>
+                                    <span class="date-text">
+                                        <i class="far fa-calendar"></i> <?= $formattedDate ?>
+                                    </span>
+                                </td>
+                                <td><?= $dayName ?></td>
+                                <td>
+                                    <?php if ($status === 'present'): ?>
+                                        <span class="status-badge status-present">
+                                            <i class="fas fa-check"></i> Present
+                                        </span>
+                                    <?php elseif ($status === 'absent'): ?>
+                                        <span class="status-badge status-absent">
+                                            <i class="fas fa-times"></i> Absent
+                                        </span>
+                                    <?php elseif ($status === 'leave'): ?>
+                                        <span class="status-badge status-leave">
+                                            <i class="fas fa-umbrella-beach"></i> Leave
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="status-badge" style="background: #f1f5f9; color: #64748b;">
+                                            <?= htmlspecialchars(ucfirst($r['status'] ?? 'Unknown')) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <?php include 'includes/employee_scripts.php'; ?>
+</body>
+</html>
             border: none;
         }
 

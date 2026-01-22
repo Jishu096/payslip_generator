@@ -20,14 +20,22 @@ $username = $_SESSION['employee_name'] ?? $_SESSION['username'] ?? 'Employee';
     
     <div class="sidebar-menu">
         <a href="<?php echo $baseURL; ?>employee/dashboard.php" class="<?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>">
-            <i class="fas fa-chart-line"></i>
+            <i class="fas fa-home"></i>
             <span>Dashboard</span>
         </a>
+        
+        <div style="margin: 20px 15px 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            Payroll & Compensation
+        </div>
         
         <a href="<?php echo $baseURL; ?>employee/view_payslips.php" class="<?php echo $currentPage === 'view_payslips.php' ? 'active' : ''; ?>">
             <i class="fas fa-file-invoice-dollar"></i>
             <span>My Payslips</span>
         </a>
+        
+        <div style="margin: 20px 15px 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            Attendance & Leave
+        </div>
         
         <a href="<?php echo $baseURL; ?>employee/attendance.php" class="<?php echo $currentPage === 'attendance.php' ? 'active' : ''; ?>">
             <i class="fas fa-calendar-check"></i>
@@ -43,6 +51,10 @@ $username = $_SESSION['employee_name'] ?? $_SESSION['username'] ?? 'Employee';
             <i class="fas fa-umbrella-beach"></i>
             <span>Leave Management</span>
         </a>
+        
+        <div style="margin: 20px 15px 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            My Account
+        </div>
         
         <a href="<?php echo $baseURL; ?>employee/employee_profile.php" class="<?php echo $currentPage === 'employee_profile.php' ? 'active' : ''; ?>">
             <i class="fas fa-user-circle"></i>
