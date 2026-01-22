@@ -270,9 +270,11 @@ $error = $_GET['error'] ?? '';
     <?php include 'includes/accountant_navbar.php'; ?>
 
     <main class="main-content" id="mainContent">
-        <div class="page-header">
-            <h1><i class="fas fa-calculator"></i> Payroll Management</h1>
-            <p>Manage employee salaries, bonuses, and deductions</p>
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-calculator"></i> Payroll Management</h1>
+                <p>Manage employee salaries, bonuses, and deductions</p>
+            </div>
         </div>
 
         <?php if ($success): ?>

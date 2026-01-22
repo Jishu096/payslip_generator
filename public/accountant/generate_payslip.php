@@ -361,9 +361,11 @@ $error = $_GET['error'] ?? '';
     <?php include 'includes/accountant_navbar.php'; ?>
 
     <main class="main-content" id="mainContent">
-        <div class="page-header">
-            <h1><i class="fas fa-file-invoice-dollar"></i> Generate Payslip</h1>
-            <p>Create and manage employee payslips</p>
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-file-invoice-dollar"></i> Generate Payslip</h1>
+                <p>Create and manage employee payslips</p>
+            </div>
         </div>
 
         <?php if ($success): ?>

@@ -262,9 +262,11 @@ $deductions = $deductionStmt->fetch(PDO::FETCH_ASSOC);
     <?php include 'includes/accountant_navbar.php'; ?>
 
     <main class="main-content">
-        <div class="page-header">
-            <h1><i class="fas fa-chart-bar"></i> Financial Reports</h1>
-            <p>Comprehensive payroll analytics and financial insights</p>
+        <div class="content-header">
+            <div>
+                <h1><i class="fas fa-chart-bar"></i> Financial Reports</h1>
+                <p>Comprehensive payroll analytics and financial insights</p>
+            </div>
         </div>
 
         <!-- Report Tabs -->
