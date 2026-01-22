@@ -32,13 +32,32 @@
         width: 260px;
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
         color: white;
-        min-height: 100vh;
+        height: 100vh;
         padding: 0;
         position: fixed;
         left: 0;
         top: 0;
         z-index: 1000;
         box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
     }
 
     .sidebar-header {
@@ -93,12 +112,9 @@
     }
 
     .sidebar-footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
         padding: 20px 15px;
         border-top: 1px solid rgba(255,255,255,0.1);
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
     }
 
     .user-info {
