@@ -972,6 +972,115 @@
         border-radius: 4px;
     }
 
+    /* Attendance Summary Cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .summary-card {
+        background: white;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        border-radius: 15px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+    }
+
+    .summary-label {
+        font-size: 14px;
+        color: #718096;
+        font-weight: 600;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .summary-value {
+        font-family: 'Roboto', sans-serif;
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .summary-value.success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .summary-value.danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .summary-value.warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .summary-subtext {
+        font-size: 13px;
+        color: #a0aec0;
+    }
+
+    /* Date text styling */
+    .date-text {
+        color: #718096;
+        font-size: 14px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #a0aec0;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #718096;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .profile-header {
