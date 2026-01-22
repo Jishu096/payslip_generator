@@ -770,7 +770,9 @@ $deductions = $deductionStmt->fetch(PDO::FETCH_ASSOC);
 
             <div class="chart-container">
                 <div class="chart-title"><i class="fas fa-chart-pie"></i> Deduction Breakdown</div>
-                <canvas id="deductionChart"></canvas>
+                <div style="max-width: 500px; margin: 0 auto;">
+                    <canvas id="deductionChart"></canvas>
+                </div>
             </div>
 
         <?php endif; ?>
@@ -842,13 +844,25 @@ $deductions = $deductionStmt->fetch(PDO::FETCH_ASSOC);
                             <?php echo $deductions['total_pt']; ?>,
                             <?php echo $deductions['total_other']; ?>
                         ],
-                        backgroundColor: ['#f87171', '#fb923c', '#fbbf24', '#60a5fa', '#34d399']
+                        backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#667eea', '#10b981']
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
                     plugins: {
-                        legend: { labels: { color: '#e5e7eb' } }
+                        legend: { 
+                            position: 'right',
+                            labels: { 
+                                color: '#1e293b',
+                                padding: 15,
+                                font: {
+                                    size: 13,
+                                    weight: '500'
+                                }
+                            } 
+                        }
                     }
                 }
             });
