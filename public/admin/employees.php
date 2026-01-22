@@ -750,7 +750,7 @@ $error = $_GET['error'] ?? '';
                 <table>
                     <thead>
                         <tr>
-                        <th>ID</th>
+                        <th>Emp Code</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -767,7 +767,7 @@ $error = $_GET['error'] ?? '';
                     <?php if (!empty($employees)): ?>
                         <?php foreach ($employees as $emp): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($emp['employee_id']); ?></td>
+                                <td><strong style="color: var(--accent);"><?php echo htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)); ?></strong></td>
                                 <td>
                                     <a href="javascript:void(0)" class="employee-name-clickable" onclick='showEmployeeDetails(<?php echo json_encode($emp); ?>)'>
                                         <?php echo htmlspecialchars($emp['full_name']); ?>

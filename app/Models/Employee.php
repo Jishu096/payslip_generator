@@ -9,6 +9,20 @@ class Employee {
         $this->conn = $db->connect();
     }
 
+    /**
+     * Generate next employee code in format EMP001, EMP002, etc.
+     */
+    public function generateNextEmployeeCode() {
+        $sql = "SELECT COALESCE(MAX(CAST(SUBSTRING(employee_code, 4) AS UNSIGNED)), 0) + 1 as next_num
+                FROM employees 
+                WHERE employee_code LIKE 'EMP%'";
+        $stmt = $this->conn->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $nextNum = $result['next_num'] ?? 1;
+        
+        return 'EMP' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+    }
+
     public function insertEmployee($data) {
 
         // Validate all required fields
@@ -40,11 +54,14 @@ class Employee {
                 return "NAME_EXISTS";
             }
 
+        // 4️⃣ Generate employee code
+        $employee_code = $this->generateNextEmployeeCode();
+
         $sql = "INSERT INTO employees 
-            (full_name, email, phone, designation, department_id, employment_type, basic_salary, address,
+            (employee_code, full_name, email, phone, designation, department_id, employment_type, basic_salary, address,
              city, state, pincode, emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
              aadhaar_no, pan_no, bank_account_no, ifsc_code, experience_years, last_appraisal_date, remarks, join_date)
-            VALUES (:full_name, :email, :phone, :designation, :department_id, :employment_type, :basic_salary, :address,
+            VALUES (:employee_code, :full_name, :email, :phone, :designation, :department_id, :employment_type, :basic_salary, :address,
              :city, :state, :pincode, :emergency_contact_name, :emergency_contact_phone, :emergency_contact_relation,
              :aadhaar_no, :pan_no, :bank_account_no, :ifsc_code, :experience_years, :last_appraisal_date, :remarks, NOW())";
 
@@ -63,6 +80,7 @@ class Employee {
         }
 
         $stmt->execute([
+            ':employee_code' => $employee_code,
             ':full_name' => $data['full_name'],
             ':email' => $data['email'],
             ':phone' => $data['phone'],
