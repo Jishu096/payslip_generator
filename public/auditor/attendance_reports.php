@@ -143,24 +143,28 @@ $stats = [
             font-size: 32px;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
         .stat-card.present .stat-value {
             background: linear-gradient(135deg, #10b981, #059669);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
         .stat-card.absent .stat-value {
             background: linear-gradient(135deg, #ef4444, #dc2626);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
         .stat-card.leave .stat-value {
             background: linear-gradient(135deg, #f59e0b, #d97706);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -238,16 +242,15 @@ $stats = [
             padding: 25px;
             border-bottom: 2px solid #f1f5f9;
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .table-header h3 {
             margin: 0;
             font-size: 18px;
             font-weight: 700;
-        }
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .data-table {

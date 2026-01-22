@@ -92,9 +92,8 @@ switch ($request) {
         break;
 
     case 'generate-attendance-statement':
+        // Procedural script - executes directly on require
         require_once __DIR__ . "/../Controllers/AttendanceStatementController.php";
-        $controller = new AttendanceStatementController();
-        $controller->generateStatement();
         break;
 
     case 'delete-audit-log':

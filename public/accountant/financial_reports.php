@@ -113,6 +113,7 @@ $deductions = $deductionStmt->fetch(PDO::FETCH_ASSOC);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <?php include 'includes/accountant_styles.php'; ?>
     <style>
         :root {
             --bg: #0b1221;
