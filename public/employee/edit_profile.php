@@ -43,115 +43,97 @@ function val($key){
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Profile - Employee</title>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-    <style>
-        body { background:#f5f6fa; font-family:"Segoe UI",sans-serif; }
-        .sidebar {
-            width:250px; height:100vh; position:fixed;
-            background:linear-gradient(135deg,#667eea,#764ba2);
-            padding:20px; color:white;
-        }
-        .sidebar h3 { text-align:center; margin-bottom:30px; font-weight:700; }
-        .sidebar a {
-            display:block; padding:12px 15px; color:white; text-decoration:none;
-            border-radius:6px; margin-bottom:10px;
-        }
-        .sidebar a:hover, .active-link { background:rgba(255,255,255,0.3); }
-        .main { margin-left:270px; padding:30px; }
-        .section-box {
-            background:white; padding:25px; border-radius:10px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.08); margin-bottom:25px;
-        }
-        .section-header {
-            font-size:18px; font-weight:600;
-            border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:20px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Employee Portal</title>
+    <?php include 'includes/employee_styles.php'; ?>
 </head>
 
 <body>
+    <?php include 'includes/employee_navbar.php'; ?>
 
-<!-- Sidebar -->
-<div class="sidebar">
-    <h3><i class="fas fa-file-invoice-dollar"></i> Payslip</h3>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="employee_profile.php">My Profile</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Edit Profile</span>
+            </div>
+            <h1><i class="fas fa-user-edit"></i> Edit Profile</h1>
+        </div>
 
-    <a href="dashboard.php"><i class="fa fa-home"></i> Dashboard</a>
-    <a href="employee_profile.php"><i class="fa fa-user"></i> My Profile</a>
-    <a href="edit_profile.php" class="active-link"><i class="fa fa-edit"></i> Edit Profile</a>
-    <a href="view_payslips.php"><i class="fa fa-file"></i> Payslips</a>
-    <a href="attendance.php"><i class="fa fa-calendar-check"></i> Attendance</a>
-</div>
-
-<div class="main">
-
-    <div class="section-box">
-        <div class="section-header"><i class="fa fa-edit"></i> Edit Profile (Approval Required)</div>
-
-        <form method="POST" action="../../backend/public/index.php?page=request-profile-update">
-
-            <!-- Phone -->
-            <div class="mb-3">
-                <label class="form-label">Phone Number</label>
-                <input type="text" name="phone" class="form-control" value="<?= val('phone') ?>" required>
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit"></i>
+                <h2>Edit Profile (Approval Required)</h2>
             </div>
 
-            <!-- Address Fields -->
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Address</label>
-                    <input type="text" name="address" class="form-control" value="<?= val('address') ?>">
-                </div>
+            <div class="card-body">
+                <form method="POST" action="../../backend/public/index.php?page=request-profile-update">
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">City</label>
-                    <input type="text" name="city" class="form-control" value="<?= val('city') ?>">
-                </div>
+                    <!-- Phone -->
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" value="<?= val('phone') ?>" required>
+                    </div>
+
+                    <!-- Address Fields -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <input type="text" name="address" class="form-control" value="<?= val('address') ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input type="text" name="city" class="form-control" value="<?= val('city') ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">State</label>
+                            <input type="text" name="state" class="form-control" value="<?= val('state') ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Pincode</label>
+                            <input type="text" name="pincode" class="form-control" value="<?= val('pincode') ?>">
+                        </div>
+                    </div>
+
+                    <!-- Emergency Contacts -->
+                    <div class="section-divider">Emergency Contact</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contact Name</label>
+                        <input type="text" name="emergency_contact_name" class="form-control" value="<?= val('emergency_contact_name') ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Relation</label>
+                        <input type="text" name="emergency_contact_relation" class="form-control" value="<?= val('emergency_contact_relation') ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" name="emergency_contact_phone" class="form-control" value="<?= val('emergency_contact_phone') ?>">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                        <i class="fas fa-paper-plane"></i> Submit Update Request
+                    </button>
+                </form>
             </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">State</label>
-                    <input type="text" name="state" class="form-control" value="<?= val('state') ?>">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Pincode</label>
-                    <input type="text" name="pincode" class="form-control" value="<?= val('pincode') ?>">
-                </div>
-            </div>
-
-            <!-- Emergency Contacts -->
-            <div class="section-header mt-4">Emergency Contact</div>
-
-            <div class="mb-3">
-                <label class="form-label">Contact Name</label>
-                <input type="text" name="emergency_contact_name" class="form-control" value="<?= val('emergency_contact_name') ?>">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Relation</label>
-                <input type="text" name="emergency_contact_relation" class="form-control" value="<?= val('emergency_contact_relation') ?>">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Contact Number</label>
-                <input type="text" name="emergency_contact_phone" class="form-control" value="<?= val('emergency_contact_phone') ?>">
-            </div>
-
-            <button class="btn btn-primary w-100 mt-3">
-                Submit Update Request
-            </button>
-        </form>
+        </div>
     </div>
 
-</div>
-
+    <?php include 'includes/employee_scripts.php'; ?>
 </body>
 </html>
