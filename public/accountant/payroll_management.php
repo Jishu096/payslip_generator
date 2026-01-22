@@ -143,56 +143,6 @@ $error = $_GET['error'] ?? '';
             border-top: 1px solid var(--border);
         }
 
-        .quick-actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .action-card {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .action-card:hover {
-            transform: translateX(5px);
-            border-color: var(--accent);
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
-        }
-
-        .action-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-
-        .action-content h3 {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-
-        .action-content p {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
         .data-table-container {
             background: white;
             border-radius: 15px;
@@ -484,39 +434,6 @@ $error = $_GET['error'] ?? '';
                 <div class="stat-value"><?php echo date('M Y'); ?></div>
                 <div class="stat-detail"><?php echo date('d M, l'); ?></div>
             </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="quick-actions-grid">
-            <a class="action-card" href="generate_payslip.php">
-                <div class="action-icon">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                </div>
-                <div class="action-content">
-                    <h3>Generate Payslip</h3>
-                    <p>Create employee payslips with auto-calculations</p>
-                </div>
-            </a>
-            
-            <a class="action-card" href="financial_reports.php">
-                <div class="action-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="action-content">
-                    <h3>Financial Reports</h3>
-                    <p>View analytics and download reports</p>
-                </div>
-            </a>
-            
-            <a class="action-card" href="../admin/employees.php">
-                <div class="action-icon">
-                    <i class="fas fa-user-edit"></i>
-                </div>
-                <div class="action-content">
-                    <h3>Manage Employees</h3>
-                    <p>Update salary and employee records</p>
-                </div>
-            </a>
         </div>
 
         <!-- Payroll Data Table -->
