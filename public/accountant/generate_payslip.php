@@ -166,12 +166,35 @@ $error = $_GET['error'] ?? '';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <?php include 'includes/accountant_styles.php'; ?>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
         .payslip-form {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
             padding: 30px;
             margin-bottom: 30px;
+        }
+
+        .payslip-form h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .payslip-form h2 i {
+            color: var(--accent);
         }
 
         .form-grid {
@@ -188,68 +211,99 @@ $error = $_GET['error'] ?? '';
 
         .form-group label {
             font-weight: 600;
-            color: #333;
+            color: var(--text);
             margin-bottom: 8px;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group label i {
+            color: var(--accent);
+            font-size: 13px;
         }
 
         .form-group input,
         .form-group select {
-            padding: 10px 12px;
-            border: 2px solid #e0e0e0;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            background: white;
+            color: var(--text);
         }
 
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 8px rgba(102, 126, 234, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: white;
             padding: 15px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin: 30px 0 20px 0;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 15px;
         }
 
         .calculation-summary {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #e0e0e0;
-            margin-top: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            margin-top: 25px;
         }
 
         .calc-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .calc-row .label {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .calc-row .value {
+            color: var(--text);
+            font-weight: 600;
         }
 
         .calc-row.total {
             font-weight: 700;
             font-size: 18px;
-            color: #28a745;
             border-bottom: none;
-            border-top: 2px solid #333;
+            border-top: 2px solid var(--accent);
             margin-top: 10px;
+            padding-top: 15px;
+        }
+
+        .calc-row.total .label {
+            color: var(--text);
+        }
+
+        .calc-row.total .value {
+            color: var(--success);
+            font-size: 22px;
         }
 
         .btn-generate {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 15px 35px;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
@@ -262,27 +316,43 @@ $error = $_GET['error'] ?? '';
 
         .btn-generate:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
         }
 
         .recent-payslips {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            padding: 30px;
+        }
+
+        .recent-payslips h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recent-payslips h2 i {
+            color: var(--accent);
         }
 
         .payslip-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03), rgba(118, 75, 162, 0.03));
+            border-radius: 10px;
+            padding: 20px;
             margin-bottom: 15px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--accent);
             transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
         }
 
         .payslip-card:hover {
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
             transform: translateY(-2px);
         }
 
@@ -290,13 +360,19 @@ $error = $_GET['error'] ?? '';
             display: flex;
             justify-content: space-between;
             align-items: start;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .payslip-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
         }
 
         .payslip-info {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
+            gap: 15px;
             font-size: 13px;
         }
 
@@ -306,55 +382,85 @@ $error = $_GET['error'] ?? '';
         }
 
         .info-label {
-            color: #666;
+            color: var(--muted);
             font-size: 11px;
             text-transform: uppercase;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .info-value {
-            color: #333;
+            color: var(--text);
             font-weight: 600;
+            font-size: 14px;
         }
 
         .status-badge {
-            padding: 5px 12px;
-            border-radius: 15px;
+            padding: 6px 14px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .status-generated {
-            background: #d4edda;
-            color: #155724;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
         }
 
         .status-sent {
-            background: #cce5ff;
-            color: #004085;
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
         }
 
         .success-banner {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #28a745;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #059669;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .success-banner i {
+            font-size: 20px;
         }
 
         .error-banner {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #dc3545;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #dc2626;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .error-banner i {
+            font-size: 20px;
         }
 
         .required {
-            color: #dc3545;
+            color: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .payslip-info {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
