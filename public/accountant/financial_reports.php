@@ -255,10 +255,6 @@ $deductions = $deductionStmt->fetch(PDO::FETCH_ASSOC);
             background: white;
             border-radius: 15px;
             overflow: hidden;
-        .table-wrapper {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
             box-shadow: 0 4px 20px rgba(102, 126, 234, 0.08);
             border: 1px solid rgba(102, 126, 234, 0.1);
             margin-bottom: 30px;
