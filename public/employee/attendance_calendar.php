@@ -135,118 +135,6 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Calendar - Employee Portal</title>
     <?php include 'includes/employee_styles.php'; ?>
-    <style>
-        .calendar-wrapper {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.08);
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .month-navigation h2 {
-            font-size: 24px;
-            color: #1e293b;
-            margin: 0;
-        }
-        .month-nav-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        .month-nav-buttons a, .btn {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-        }
-        .month-nav-buttons a:hover, .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .calendar-day-header {
-            text-align: center;
-            padding: 10px;
-            font-weight: 600;
-            color: #667eea;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        .calendar-day {
-            min-height: 80px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px;
-            background: white;
-            transition: all 0.3s;
-        }
-        .calendar-day:hover {
-            border-color: #667eea;
-            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.1);
-        }
-        .calendar-day.empty {
-            background: #f8f9fa;
-            opacity: 0.5;
-        }
-        .day-number {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #1e293b;
-        }
-        .day-status {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            display: inline-block;
-            font-weight: 600;
-        }
-        .status-present {
-            background: #dcfce7;
-            color: #166534;
-        }
-        .status-absent {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .status-leave {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        .legend {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-        .legend-box {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
-    </style>
 </head>
 <body>
     <?php include 'includes/employee_navbar.php'; ?>
@@ -263,14 +151,19 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
             <h1><i class="fas fa-calendar-alt"></i> Attendance Calendar</h1>
         </div>
 
+        <!-- Calendar Wrapper -->
         <div class="calendar-wrapper">
+            <!-- Calendar Header with Navigation -->
             <div class="calendar-header">
                 <div class="month-navigation">
-                    <h2><?= htmlspecialchars($monthName) ?></h2>
+                    <h2><i class="fas fa-calendar-day"></i> <?= htmlspecialchars($monthName) ?></h2>
                 </div>
                 <div class="month-nav-buttons">
                     <a href="?month=<?= $prevMonth ?><?= $filterEmployee ? '&employee_id=' . $filterEmployee : '' ?>">
                         <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                    <a href="?month=<?= date('Y-m') ?><?= $filterEmployee ? '&employee_id=' . $filterEmployee : '' ?>">
+                        <i class="fas fa-calendar-check"></i> Today
                     </a>
                     <a href="?month=<?= $nextMonth ?><?= $filterEmployee ? '&employee_id=' . $filterEmployee : '' ?>">
                         Next <i class="fas fa-chevron-right"></i>
@@ -278,26 +171,24 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
                 </div>
             </div>
             
-            <!-- Filters -->
-            <form method="GET" action="" style="margin: 20px 0;">
-                <div style="display: flex; gap: 15px; align-items: end;">
-                    <div>
-                        <label for="month" style="display: block; margin-bottom: 5px; font-weight: 500;">
-                            <i class="far fa-calendar"></i> Month
+            <!-- Filters Form -->
+            <form method="GET" action="" class="filter-form">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="month">
+                            <i class="far fa-calendar"></i> Select Month
                         </label>
                         <input type="month" 
                                id="month" 
                                name="month" 
                                value="<?= htmlspecialchars($filterMonth) ?>"
-                               style="padding: 8px; border: 2px solid #e2e8f0; border-radius: 5px;">
+                               required>
                     </div>
-                    <div>
-                        <label for="employee_id" style="display: block; margin-bottom: 5px; font-weight: 500;">
-                            <i class="fas fa-user"></i> Employee
+                    <div class="filter-group">
+                        <label for="employee_id">
+                            <i class="fas fa-user"></i> Select Employee
                         </label>
-                        <select id="employee_id" 
-                                name="employee_id"
-                                style="padding: 8px; border: 2px solid #e2e8f0; border-radius: 5px; min-width: 200px;">
+                        <select id="employee_id" name="employee_id">
                             <option value="">All Employees</option>
                             <?php foreach ($allEmployees as $emp): ?>
                             <option value="<?= $emp['employee_id'] ?>" <?= $filterEmployee == $emp['employee_id'] ? 'selected' : '' ?>>
@@ -306,12 +197,13 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <button type="submit" style="padding: 8px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        <i class="fas fa-search"></i> Filter
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-search"></i> Apply Filter
                     </button>
                 </div>
             </form>
 
+            <!-- Summary Statistics -->
             <div class="stats-row">
                 <div class="stat-card present">
                     <div class="stat-info">
@@ -352,23 +244,24 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
             </div>
         </div>
 
+        <!-- Calendar Grid Container -->
         <div class="calendar-container">
             <div class="calendar">
-                <!-- Day headers -->
-                <div class="calendar-day header">Sun</div>
-                <div class="calendar-day header">Mon</div>
-                <div class="calendar-day header">Tue</div>
-                <div class="calendar-day header">Wed</div>
-                <div class="calendar-day header">Thu</div>
-                <div class="calendar-day header">Fri</div>
-                <div class="calendar-day header">Sat</div>
+                <!-- Day Headers -->
+                <div class="calendar-day header">Sunday</div>
+                <div class="calendar-day header">Monday</div>
+                <div class="calendar-day header">Tuesday</div>
+                <div class="calendar-day header">Wednesday</div>
+                <div class="calendar-day header">Thursday</div>
+                <div class="calendar-day header">Friday</div>
+                <div class="calendar-day header">Saturday</div>
 
                 <!-- Empty cells for days before month starts -->
                 <?php for ($i = 0; $i < $dayOfWeek; $i++): ?>
                     <div class="calendar-day empty"></div>
                 <?php endfor; ?>
 
-                <!-- Calendar days -->
+                <!-- Calendar Days -->
                 <?php for ($day = 1; $day <= $daysInMonth; $day++): 
                     $currentDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
                     $isToday = $currentDate === date('Y-m-d');
@@ -387,37 +280,52 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
                     }
                 ?>
                     <div class="calendar-day <?= $isToday ? 'today' : '' ?> <?= $isHoliday ? 'has-holiday' : '' ?>" 
-                         title="<?= $isHoliday ? htmlspecialchars($holidayInfo['holiday_name']) : '' ?>">
-                        <div class="day-number"><?= $day ?></div>
+                         title="<?= $isHoliday ? htmlspecialchars($holidayInfo['holiday_name']) : date('F d, Y', strtotime($currentDate)) ?>">
+                        <div class="day-number">
+                            <?= $day ?>
+                            <?php if ($isToday): ?>
+                                <i class="fas fa-star" style="font-size: 10px; color: var(--accent);"></i>
+                            <?php endif; ?>
+                        </div>
                         
-                        <!-- Display holiday badge -->
+                        <!-- Display Holiday Badge -->
                         <?php if ($isHoliday): ?>
                             <div class="holiday-badge" title="<?= htmlspecialchars($holidayInfo['holiday_name']) ?>">
-                                <i class="fas fa-gift"></i> <?= htmlspecialchars($holidayInfo['holiday_name']) ?>
+                                <i class="fas fa-gift"></i> <?= htmlspecialchars(strlen($holidayInfo['holiday_name']) > 15 ? substr($holidayInfo['holiday_name'], 0, 15) . '...' : $holidayInfo['holiday_name']) ?>
                             </div>
                         <?php endif; ?>
                         
-                        <!-- Display leave badges -->
-                        <?php foreach ($leavesOnDate as $leave): ?>
+                        <!-- Display Leave Badges -->
+                        <?php foreach (array_slice($leavesOnDate, 0, 2) as $leave): ?>
                             <div class="leave-badge" title="<?= htmlspecialchars($leave['employee_name']) ?> - <?= ucfirst($leave['leave_type']) ?> Leave">
                                 <i class="fas fa-umbrella-beach"></i> 
-                                <?= htmlspecialchars($leave['employee_name']) ?> (<?= $leave['leave_days'] ?> day<?= $leave['leave_days'] > 1 ? 's' : '' ?>)
+                                <?= htmlspecialchars(strlen($leave['employee_name']) > 12 ? substr($leave['employee_name'], 0, 12) . '...' : $leave['employee_name']) ?>
                             </div>
                         <?php endforeach; ?>
+                        <?php if (count($leavesOnDate) > 2): ?>
+                            <div class="leave-badge" title="<?= count($leavesOnDate) - 2 ?> more leave(s)">
+                                <i class="fas fa-plus"></i> <?= count($leavesOnDate) - 2 ?> more
+                            </div>
+                        <?php endif; ?>
                         
-                        <!-- Display attendance status dots -->
+                        <!-- Display Attendance Status Indicators -->
                         <?php if (!empty($dayAttendance)): ?>
                             <div class="attendance-indicators">
-                                <?php foreach ($dayAttendance as $record): ?>
+                                <?php foreach (array_slice($dayAttendance, 0, 10) as $record): ?>
                                     <div class="status-indicator <?= strtolower($record['status']) ?>" 
                                          title="<?= htmlspecialchars($record['employee_name']) ?> - <?= ucfirst($record['status']) ?>"></div>
                                 <?php endforeach; ?>
+                                <?php if (count($dayAttendance) > 10): ?>
+                                    <div class="status-indicator" style="background: #cbd5e0;" 
+                                         title="<?= count($dayAttendance) - 10 ?> more records">+<?= count($dayAttendance) - 10 ?></div>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     </div>
                 <?php endfor; ?>
             </div>
 
+            <!-- Legend -->
             <div class="legend">
                 <div class="legend-item">
                     <div class="legend-dot present"></div>
@@ -436,29 +344,29 @@ $nextMonth = date('Y-m', strtotime($filterMonth . '-01 +1 month'));
                     <span>Holiday</span>
                 </div>
                 <div class="legend-item">
-                    <i class="fas fa-gift" style="color: #f39c12; margin-right: 5px;"></i>
-                    <span>Govt Holiday</span>
-                </div>
-                <div class="legend-item">
-                    <i class="fas fa-umbrella-beach" style="color: #4299e1; margin-right: 5px;"></i>
-                    <span>Approved Leave</span>
+                    <i class="fas fa-star" style="color: var(--accent); font-size: 14px;"></i>
+                    <span>Today</span>
                 </div>
             </div>
             
-            <!-- Holidays List -->
+            <!-- Holidays List Section -->
             <?php if (!empty($holidays)): ?>
-            <div style="margin-top: 30px; padding: 20px; background: #fff8e1; border-left: 4px solid #f39c12; border-radius: 8px;">
-                <h3 style="margin-bottom: 15px; color: #e67e22;">
+            <div class="holiday-section">
+                <h3>
                     <i class="fas fa-calendar-star"></i> Government Holidays in <?= $monthName ?>
                 </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                <div class="holidays-grid">
                     <?php foreach ($holidays as $holiday): ?>
-                        <div style="padding: 10px; background: white; border-radius: 6px; border: 1px solid #f39c12;">
-                            <strong style="color: #e67e22;"><?= date('M d, Y', strtotime($holiday['holiday_date'])) ?></strong><br>
-                            <?= htmlspecialchars($holiday['holiday_name']) ?>
-                            <?php if ($holiday['holiday_type'] === 'optional'): ?>
-                                <span style="font-size: 10px; background: #ffeaa7; padding: 2px 6px; border-radius: 3px; margin-left: 5px;">Optional</span>
-                            <?php endif; ?>
+                        <div class="holiday-item">
+                            <div class="holiday-date">
+                                <i class="far fa-calendar-alt"></i> <?= date('l, M d, Y', strtotime($holiday['holiday_date'])) ?>
+                            </div>
+                            <div class="holiday-name">
+                                <?= htmlspecialchars($holiday['holiday_name']) ?>
+                                <?php if ($holiday['holiday_type'] === 'optional'): ?>
+                                    <span class="optional-tag">OPTIONAL</span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
