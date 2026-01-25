@@ -212,10 +212,10 @@ class ExcelExportHelper {
         $spreadsheet->getProperties()->setTitle("Absentee Statement {$monthName} {$selectedYear}");
         
         // Merge cells for header
-        $sheet->mergeCells('A1:G1');
-        $sheet->mergeCells('A2:G2');
-        $sheet->mergeCells('A3:G3');
-        $sheet->mergeCells('A4:G4');
+        $sheet->mergeCells('A1:I1');
+        $sheet->mergeCells('A2:I2');
+        $sheet->mergeCells('A3:I3');
+        $sheet->mergeCells('A4:I4');
         
         // Header styling
         $sheet->getCell('A1')->setValue('NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY');
@@ -233,27 +233,48 @@ class ExcelExportHelper {
         // Set column widths
         $sheet->getColumnDimension('A')->setWidth(6);
         $sheet->getColumnDimension('B')->setWidth(20);
-        $sheet->getColumnDimension('C')->setWidth(15);
-        $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(15);
-        $sheet->getColumnDimension('F')->setWidth(8);
-        $sheet->getColumnDimension('G')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(12);
+        $sheet->getColumnDimension('D')->setWidth(12);
+        $sheet->getColumnDimension('E')->setWidth(20);
+        $sheet->getColumnDimension('F')->setWidth(12);
+        $sheet->getColumnDimension('G')->setWidth(12);
+        $sheet->getColumnDimension('H')->setWidth(8);
+        $sheet->getColumnDimension('I')->setWidth(20);
         
         // Header row
         $row = 6;
-        $headers = ['S.No.', 'Name & Designation', 'Period of Leave (From – To)', 'Nature of Leave/OD', 
-                    'Period of Absence (From – To)', 'Absent Days', 'Remarks'];
-        $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        $sheet->setCellValue('A6', 'S.No.');
+        $sheet->mergeCells('A6:A7');
         
-        foreach ($headers as $idx => $header) {
-            $cellRef = $cols[$idx] . $row;
-            $sheet->getCell($cellRef)->setValue($header);
-            $style = $sheet->getStyle($cellRef);
-            $style->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
-            $style->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $style->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $style->getAlignment()->setWrapText(true);
-        }
+        $sheet->setCellValue('B6', 'Name & Designation');
+        $sheet->mergeCells('B6:B7');
+        
+        $sheet->setCellValue('C6', 'Period of Leave');
+        $sheet->mergeCells('C6:D6');
+        
+        $sheet->setCellValue('E6', 'Nature of Leave/OD');
+        $sheet->mergeCells('E6:E7');
+        
+        $sheet->setCellValue('F6', 'Period of Absence');
+        $sheet->mergeCells('F6:G6');
+        
+        $sheet->setCellValue('H6', 'Absent Days');
+        $sheet->mergeCells('H6:H7');
+        
+        $sheet->setCellValue('I6', 'Remarks');
+        $sheet->mergeCells('I6:I7');
+        
+        // Sub-headers
+        $sheet->setCellValue('C7', 'From');
+        $sheet->setCellValue('D7', 'To');
+        $sheet->setCellValue('F7', 'From');
+        $sheet->setCellValue('G7', 'To');
+        
+        // Styling
+        $sheet->getStyle('A6:I7')->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
+        $sheet->getStyle('A6:I7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A6:I7')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A6:I7')->getAlignment()->setWrapText(true);
         
         // Apply borders to header
         $borderStyle = [
@@ -263,7 +284,7 @@ class ExcelExportHelper {
                 ],
             ],
         ];
-        $sheet->getStyle("A6:G6")->applyFromArray($borderStyle);
+        $sheet->getStyle("A6:I7")->applyFromArray($borderStyle);
         
         // Data rows
         $row = 7;
@@ -325,16 +346,18 @@ class ExcelExportHelper {
                 // Add row data
                 $sheet->getCell('A' . $row)->setValue($serialNo++);
                 $sheet->getCell('B' . $row)->setValue($emp['full_name'] . ' (' . $emp['designation'] . ')');
-                $sheet->getCell('C' . $row)->setValue($leavePerStr);
-                $sheet->getCell('D' . $row)->setValue($leaveNatStr);
-                $sheet->getCell('E' . $row)->setValue($absenceStr);
-                $sheet->getCell('F' . $row)->setValue($emp['absent_days'] > 0 ? $emp['absent_days'] : '');
-                $sheet->getCell('G' . $row)->setValue($finalRemarks);
+                $sheet->getCell('C' . $row)->setValue($leaveFromStr);
+                $sheet->getCell('D' . $row)->setValue($leaveToStr);
+                $sheet->getCell('E' . $row)->setValue($leaveNatStr);
+                $sheet->getCell('F' . $row)->setValue($absFromStr);
+                $sheet->getCell('G' . $row)->setValue($absToStr);
+                $sheet->getCell('H' . $row)->setValue($emp['absent_days'] > 0 ? $emp['absent_days'] : '');
+                $sheet->getCell('I' . $row)->setValue($finalRemarks);
                 
                 // Apply borders and alignment
-                $sheet->getStyle("A$row:G$row")->applyFromArray($borderStyle);
-                $sheet->getStyle("A$row:G$row")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
-                $sheet->getStyle("A$row:G$row")->getAlignment()->setWrapText(true);
+                $sheet->getStyle("A$row:I$row")->applyFromArray($borderStyle);
+                $sheet->getStyle("A$row:I$row")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+                $sheet->getStyle("A$row:I$row")->getAlignment()->setWrapText(true);
                 
                 $row++;
             }

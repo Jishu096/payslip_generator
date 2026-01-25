@@ -42,10 +42,12 @@ class Employee {
         $sql = "INSERT INTO employees 
             (full_name, email, phone, designation, department_id, employment_type, basic_salary, address,
              city, state, pincode, emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
-             aadhaar_no, pan_no, bank_account_no, ifsc_code, experience_years, last_appraisal_date, remarks, join_date)
+             aadhaar_no, pan_no, bank_account_no, ifsc_code, experience_years, last_appraisal_date, remarks, 
+             location, employee_group, join_date)
             VALUES (:full_name, :email, :phone, :designation, :department_id, :employment_type, :basic_salary, :address,
              :city, :state, :pincode, :emergency_contact_name, :emergency_contact_phone, :emergency_contact_relation,
-             :aadhaar_no, :pan_no, :bank_account_no, :ifsc_code, :experience_years, :last_appraisal_date, :remarks, NOW())";
+             :aadhaar_no, :pan_no, :bank_account_no, :ifsc_code, :experience_years, :last_appraisal_date, :remarks, 
+             :location, :employee_group, NOW())";
 
         $stmt = $this->conn->prepare($sql);
 
@@ -82,7 +84,9 @@ class Employee {
             ':ifsc_code' => $data['ifsc_code'] ?? null,
             ':experience_years' => $exp_years,
             ':last_appraisal_date' => $last_appraisal_date,
-            ':remarks' => $data['remarks'] ?? null
+            ':remarks' => $data['remarks'] ?? null,
+            ':location' => $data['location'] ?? null,
+            ':employee_group' => $data['employee_group'] ?? null
         ]);
 
         return $this->conn->lastInsertId();   // ⭐ Return new employee_id
@@ -187,7 +191,9 @@ class Employee {
             contract_end_date=:contract_end_date,
             resignation_date=:resignation_date,
             retirement_date=:retirement_date,
-            internship_duration=:internship_duration
+            internship_duration=:internship_duration,
+            location=:location,
+            employee_group=:employee_group
             WHERE employee_id=:id";
 
         $stmt = $this->conn->prepare($sql);
@@ -237,7 +243,9 @@ class Employee {
             ':contract_end_date' => $contract_end_date,
             ':resignation_date' => $resignation_date,
             ':retirement_date' => $retirement_date,
-            ':internship_duration' => $internship_duration
+            ':internship_duration' => $internship_duration,
+            ':location' => $data['location'] ?? null,
+            ':employee_group' => $data['employee_group'] ?? null
         ]);
     }
     public function getEmployeeById($id) {

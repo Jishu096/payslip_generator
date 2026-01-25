@@ -223,6 +223,21 @@ $username = $_SESSION['username'] ?? 'Admin';
                     </div>
 
                     <div class="form-group">
+                        <label for="location"><i class="fas fa-map-marker-alt"></i> Office Location</label>
+                        <input type="text" id="location" name="location" value="<?php echo htmlspecialchars($emp['location'] ?? ''); ?>" placeholder="e.g. NIELIT Bhubaneswar">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employee_group"><i class="fas fa-users"></i> Employee Group</label>
+                        <select id="employee_group" name="employee_group">
+                            <option value="" <?php echo empty($emp['employee_group']) ? 'selected' : ''; ?>>None</option>
+                            <option value="Daily Wage Workers" <?php echo ($emp['employee_group'] ?? '') === 'Daily Wage Workers' ? 'selected' : ''; ?>>Daily Wage Workers</option>
+                            <option value="Project Staff" <?php echo ($emp['employee_group'] ?? '') === 'Project Staff' ? 'selected' : ''; ?>>Project Staff</option>
+                            <option value="NIELIT Balasore" <?php echo ($emp['employee_group'] ?? '') === 'NIELIT Balasore' ? 'selected' : ''; ?>>NIELIT Balasore</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label for="department_id"><i class="fas fa-building"></i> Department</label>
                         <select id="department_id" name="department_id" required>
                             <option value="">Select Department</option>

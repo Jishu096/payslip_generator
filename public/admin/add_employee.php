@@ -199,6 +199,21 @@ $username = $_SESSION['username'] ?? 'Admin';
                     </div>
 
                     <div class="form-group">
+                        <label for="location"><i class="fas fa-map-marker-alt"></i> Office Location</label>
+                        <input type="text" id="location" name="location" placeholder="e.g. NIELIT Bhubaneswar">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employee_group"><i class="fas fa-users"></i> Employee Group</label>
+                        <select id="employee_group" name="employee_group">
+                            <option value="">None</option>
+                            <option value="Daily Wage Workers">Daily Wage Workers</option>
+                            <option value="Project Staff">Project Staff</option>
+                            <option value="NIELIT Balasore">NIELIT Balasore</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label for="department_id"><i class="fas fa-building"></i> Department</label>
                         <select id="department_id" name="department_id" required>
                             <option value="">Select Department</option>

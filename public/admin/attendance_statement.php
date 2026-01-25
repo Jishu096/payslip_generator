@@ -507,51 +507,65 @@ if (!empty($contractEmployees)) {
                     <table class="govt-table" border="1">
                         <thead>
                             <?php if ($isExport): ?>
-                                <tr><th colspan="7" style="border:none; font-size:16px; font-weight:bold;">NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</th></tr>
-                                <tr><th colspan="7" style="border:none; font-size:14px;">NIELIT BHUBANESWAR</th></tr>
-                                <tr><th colspan="7" style="border:none; font-weight:bold;">ABSENTEE STATEMENT OF CONTRACT EMPLOYEES</th></tr>
-                                <tr><th colspan="7" style="border:none;">For the month of <?= $monthName ?> <?= $selectedYear ?></th></tr>
-                                <tr><th colspan="7" style="border:none;"></th></tr>
+                                <tr><th colspan="9" style="border:none; font-size:16px; font-weight:bold;">NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</th></tr>
+                                <tr><th colspan="9" style="border:none; font-size:14px;">NIELIT BHUBANESWAR</th></tr>
+                                <tr><th colspan="9" style="border:none; font-weight:bold;">ABSENTEE STATEMENT OF CONTRACT EMPLOYEES</th></tr>
+                                <tr><th colspan="9" style="border:none;">For the month of <?= $monthName ?> <?= $selectedYear ?></th></tr>
+                                <tr><th colspan="9" style="border:none;"></th></tr>
                             <?php endif; ?>
                             <tr>
-                                <th>S.No.</th>
-                                <th>Name & Designation</th>
-                                <th>Period of Leave<br>(From – To)</th>
-                                <th>Nature of Leave/OD</th>
-                                <th>Period of Absence<br>(From – To)</th>
-                                <th>Absent<br>Days</th>
-                                <th>Remarks</th>
+                                <th rowspan="2">S.No.</th>
+                                <th rowspan="2">Name & Designation</th>
+                                <th colspan="2">Period of Leave</th>
+                                <th rowspan="2">Nature of Leave/OD</th>
+                                <th colspan="2">Period of Absence</th>
+                                <th rowspan="2">Absent<br>Days</th>
+                                <th rowspan="2">Remarks</th>
+                            </tr>
+                            <tr>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>From</th>
+                                <th>To</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($groupedContractEmployees)): ?>
-                                <tr><td colspan="7" style="padding: 20px;">No data available</td></tr>
+                                <b><tr><td colspan="9" style="padding: 20px;">No data available</td></tr></b>
                             <?php else: ?>
                                 <?php 
                                 $serialNo = 1;
                                 foreach ($groupedContractEmployees as $groupName => $employees): 
                                 ?>
                                     <tr>
-                                        <td colspan="7" class="text-left" style="background: #eee; font-weight: bold;">
+                                        <td colspan="9" class="text-left" style="background: #eee; font-weight: bold;">
                                             <?= htmlspecialchars($groupName) ?>
                                         </td>
                                     </tr>
                                     <?php foreach ($employees as $emp): 
                                         $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
-                                        $leavePeriods = [];
+                                        $leaveFrom = [];
+                                        $leaveTo = [];
                                         $leaveNatures = [];
-                                        $absencePeriods = [];
+                                        $absenceFrom = [];
+                                        $absenceTo = [];
+                                        
                                         foreach ($leaveDetails as $leave) {
                                             if ($leave['leave_type'] === 'Absent') {
-                                                $absencePeriods[] = $leave['period'];
+                                                $absenceFrom[] = $leave['start_date'];
+                                                $absenceTo[] = $leave['end_date'];
                                             } else {
-                                                $leavePeriods[] = $leave['period'];
+                                                $leaveFrom[] = $leave['start_date'];
+                                                $leaveTo[] = $leave['end_date'];
                                                 $leaveNatures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
                                             }
                                         }
-                                        $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '---';
+                                        $leaveFromStr = !empty($leaveFrom) ? implode('<br>', $leaveFrom) : '---';
+                                        $leaveToStr = !empty($leaveTo) ? implode('<br>', $leaveTo) : '---';
                                         $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
-                                        $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
+                                        
+                                        $absFromStr = !empty($absenceFrom) ? implode('<br>', $absenceFrom) : '---';
+                                        $absToStr = !empty($absenceTo) ? implode('<br>', $absenceTo) : '---';
                                         
                                         // Auto-Remarks for Contract
                                         $finalRemarks = $emp['remarks'] ?: '';
@@ -580,9 +594,11 @@ if (!empty($contractEmployees)) {
                                                 <strong><?= htmlspecialchars($emp['full_name']) ?></strong><br>
                                                 <span style="font-size: 9px;"><?= htmlspecialchars($emp['designation']) ?></span>
                                             </td>
-                                            <td><?= $leavePerStr ?></td>
+                                            <td><?= $leaveFromStr ?></td>
+                                            <td><?= $leaveToStr ?></td>
                                             <td class="text-left"><?= $leaveNatStr ?></td>
-                                            <td><?= $absenceStr ?></td>
+                                            <td><?= $absFromStr ?></td>
+                                            <td><?= $absToStr ?></td>
                                             <td><strong><?= $emp['absent_days'] > 0 ? $emp['absent_days'] : '---' ?></strong></td>
                                             <td class="text-left"><?= htmlspecialchars($finalRemarks) ?></td>
                                         </tr>
