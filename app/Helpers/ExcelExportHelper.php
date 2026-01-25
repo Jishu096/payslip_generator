@@ -20,79 +20,80 @@ class ExcelExportHelper {
         $spreadsheet->getProperties()->setTitle("Attendance Statement {$monthName} {$selectedYear}");
         
         // Merge cells for header
-        $sheet->mergeCells('A1:M1');
-        $sheet->mergeCells('A2:M2');
-        $sheet->mergeCells('A3:M3');
-        $sheet->mergeCells('A4:M4');
+        $sheet->mergeCells('A1:L1');
+        $sheet->mergeCells('A2:L2');
         
-        // Header styling
-        $sheet->getCell('A1')->setValue('NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY');
-        $sheet->getStyle('A1')->getFont()->applyFromArray(['bold' => true, 'size' => 12]);
+        // Header styling - matching the photo format
+        $sheet->getCell('A1')->setValue('National Institute of Electronics & Information Technology (NIELIT) Bhubaneswar');
+        $sheet->getStyle('A1')->getFont()->applyFromArray(['bold' => true, 'size' => 14, 'underline' => true]);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
-        $sheet->getCell('A2')->setValue('NIELIT BHUBANESWAR');
-        $sheet->getStyle('A2')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
+        // Format the period string
+        $startDate = "01.{$selectedMonth}.{$selectedYear}";
+        $endDate = date('d.m.Y', strtotime("$selectedYear-$selectedMonth-01 +1 month -1 day"));
         
-        $sheet->getCell('A3')->setValue('ATTENDANCE STATEMENT OF REGULAR EMPLOYEES');
-        $sheet->getStyle('A3')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
-        
-        $sheet->getCell('A4')->setValue("For the month of {$monthName} {$selectedYear}");
-        $sheet->getStyle('A4')->getFont()->applyFromArray(['size' => 10]);
+        $sheet->getCell('A2')->setValue("ATTENDANCE STATEMENT OF REGULAR EMPLOYEES FOR THE PERIOD FROM {$startDate} TO {$endDate}");
+        $sheet->getStyle('A2')->getFont()->applyFromArray(['bold' => false, 'size' => 11]);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
         // Set column widths
         $sheet->getColumnDimension('A')->setWidth(6);
         $sheet->getColumnDimension('B')->setWidth(20);
-        $sheet->getColumnDimension('C')->setWidth(15);
-        $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(8);
+        $sheet->getColumnDimension('C')->setWidth(12);
+        $sheet->getColumnDimension('D')->setWidth(12);
+        $sheet->getColumnDimension('E')->setWidth(20);
         $sheet->getColumnDimension('F')->setWidth(10);
-        $sheet->getColumnDimension('G')->setWidth(8);
+        $sheet->getColumnDimension('G')->setWidth(10);
         $sheet->getColumnDimension('H')->setWidth(10);
-        $sheet->getColumnDimension('I')->setWidth(8);
+        $sheet->getColumnDimension('I')->setWidth(10);
         $sheet->getColumnDimension('J')->setWidth(10);
         $sheet->getColumnDimension('K')->setWidth(10);
-        $sheet->getColumnDimension('L')->setWidth(10);
-        $sheet->getColumnDimension('M')->setWidth(20);
+        $sheet->getColumnDimension('L')->setWidth(20);
         
-        // Header rows construction
-        // Row 6 (Top level headers)
-        $sheet->setCellValue('A6', 'S.No.');
-        $sheet->mergeCells('A6:A7');
+        // Header rows construction - matching photo layout
+        // Row 4 (Top level headers)
+        $sheet->setCellValue('A4', 'S.No.');
+        $sheet->mergeCells('A4:A5');
         
-        $sheet->setCellValue('B6', 'Name & Designation');
-        $sheet->mergeCells('B6:B7');
+        $sheet->setCellValue('B4', 'Name & Designation');
+        $sheet->mergeCells('B4:B5');
         
-        $sheet->setCellValue('C6', 'Period of Absence/ OD & TOUR');
-        $sheet->mergeCells('C6:D6');
+        $sheet->setCellValue('C4', 'Period of Absence/ OD & TOUR');
+        $sheet->mergeCells('C4:D4');
         
-        $sheet->setCellValue('E6', 'Nature of Leave/ OD/Tour');
-        $sheet->mergeCells('E6:E7');
+        $sheet->setCellValue('E4', 'Nature Of Leave/OD/TOUR');
+        $sheet->mergeCells('E4:E5');
         
-        $sheet->setCellValue('F6', 'Number of Days');
-        $sheet->mergeCells('F6:J6');
+        $sheet->setCellValue('F4', 'OD/TOUR');
+        $sheet->mergeCells('F4:F5');
         
-        $sheet->setCellValue('K6', 'Working Days');
-        $sheet->mergeCells('K6:K7');
+        $sheet->setCellValue('G4', 'EL/HPL/CCL/PL');
+        $sheet->mergeCells('G4:G5');
         
-        $sheet->setCellValue('L6', 'Net Working Days');
-        $sheet->mergeCells('L6:L7');
+        $sheet->setCellValue('H4', 'CL/RH');
+        $sheet->mergeCells('H4:H5');
         
-        $sheet->setCellValue('M6', 'Remarks');
-        $sheet->mergeCells('M6:M7');
+        $sheet->setCellValue('I4', 'EL/HPL/OD on Sat/Sun/GH');
+        $sheet->mergeCells('I4:I5');
+        
+        $sheet->setCellValue('J4', 'Working days');
+        $sheet->mergeCells('J4:J5');
+        
+        $sheet->setCellValue('K4', 'Net working Days');
+        $sheet->mergeCells('K4:K5');
+        
+        $sheet->setCellValue('L4', 'Remarks');
+        $sheet->mergeCells('L4:L5');
 
-        // Row 7 (Sub headers)
-        $sheet->setCellValue('C7', 'From');
-        $sheet->setCellValue('D7', 'To');
-        $sheet->setCellValue('F7', 'OD/Tour');
-        $sheet->setCellValue('G7', 'EL/CCL/PL');
-        $sheet->setCellValue('H7', 'CL/RH');
-        $sheet->setCellValue('I7', 'Sat/Sun/GH');
-        $sheet->setCellValue('J7', 'Total');
+        // Row 5 (Sub headers for Period of Absence)
+        $sheet->setCellValue('C5', 'From');
+        $sheet->setCellValue('D5', 'To');
         
         // Styling for headers
-        $sheet->getStyle('A6:M7')->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
-        $sheet->getStyle('A6:M7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A6:M7')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('A6:M7')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A4:L5')->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
+        $sheet->getStyle('A4:L5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A4:L5')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A4:L5')->getAlignment()->setWrapText(true);
         
         // Apply borders to header
         $borderStyle = [
@@ -102,10 +103,10 @@ class ExcelExportHelper {
                 ],
             ],
         ];
-        $sheet->getStyle("A6:M7")->applyFromArray($borderStyle);
+        $sheet->getStyle("A4:L5")->applyFromArray($borderStyle);
         
         // Data rows start after header
-        $row = 8;
+        $row = 6;
         $serialNo = 1;
         
         foreach ($regularEmployees as $emp) {
@@ -119,15 +120,14 @@ class ExcelExportHelper {
                 $toDates[] = $leave['end_date'];
                 $natures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
             }
-            $fromStr = !empty($fromDates) ? implode("\n", $fromDates) : '---';
-            $toStr = !empty($toDates) ? implode("\n", $toDates) : '---';
-            $natureStr = !empty($natures) ? implode('; ', $natures) : '---';
+            $fromStr = !empty($fromDates) ? implode("\n", $fromDates) : '';
+            $toStr = !empty($toDates) ? implode("\n", $toDates) : '';
+            $natureStr = !empty($natures) ? implode('; ', $natures) : '';
             
             $odTour = $emp['od_days'] + $emp['tour_days'];
             $elCclPl = $emp['el_days'] + $emp['ccl_days'] + $emp['pl_days'];
             $clRh = $emp['cl_days'] + $emp['rh_days'];
             $satSunGh = $emp['sat_days'] + $emp['sun_days'] + $emp['gh_days'];
-            $totalDays = $odTour + $elCclPl + $clRh + $satSunGh;
             
             // Auto-Remarks Logic
             $generatedRemarks = [];
@@ -152,31 +152,51 @@ class ExcelExportHelper {
             
             $finalRemarks = implode('; ', $generatedRemarks);
             
-            // Add row data
+            // Add row data - empty cells instead of '---'
             $sheet->getCell('A' . $row)->setValue($serialNo++);
             $sheet->getCell('B' . $row)->setValue($emp['full_name'] . ' (' . $emp['designation'] . ')');
             $sheet->getCell('C' . $row)->setValue($fromStr);
             $sheet->getCell('D' . $row)->setValue($toStr);
             $sheet->getCell('E' . $row)->setValue($natureStr);
-            $sheet->getCell('F' . $row)->setValue($odTour > 0 ? $odTour : '---');
-            $sheet->getCell('G' . $row)->setValue($elCclPl > 0 ? $elCclPl : '---');
-            $sheet->getCell('H' . $row)->setValue($clRh > 0 ? $clRh : '---');
-            $sheet->getCell('I' . $row)->setValue($satSunGh > 0 ? $satSunGh : '---');
-            $sheet->getCell('J' . $row)->setValue($totalDays > 0 ? $totalDays : '---');
-            $sheet->getCell('K' . $row)->setValue($emp['working_days'] ?: $daysInMonth);
-            $sheet->getCell('L' . $row)->setValue($emp['net_working_days'] ?: $daysInMonth);
-            $sheet->getCell('M' . $row)->setValue($finalRemarks);
+            $sheet->getCell('F' . $row)->setValue($odTour > 0 ? $odTour : '');
+            $sheet->getCell('G' . $row)->setValue($elCclPl > 0 ? $elCclPl : '');
+            $sheet->getCell('H' . $row)->setValue($clRh > 0 ? $clRh : '');
+            $sheet->getCell('I' . $row)->setValue($satSunGh > 0 ? $satSunGh : '');
+            $sheet->getCell('J' . $row)->setValue($emp['working_days'] ?: $daysInMonth);
+            $sheet->getCell('K' . $row)->setValue($emp['net_working_days'] ?: $daysInMonth);
+            $sheet->getCell('L' . $row)->setValue($finalRemarks);
             
             // Apply borders and alignment
-            $sheet->getStyle("A$row:M$row")->applyFromArray($borderStyle);
-            $sheet->getStyle("A$row:M$row")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
-            $sheet->getStyle("A$row:M$row")->getAlignment()->setWrapText(true);
+            $sheet->getStyle("A$row:L$row")->applyFromArray($borderStyle);
+            $sheet->getStyle("A$row:L$row")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+            $sheet->getStyle("A$row:L$row")->getAlignment()->setWrapText(true);
             
             $row++;
         }
         
+        // Add footer note
+        $row++; // Skip a row
+        $sheet->setCellValue("A$row", "The report is according to attendance register.");
+        $row++;
+        $sheet->setCellValue("A$row", "1. Absentee Report From {$startDate} to {$endDate}");
+        
+        // Add signature section
+        $row += 5;
+        $sheet->setCellValue("A$row", "Sh Suvranshu Mahapatra");
+        $sheet->setCellValue("C$row", "Smt Sukanya Palli");
+        $sheet->setCellValue("F$row", "Sh Satikanta Dash");
+        $sheet->setCellValue("J$row", "Sh Anil Kumar Shaw");
+        $sheet->getStyle("A$row:J$row")->getFont()->setBold(true);
+        
+        $row++;
+        $sheet->setCellValue("A$row", "Assistant Accounts");
+        $sheet->setCellValue("C$row", "Assistant Accounts");
+        $sheet->setCellValue("F$row", "Assistant Director (Admin)");
+        $sheet->setCellValue("J$row", "Director-In-Charge");
+        $sheet->getStyle("A$row:J$row")->getFont()->setBold(true);
+        
         // Set row height for header
-        $sheet->getRowDimension(6)->setRowHeight(40);
+        $sheet->getRowDimension(4)->setRowHeight(40);
         
         return $spreadsheet;
     }
@@ -277,9 +297,9 @@ class ExcelExportHelper {
                     }
                 }
                 
-                $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '---';
-                $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
-                $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
+                $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '';
+                $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '';
+                $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '';
                 
                 // Auto-Remarks for Contract
                 $finalRemarks = $emp['remarks'] ?: '';
@@ -308,7 +328,7 @@ class ExcelExportHelper {
                 $sheet->getCell('C' . $row)->setValue($leavePerStr);
                 $sheet->getCell('D' . $row)->setValue($leaveNatStr);
                 $sheet->getCell('E' . $row)->setValue($absenceStr);
-                $sheet->getCell('F' . $row)->setValue($emp['absent_days'] > 0 ? $emp['absent_days'] : '---');
+                $sheet->getCell('F' . $row)->setValue($emp['absent_days'] > 0 ? $emp['absent_days'] : '');
                 $sheet->getCell('G' . $row)->setValue($finalRemarks);
                 
                 // Apply borders and alignment
