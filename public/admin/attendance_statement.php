@@ -158,9 +158,9 @@ $isExport = isset($_GET['export']) && $_GET['export'] === 'excel';
 if ($isExport) {
     $monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
     
-    // Get data first
-    $regularEmployees = ($reportType === 'regular') ? getRegularEmployeesStatement($db, $selectedMonth, $selectedYear) : [];
-    $contractEmployees = ($reportType === 'contract') ? getContractEmployeesStatement($db, $selectedMonth, $selectedYear) : [];
+    // Get data first - fetch BOTH for combined export
+    $regularEmployees = getRegularEmployeesStatement($db, $selectedMonth, $selectedYear);
+    $contractEmployees = getContractEmployeesStatement($db, $selectedMonth, $selectedYear);
     
     // Group contract employees
     $groupedContractEmployees = [];
@@ -179,15 +179,11 @@ if ($isExport) {
     // Calculate days in month
     $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
     
-    // Generate appropriate Excel file using ExcelExportHelper
-    if ($reportType === 'regular') {
-        $spreadsheet = \App\Helpers\ExcelExportHelper::generateRegularEmployeesExcel($regularEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth);
-    } else {
-        $spreadsheet = \App\Helpers\ExcelExportHelper::generateContractEmployeesExcel($groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName);
-    }
+    // Generate combined Excel file using ExcelExportHelper
+    $spreadsheet = \App\Helpers\ExcelExportHelper::generateCombinedAttendanceExcel($regularEmployees, $groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth);
     
     // Download Excel file
-    $filename = "Attendance_Statement_{$reportType}_{$monthName}_{$selectedYear}.xlsx";
+    $filename = "Attendance_Statement_Combined_{$monthName}_{$selectedYear}.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Cache-Control: max-age=0');

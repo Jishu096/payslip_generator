@@ -10,14 +10,33 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 class ExcelExportHelper {
 
     /**
-     * Generate Regular Employees Attendance Statement Excel
+     * Generate Combined Attendance Statement Excel (Regular + Contract)
      */
-    public static function generateRegularEmployeesExcel($regularEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth) {
+    public static function generateCombinedAttendanceExcel($regularEmployees, $groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth) {
         $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
         
+        // Sheet 1: Regular Employees
+        $sheet1 = $spreadsheet->getActiveSheet();
+        $sheet1->setTitle('Regular Employees');
+        self::fillRegularEmployeesSheet($sheet1, $regularEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth);
+        
+        // Sheet 2: Contract Employees
+        if (!empty($groupedContractEmployees)) {
+            $sheet2 = $spreadsheet->createSheet();
+            $sheet2->setTitle('Contract Employees');
+            self::fillContractEmployeesSheet($sheet2, $groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName);
+        }
+        
+        $spreadsheet->setActiveSheetIndex(0);
+        return $spreadsheet;
+    }
+
+    /**
+     * Fill Regular Employees Sheet
+     */
+    private static function fillRegularEmployeesSheet($sheet, $regularEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth) {
         // Set title
-        $spreadsheet->getProperties()->setTitle("Attendance Statement {$monthName} {$selectedYear}");
+        // Set title removed (handled in main method)
         
         // Merge cells for header
         $sheet->mergeCells('A1:L1');
@@ -197,38 +216,29 @@ class ExcelExportHelper {
         
         // Set row height for header
         $sheet->getRowDimension(4)->setRowHeight(40);
-        
-        return $spreadsheet;
     }
 
     /**
-     * Generate Contract Employees Absentee Statement Excel
+     * Fill Contract Employees Sheet
      */
-    public static function generateContractEmployeesExcel($groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName) {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        
-        // Set title
-        $spreadsheet->getProperties()->setTitle("Absentee Statement {$monthName} {$selectedYear}");
+    private static function fillContractEmployeesSheet($sheet, $groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName) {
         
         // Merge cells for header
         $sheet->mergeCells('A1:I1');
         $sheet->mergeCells('A2:I2');
-        $sheet->mergeCells('A3:I3');
-        $sheet->mergeCells('A4:I4');
         
-        // Header styling
-        $sheet->getCell('A1')->setValue('NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY');
-        $sheet->getStyle('A1')->getFont()->applyFromArray(['bold' => true, 'size' => 12]);
+        // Format the period string
+        $startDate = "01.{$selectedMonth}.{$selectedYear}";
+        $endDate = date('d.m.Y', strtotime("$selectedYear-$selectedMonth-01 +1 month -1 day"));
+
+        // Header styling - matching the regular format
+        $sheet->getCell('A1')->setValue('National Institute of Electronics & Information Technology (NIELIT) Bhubaneswar');
+        $sheet->getStyle('A1')->getFont()->applyFromArray(['bold' => true, 'size' => 14, 'underline' => true]);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
-        $sheet->getCell('A2')->setValue('NIELIT BHUBANESWAR');
-        $sheet->getStyle('A2')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
-        
-        $sheet->getCell('A3')->setValue('ABSENTEE STATEMENT OF CONTRACT EMPLOYEES');
-        $sheet->getStyle('A3')->getFont()->applyFromArray(['bold' => true, 'size' => 11]);
-        
-        $sheet->getCell('A4')->setValue("For the month of {$monthName} {$selectedYear}");
-        $sheet->getStyle('A4')->getFont()->applyFromArray(['size' => 10]);
+        $sheet->getCell('A2')->setValue("ABSENTEE STATEMENT OF CONTRACT EMPLOYEES FOR THE PERIOD FROM {$startDate} TO {$endDate}");
+        $sheet->getStyle('A2')->getFont()->applyFromArray(['bold' => false, 'size' => 11]);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
         // Set column widths
         $sheet->getColumnDimension('A')->setWidth(6);
@@ -241,40 +251,40 @@ class ExcelExportHelper {
         $sheet->getColumnDimension('H')->setWidth(8);
         $sheet->getColumnDimension('I')->setWidth(20);
         
-        // Header row
-        $row = 6;
-        $sheet->setCellValue('A6', 'S.No.');
-        $sheet->mergeCells('A6:A7');
+        // Header rows construction
+        // Row 4 (Top level headers)
+        $sheet->setCellValue('A4', 'S.No.');
+        $sheet->mergeCells('A4:A5');
         
-        $sheet->setCellValue('B6', 'Name & Designation');
-        $sheet->mergeCells('B6:B7');
+        $sheet->setCellValue('B4', 'Name & Designation');
+        $sheet->mergeCells('B4:B5');
         
-        $sheet->setCellValue('C6', 'Period of Leave');
-        $sheet->mergeCells('C6:D6');
+        $sheet->setCellValue('C4', 'Period of Leave');
+        $sheet->mergeCells('C4:D4');
         
-        $sheet->setCellValue('E6', 'Nature of Leave/OD');
-        $sheet->mergeCells('E6:E7');
+        $sheet->setCellValue('E4', 'Nature of Leave/OD');
+        $sheet->mergeCells('E4:E5');
         
-        $sheet->setCellValue('F6', 'Period of Absence');
-        $sheet->mergeCells('F6:G6');
+        $sheet->setCellValue('F4', 'Period of Absence');
+        $sheet->mergeCells('F4:G4');
         
-        $sheet->setCellValue('H6', 'Absent Days');
-        $sheet->mergeCells('H6:H7');
+        $sheet->setCellValue('H4', 'Absent Days');
+        $sheet->mergeCells('H4:H5');
         
-        $sheet->setCellValue('I6', 'Remarks');
-        $sheet->mergeCells('I6:I7');
+        $sheet->setCellValue('I4', 'Remarks');
+        $sheet->mergeCells('I4:I5');
         
         // Sub-headers
-        $sheet->setCellValue('C7', 'From');
-        $sheet->setCellValue('D7', 'To');
-        $sheet->setCellValue('F7', 'From');
-        $sheet->setCellValue('G7', 'To');
+        $sheet->setCellValue('C5', 'From');
+        $sheet->setCellValue('D5', 'To');
+        $sheet->setCellValue('F5', 'From');
+        $sheet->setCellValue('G5', 'To');
         
         // Styling
-        $sheet->getStyle('A6:I7')->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
-        $sheet->getStyle('A6:I7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A6:I7')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('A6:I7')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A4:I5')->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
+        $sheet->getStyle('A4:I5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A4:I5')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A4:I5')->getAlignment()->setWrapText(true);
         
         // Apply borders to header
         $borderStyle = [
@@ -284,43 +294,50 @@ class ExcelExportHelper {
                 ],
             ],
         ];
-        $sheet->getStyle("A6:I7")->applyFromArray($borderStyle);
+        $sheet->getStyle("A4:I5")->applyFromArray($borderStyle);
         
-        // Data rows
-        $row = 7;
+        // Data rows start after header
+        $row = 6;
         $serialNo = 1;
         
         foreach ($groupedContractEmployees as $groupName => $employees) {
             // Group header
-            $sheet->mergeCells("A$row:G$row");
+            $sheet->mergeCells("A$row:I$row");
             $cell = $sheet->getCell("A$row");
             $cell->setValue($groupName);
             $groupStyle = $sheet->getStyle("A$row");
             $groupStyle->getFont()->applyFromArray(['bold' => true, 'size' => 10]);
             $groupStyle->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $sheet->getStyle("A$row:G$row")->applyFromArray([
+            $sheet->getStyle("A$row:I$row")->applyFromArray([
                 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'EEEEEE']],
             ])->applyFromArray($borderStyle);
             $row++;
             
             foreach ($employees as $emp) {
                 $leaveDetails = self::getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
-                $leavePeriods = [];
+                $leaveFrom = [];
+                $leaveTo = [];
                 $leaveNatures = [];
-                $absencePeriods = [];
+                $absenceFrom = [];
+                $absenceTo = [];
                 
                 foreach ($leaveDetails as $leave) {
                     if ($leave['leave_type'] === 'Absent') {
-                        $absencePeriods[] = $leave['period'];
+                        $absenceFrom[] = $leave['start_date'];
+                        $absenceTo[] = $leave['end_date'];
                     } else {
-                        $leavePeriods[] = $leave['period'];
+                        $leaveFrom[] = $leave['start_date'];
+                        $leaveTo[] = $leave['end_date'];
                         $leaveNatures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
                     }
                 }
                 
-                $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '';
+                $leaveFromStr = !empty($leaveFrom) ? implode("\n", $leaveFrom) : '';
+                $leaveToStr = !empty($leaveTo) ? implode("\n", $leaveTo) : '';
                 $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '';
-                $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '';
+                
+                $absFromStr = !empty($absenceFrom) ? implode("\n", $absenceFrom) : '';
+                $absToStr = !empty($absenceTo) ? implode("\n", $absenceTo) : '';
                 
                 // Auto-Remarks for Contract
                 $finalRemarks = $emp['remarks'] ?: '';
@@ -363,10 +380,29 @@ class ExcelExportHelper {
             }
         }
         
-        // Set row height for header
-        $sheet->getRowDimension(6)->setRowHeight(40);
+        // Add footer note
+        $row++; // Skip a row
+        $sheet->setCellValue("A$row", "The report is according to attendance register.");
+        $row++;
+        $sheet->setCellValue("A$row", "1. Absentee Report From {$startDate} to {$endDate}");
         
-        return $spreadsheet;
+        // Add signature section
+        $row += 5;
+        $sheet->setCellValue("A$row", "Sh Suvranshu Mahapatra");
+        $sheet->setCellValue("C$row", "Smt Sukanya Palli");
+        $sheet->setCellValue("F$row", "Sh Satikanta Dash");
+        $sheet->setCellValue("I$row", "Sh Anil Kumar Shaw"); // Using I for alignment in Contract sheet
+        $sheet->getStyle("A$row:J$row")->getFont()->setBold(true);
+        
+        $row++;
+        $sheet->setCellValue("A$row", "Assistant Accounts");
+        $sheet->setCellValue("C$row", "Assistant Accounts");
+        $sheet->setCellValue("F$row", "Assistant Director (Admin)");
+        $sheet->setCellValue("I$row", "Director-In-Charge");
+        $sheet->getStyle("A$row:J$row")->getFont()->setBold(true);
+
+        // Set row height for header
+        $sheet->getRowDimension(4)->setRowHeight(40);
     }
 
     /**
