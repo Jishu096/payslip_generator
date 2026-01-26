@@ -56,644 +56,172 @@ $error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salary Approvals - Director Portal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <?php include 'includes/director_styles.php'; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --text-primary: #1a1f36;
-            --text-secondary: #555;
-            --border-color: #e0e0e0;
-            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--bg-primary);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-        }
-
-        .stat-card .icon {
-            font-size: 36px;
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .stat-card.pending .icon {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-
-        .stat-card.approved .icon {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .stat-card.rejected .icon {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .stat-card .content h3 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: var(--text-primary);
-        }
-
-        .stat-card .content p {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .requests-section {
-            background: var(--bg-primary);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .requests-section h2 {
-            color: var(--text-primary);
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .request-card {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-
-        .request-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transform: translateY(-2px);
-        }
-
-        .request-card.pending {
-            border-left-color: #f59e0b;
-            background: #fffbeb;
-        }
-
-        .request-card.approved {
-            border-left-color: #10b981;
-            background: #ecfdf5;
-        }
-
-        .request-card.rejected {
-            border-left-color: #ef4444;
-            background: #fef2f2;
-        }
-
-        .request-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .request-header h3 {
-            font-size: 18px;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .status-badge {
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-badge.pending {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-
-        .status-badge.approved {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .status-badge.rejected {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .request-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .detail-item label {
-            font-size: 12px;
-            color: #666;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .detail-item .value {
-            font-size: 16px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .detail-item .value.highlight {
-            color: #667eea;
-            font-weight: 700;
-            font-size: 18px;
-        }
-
-        .salary-comparison {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .salary-comparison .arrow {
-            color: #ff9800;
-            font-size: 20px;
-        }
-
-        .change-info {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .change-info .type {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #667eea;
-            color: white;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .change-info .reason {
-            color: #555;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .request-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .btn-approve, .btn-reject {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-approve {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-approve:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-reject {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-reject:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-        }
-
-        .review-info {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #666;
-        }
-
-        .review-info strong {
-            color: #333;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
-            margin-bottom: 20px;
-        }
-
-        .modal-header h3 {
-            color: #333;
-            font-size: 22px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .btn-cancel {
-            padding: 10px 25px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-cancel:hover {
-            background: #5a6268;
-        }
-
-        .btn-submit {
-            padding: 10px 25px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            color: white;
-        }
-
-        .btn-submit.approve {
-            background: #28a745;
-        }
-
-        .btn-submit.approve:hover {
-            background: #218838;
-        }
-
-        .btn-submit.reject {
-            background: #dc3545;
-        }
-
-        .btn-submit.reject:hover {
-            background: #c82333;
-        }
-
-        .no-requests {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-
-        .no-requests i {
-            font-size: 80px;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-
-        .no-requests h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .back-link:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1><i class="fas fa-hand-holding-usd"></i> Salary Change Approvals</h1>
-            </div>
-            <div class="user-info">
-                <a href="director_dashboard.php" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-                <span style="color: #666;">Welcome, <strong><?php echo htmlspecialchars($username); ?></strong></span>
-            </div>
+    <?php include 'includes/director_navbar.php'; ?>
+    <?php include 'includes/director_sidebar.php'; ?>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1><i class="fas fa-hand-holding-usd"></i> Salary Change Approvals</h1>
+            <p>Review and process salary modification requests.</p>
         </div>
 
         <?php if ($approved): ?>
-            <div style="background:#d4edda;border:1px solid #b6e0c5;color:#155724;padding:15px 20px;border-radius:8px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
-                <i class="fas fa-check-circle" style="font-size:20px;"></i>
-                <div>
-                    <strong>Salary change approved successfully!</strong>
-                    <p style="margin-bottom:0;font-size:13px;">The employee's salary has been updated and the admin has been notified.</p>
-                </div>
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #065f46;">
+                <div style="font-weight: 600;"><i class="fas fa-check-circle"></i> Salary change approved successfully!</div>
             </div>
         <?php elseif ($rejected): ?>
-            <div style="background:#f8d7da;border:1px solid #f5c6cb;color:#721c24;padding:15px 20px;border-radius:8px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
-                <i class="fas fa-exclamation-circle" style="font-size:20px;"></i>
-                <div>
-                    <strong>Salary change request rejected.</strong>
-                    <p style="margin-bottom:0;font-size:13px;">The admin has been notified of the rejection and your comments.</p>
-                </div>
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #b91c1c;">
+                <div style="font-weight: 600;"><i class="fas fa-exclamation-circle"></i> Salary change request rejected.</div>
             </div>
-        <?php elseif ($error === 'database_error'): ?>
-            <div style="background:#fff3cd;border:1px solid #ffeaa7;color:#856404;padding:15px 20px;border-radius:8px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
-                <i class="fas fa-exclamation-triangle" style="font-size:20px;"></i>
-                <div>
-                    <strong>Database error occurred.</strong>
-                    <p style="margin-bottom:0;font-size:13px;">Please try again or contact the system administrator.</p>
-                </div>
+        <?php elseif($error === 'database_error'): ?>
+            <div style="background: #ffedd5; border-left: 4px solid #f97316; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #9a3412;">
+                <div style="font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Database error occurred.</div>
             </div>
         <?php endif; ?>
 
-        <div class="stats-cards">
-            <div class="stat-card pending">
-                <div class="icon">
+        <!-- Stats Overview -->
+        <div class="live-stats-container">
+            <div class="live-stat-item">
+                <div class="live-stat-icon bg-gradient-orange text-white">
                     <i class="fas fa-clock"></i>
                 </div>
-                <div class="content">
-                    <h3><?php echo $pending_count; ?></h3>
-                    <p>Pending Requests</p>
+                <div class="stat-text">
+                    <h4><?php echo $pending_count; ?></h4>
+                    <span>Pending Requests</span>
                 </div>
             </div>
-            <div class="stat-card approved">
-                <div class="icon">
+
+            <div class="live-stat-item">
+                <div class="live-stat-icon bg-gradient-teal text-white">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="content">
-                    <h3><?php 
+                <div class="stat-text">
+                    <h4><?php 
                         $approved_count = 0;
-                        foreach ($requests as $req) {
-                            if ($req['status'] === 'approved') $approved_count++;
-                        }
+                        foreach ($requests as $req) { if ($req['status'] === 'approved') $approved_count++; }
                         echo $approved_count;
-                    ?></h3>
-                    <p>Approved</p>
+                    ?></h4>
+                    <span>Approved</span>
                 </div>
             </div>
-            <div class="stat-card rejected">
-                <div class="icon">
+
+            <div class="live-stat-item">
+                <div class="live-stat-icon bg-gradient-pink text-white">
                     <i class="fas fa-times-circle"></i>
                 </div>
-                <div class="content">
-                    <h3><?php 
+                <div class="stat-text">
+                    <h4><?php 
                         $rejected_count = 0;
-                        foreach ($requests as $req) {
-                            if ($req['status'] === 'rejected') $rejected_count++;
-                        }
+                        foreach ($requests as $req) { if ($req['status'] === 'rejected') $rejected_count++; }
                         echo $rejected_count;
-                    ?></h3>
-                    <p>Rejected</p>
+                    ?></h4>
+                    <span>Rejected</span>
                 </div>
             </div>
         </div>
 
-        <div class="requests-section">
-            <h2><i class="fas fa-list"></i> Salary Change Requests</h2>
-            
-            <?php if (empty($requests)): ?>
-                <div class="no-requests">
-                    <i class="fas fa-inbox"></i>
-                    <h3>No Salary Change Requests</h3>
-                    <p>All salary change requests will appear here for your review.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($requests as $request): ?>
-                    <div class="request-card <?php echo strtolower($request['status']); ?>">
-                        <div class="request-header">
-                            <div>
-                                <h3><?php echo htmlspecialchars($request['employee_name']); ?></h3>
-                                <p style="color: #666; font-size: 14px;">
-                                    <?php echo htmlspecialchars($request['department_name'] ?? 'N/A'); ?> • 
-                                    Employee ID: <?php echo $request['employee_id']; ?>
-                                </p>
-                            </div>
-                            <span class="status-badge <?php echo strtolower($request['status']); ?>">
-                                <?php echo strtoupper($request['status']); ?>
-                            </span>
-                        </div>
-
-                        <div class="change-info">
-                            <div class="type"><?php echo htmlspecialchars($request['change_type']); ?></div>
-                            <div class="reason">
-                                <strong>Reason:</strong> <?php echo htmlspecialchars($request['change_reason']); ?>
+        <h3 style="font-size: 18px; color: #2d3748; margin-bottom: 20px; font-weight: 700; margin-top: 30px;">Request List</h3>
+        
+        <?php if (empty($requests)): ?>
+            <div style="text-align: center; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+                <p style="color: #718096;">No requests found</p>
+            </div>
+        <?php else: ?>
+            <?php foreach ($requests as $request): ?>
+                <div class="request-card <?php echo strtolower($request['status']); ?>">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 700; color: #2d3748; margin-bottom: 4px;">
+                                <?php echo htmlspecialchars($request['employee_name']); ?>
+                            </h3>
+                            <div style="font-size: 13px; color: #718096;">
+                                <?php echo htmlspecialchars($request['department_name'] ?? 'N/A'); ?> • ID: <?php echo $request['employee_id']; ?>
                             </div>
                         </div>
-
-                        <div class="request-details">
-                            <div class="detail-item">
-                                <label>Current Salary</label>
-                                <div class="value">₹<?php echo number_format($request['current_salary'], 2); ?></div>
-                            </div>
-                            <div class="detail-item">
-                                <label>New Salary</label>
-                                <div class="value highlight">₹<?php echo number_format($request['new_salary'], 2); ?></div>
-                            </div>
-                            <div class="detail-item">
-                                <label>Increase</label>
-                                <div class="value" style="color: #28a745;">
-                                    +₹<?php echo number_format($request['new_salary'] - $request['current_salary'], 2); ?>
-                                    (<?php 
-                                        $increase_percent = (($request['new_salary'] - $request['current_salary']) / $request['current_salary']) * 100;
-                                        echo number_format($increase_percent, 2); 
-                                    ?>%)
-                                </div>
-                            </div>
-                            <div class="detail-item">
-                                <label>Requested By</label>
-                                <div class="value"><?php echo htmlspecialchars($request['requested_by_name']); ?></div>
-                            </div>
-                            <div class="detail-item">
-                                <label>Request Date</label>
-                                <div class="value"><?php echo date('d M Y, h:i A', strtotime($request['request_date'])); ?></div>
-                            </div>
-                        </div>
-
-                        <?php if ($request['status'] === 'pending'): ?>
-                            <div class="request-actions">
-                                <button class="btn-approve" onclick="openApproveModal(<?php echo $request['request_id']; ?>, '<?php echo htmlspecialchars($request['employee_name'], ENT_QUOTES); ?>')">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button class="btn-reject" onclick="openRejectModal(<?php echo $request['request_id']; ?>, '<?php echo htmlspecialchars($request['employee_name'], ENT_QUOTES); ?>')">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        <?php else: ?>
-                            <div class="review-info">
-                                <strong><?php echo ucfirst($request['status']); ?> by:</strong> <?php echo htmlspecialchars($request['reviewed_by_name']); ?> 
-                                on <?php echo date('d M Y, h:i A', strtotime($request['review_date'])); ?>
-                                <?php if ($request['review_comments']): ?>
-                                    <br><strong>Comments:</strong> <?php echo htmlspecialchars($request['review_comments']); ?>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
+                        <?php 
+                            $statusClass = 'badge-warning';
+                            if($request['status'] === 'approved') $statusClass = 'badge-success';
+                            if($request['status'] === 'rejected') $statusClass = 'badge-danger';
+                        ?>
+                        <span class="badge <?php echo $statusClass; ?>">
+                            <?php echo strtoupper($request['status']); ?>
+                        </span>
                     </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
+
+                    <div style="background: #f7fafc; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
+                        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: #4a5568; margin-bottom: 4px;">
+                            <?php echo htmlspecialchars($request['change_type']); ?>
+                        </div>
+                        <div style="font-size: 14px; color: #2d3748;">
+                            <strong style="color: #718096;">Reason:</strong> <?php echo htmlspecialchars($request['change_reason']); ?>
+                        </div>
+                    </div>
+
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Current Salary</label>
+                            <div class="value">₹<?php echo number_format($request['current_salary'], 2); ?></div>
+                        </div>
+                        <div class="detail-item">
+                            <label>New Salary</label>
+                            <div class="value" style="color: #2c3e50; font-weight: 700;">₹<?php echo number_format($request['new_salary'], 2); ?></div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Increase</label>
+                            <div class="value" style="color: #059669;">
+                                +₹<?php echo number_format($request['new_salary'] - $request['current_salary'], 2); ?>
+                                (<?php 
+                                    $increase_percent = (($request['new_salary'] - $request['current_salary']) / $request['current_salary']) * 100;
+                                    echo number_format($increase_percent, 2); 
+                                ?>%)
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Requested By</label>
+                            <div class="value"><?php echo htmlspecialchars($request['requested_by_name']); ?></div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Request Date</label>
+                            <div class="value"><?php echo date('d M Y, h:i A', strtotime($request['request_date'])); ?></div>
+                        </div>
+                    </div>
+
+                    <?php if ($request['status'] === 'pending'): ?>
+                        <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
+                            <button onclick="openApproveModal(<?php echo $request['request_id']; ?>, '<?php echo htmlspecialchars($request['employee_name'], ENT_QUOTES); ?>')" 
+                                    class="btn btn-success" style="border: none;">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button onclick="openRejectModal(<?php echo $request['request_id']; ?>, '<?php echo htmlspecialchars($request['employee_name'], ENT_QUOTES); ?>')" 
+                                    class="btn btn-danger" style="border: none;">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    <?php else: ?>
+                        <div style="margin-top: 15px; padding: 12px; background: #f7fafc; border-radius: 8px; font-size: 13px; color: #718096;">
+                            <strong><?php echo ucfirst($request['status']); ?> by:</strong> <?php echo htmlspecialchars($request['reviewed_by_name']); ?> 
+                            on <?php echo date('d M Y, h:i A', strtotime($request['review_date'])); ?>
+                            <?php if ($request['review_comments']): ?>
+                                <br><strong>Comments:</strong> <?php echo htmlspecialchars($request['review_comments']); ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 
     <!-- Approve Modal -->
     <div id="approveModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-check-circle" style="color: #28a745;"></i> Approve Salary Change</h3>
-                <p id="approveEmployeeName" style="color: #666; margin-top: 5px;"></p>
+                <h3><i class="fas fa-check-circle" style="color: #10b981;"></i> Approve Salary Change</h3>
+                <p id="approveEmployeeName" style="color: #718096; margin-top: 5px; font-size: 14px;"></p>
             </div>
             <form id="approveForm" method="POST" action="/payslip_generator/public/index.php?page=approve-salary-change">
                 <input type="hidden" name="action" value="approve">
@@ -703,8 +231,8 @@ $error = $_GET['error'] ?? '';
                     <textarea name="comments" id="approve_comments" placeholder="Add any comments about this approval..."></textarea>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeModal('approveModal')">Cancel</button>
-                    <button type="submit" class="btn-submit approve">Approve Request</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('approveModal')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve Request</button>
                 </div>
             </form>
         </div>
@@ -714,19 +242,19 @@ $error = $_GET['error'] ?? '';
     <div id="rejectModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-times-circle" style="color: #dc3545;"></i> Reject Salary Change</h3>
-                <p id="rejectEmployeeName" style="color: #666; margin-top: 5px;"></p>
+                <h3><i class="fas fa-times-circle" style="color: #ef4444;"></i> Reject Salary Change</h3>
+                <p id="rejectEmployeeName" style="color: #718096; margin-top: 5px; font-size: 14px;"></p>
             </div>
             <form id="rejectForm" method="POST" action="/payslip_generator/public/index.php?page=reject-salary-change">
                 <input type="hidden" name="action" value="reject">
                 <input type="hidden" name="request_id" id="reject_request_id">
                 <div class="form-group">
-                    <label for="reject_comments">Rejection Reason <span style="color: red;">*</span></label>
+                    <label for="reject_comments">Rejection Reason <span style="color: #ef4444;">*</span></label>
                     <textarea name="comments" id="reject_comments" required placeholder="Please provide a reason for rejection..."></textarea>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeModal('rejectModal')">Cancel</button>
-                    <button type="submit" class="btn-submit reject">Reject Request</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('rejectModal')">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Request</button>
                 </div>
             </form>
         </div>

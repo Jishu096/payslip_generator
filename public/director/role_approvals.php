@@ -63,508 +63,173 @@ $error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Role Change Approvals - Director Portal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <?php include 'includes/director_styles.php'; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --text-primary: #1a1f36;
-            --text-secondary: #555;
-            --border-color: #e0e0e0;
-            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--bg-primary);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-        }
-
-        .stat-card .icon {
-            font-size: 36px;
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .stat-card.pending .icon {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-
-        .stat-card.approved .icon {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .stat-card.rejected .icon {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .stat-card .content h3 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: var(--text-primary);
-        }
-
-        .stat-card .content p {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .requests-section {
-            background: var(--bg-primary);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .requests-section h2 {
-            color: var(--text-primary);
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .request-card {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            transition: all 0.3s ease;
-        }
-
-        .request-card:hover {
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .request-card.pending {
-            border-left-color: #0c5377;
-            background: #e8f4f8;
-        }
-
-        .request-card.approved {
-            border-left-color: #28a745;
-            background: #d4edda;
-        }
-
-        .request-card.rejected {
-            border-left-color: #dc3545;
-            background: #f8d7da;
-        }
-
-        .request-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .request-header h3 {
-            font-size: 18px;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .status-badge {
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-badge.pending {
-            background: #0c5377;
-            color: white;
-        }
-
-        .status-badge.approved {
-            background: #28a745;
-            color: white;
-        }
-
-        .status-badge.rejected {
-            background: #dc3545;
-            color: white;
-        }
-
-        .request-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .detail-item label {
-            font-size: 12px;
-            color: #666;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .detail-item span {
-            font-size: 15px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .role-change-highlight {
-            background: #fff3cd;
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: 600;
-            color: #b35c00;
-        }
-
-        .reason-box {
-            background: #f0f0f0;
-            padding: 12px;
-            border-left: 3px solid #667eea;
-            margin-top: 10px;
-            border-radius: 5px;
-            font-style: italic;
-            font-size: 14px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn-approve, .btn-reject {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-approve {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-approve:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-reject {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-reject:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: #666;
-        }
-
-        .empty-state i {
-            font-size: 50px;
-            color: #ccc;
-            margin-bottom: 15px;
-        }
-
-        .success-banner {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #28a745;
-        }
-
-        .error-banner {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #dc3545;
-        }
-
-        .back-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .back-link:hover {
-            color: #764ba2;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <a href="director_dashboard.php" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+    <?php include 'includes/director_navbar.php'; ?>
+    <?php include 'includes/director_sidebar.php'; ?>
 
-        <div class="header">
-            <div>
-                <h1><i class="fas fa-user-check"></i> Role Change Approvals</h1>
-                <p style="color: #999; margin-top: 5px;">Review and approve employee role changes</p>
-            </div>
-            <div class="user-info">
-                <div style="text-align: right;">
-                    <p style="margin: 0; color: #333; font-weight: 600;">Welcome, <?php echo htmlspecialchars($username); ?></p>
-                    <small style="color: #999;">Director</small>
-                </div>
-                <img src="https://via.placeholder.com/50" alt="User" style="width: 50px; height: 50px; border-radius: 50%;">
-            </div>
+    <div class="main-content">
+        <div class="page-header">
+            <h1><i class="fas fa-user-check"></i> Role Change Approvals</h1>
+            <p>Review and approve employee role changes.</p>
         </div>
 
         <?php if ($approved): ?>
-            <div class="success-banner">
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #065f46;">
                 <i class="fas fa-check-circle"></i> Role change request approved successfully!
             </div>
         <?php endif; ?>
 
         <?php if ($rejected): ?>
-            <div class="success-banner">
-                <i class="fas fa-check-circle"></i> Role change request rejected. Employee has been notified.
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #b91c1c;">
+                <i class="fas fa-exclamation-circle"></i> Role change request rejected.
             </div>
         <?php endif; ?>
 
         <?php if ($error): ?>
-            <div class="error-banner">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
+            <div style="background: #ffedd5; border-left: 4px solid #f97316; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #9a3412;">
+                <i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
 
-        <div class="stats-cards">
-            <div class="stat-card pending">
-                <div class="icon">
+        <div class="live-stats-container">
+            <div class="live-stat-item">
+                <div class="live-stat-icon bg-gradient-orange text-white">
                     <i class="fas fa-clock"></i>
                 </div>
-                <div class="content">
-                    <h3><?php echo $pending_count; ?></h3>
-                    <p>Pending Approvals</p>
+                <div class="stat-text">
+                    <h4><?php echo $pending_count; ?></h4>
+                    <span>Pending</span>
                 </div>
             </div>
 
-            <div class="stat-card approved">
-                <div class="icon">
-                    <i class="fas fa-check"></i>
+            <div class="live-stat-item">
+                <div class="live-stat-icon bg-gradient-teal text-white">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="content">
-                    <h3><?php echo $approved_count; ?></h3>
-                    <p>Approved</p>
+                <div class="stat-text">
+                    <h4><?php echo $approved_count; ?></h4>
+                    <span>Approved</span>
                 </div>
             </div>
 
-            <div class="stat-card rejected">
-                <div class="icon">
-                    <i class="fas fa-times"></i>
+            <div class="live-stat-item">
+                <div class="live-stat-icon bg-gradient-pink text-white">
+                    <i class="fas fa-times-circle"></i>
                 </div>
-                <div class="content">
-                    <h3><?php echo $rejected_count; ?></h3>
-                    <p>Rejected</p>
+                <div class="stat-text">
+                    <h4><?php echo $rejected_count; ?></h4>
+                    <span>Rejected</span>
                 </div>
             </div>
         </div>
 
-        <div class="requests-section">
-            <h2><i class="fas fa-list"></i> All Role Change Requests</h2>
+        <h3 style="font-size: 18px; color: #2d3748; margin-bottom: 20px; font-weight: 700; margin-top: 30px;">Request List</h3>
 
-            <?php if (count($requests) === 0): ?>
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <h3>No Requests</h3>
-                    <p>There are no role change requests at this time.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($requests as $req): ?>
-                    <div class="request-card <?php echo $req['status']; ?>">
-                        <div class="request-header">
-                            <div>
-                                <h3>
-                                    <i class="fas fa-user"></i> <?php echo htmlspecialchars($req['full_name']); ?>
-                                </h3>
-                                <small style="color: #666;">Employee ID: <?php echo $req['employee_id']; ?></small>
-                            </div>
-                            <span class="status-badge <?php echo $req['status']; ?>">
-                                <?php echo ucfirst($req['status']); ?>
-                            </span>
-                        </div>
-
-                        <div class="request-details">
-                            <div class="detail-item">
-                                <label><i class="fas fa-briefcase"></i> Department</label>
-                                <span><?php echo htmlspecialchars($req['department_name'] ?? 'N/A'); ?></span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label><i class="fas fa-envelope"></i> Email</label>
-                                <span><?php echo htmlspecialchars($req['email']); ?></span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label><i class="fas fa-calendar"></i> Request Date</label>
-                                <span><?php echo date('d M Y, h:i A', strtotime($req['request_date'])); ?></span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label><i class="fas fa-user-tie"></i> Requested By</label>
-                                <span><?php echo htmlspecialchars($req['requested_by_name'] ?? 'System Admin'); ?></span>
+        <?php if (count($requests) === 0): ?>
+            <div style="text-align: center; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+                <p style="color: #718096;">There are no role change requests at this time.</p>
+            </div>
+        <?php else: ?>
+            <?php foreach ($requests as $req): ?>
+                <div class="request-card <?php echo $req['status']; ?>">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 700; color: #2d3748; margin-bottom: 4px;">
+                                <i class="fas fa-user-circle" style="color: #667eea;"></i>
+                                <?php echo htmlspecialchars($req['full_name']); ?>
+                            </h3>
+                            <div style="font-size: 13px; color: #718096;">
+                                Employee ID: <?php echo $req['employee_id']; ?>
                             </div>
                         </div>
-
-                        <div class="role-change-highlight">
-                            <i class="fas fa-exchange-alt"></i>
-                            <?php echo htmlspecialchars($req['old_role']); ?> 
-                            <i class="fas fa-arrow-right"></i> 
-                            <?php echo htmlspecialchars($req['new_role']); ?>
-                        </div>
-
-                        <div class="reason-box">
-                            <strong><i class="fas fa-comment"></i> Change Reason:</strong><br>
-                            <?php echo htmlspecialchars($req['change_reason']); ?>
-                        </div>
-
-                        <?php if ($req['status'] !== 'pending'): ?>
-                            <div class="reason-box" style="background: #f0f0f0; border-left-color: #666; margin-top: 10px;">
-                                <strong><i class="fas fa-comment"></i> Review Comments:</strong><br>
-                                <?php echo htmlspecialchars($req['review_comments'] ?? 'No additional comments'); ?><br>
-                                <small style="color: #666; margin-top: 5px;">Reviewed by: <?php echo htmlspecialchars($req['reviewed_by_name'] ?? 'System'); ?> on <?php echo date('d M Y, h:i A', strtotime($req['review_date'])); ?></small>
-                            </div>
-                        <?php endif; ?>
-
-                        <?php if ($req['status'] === 'pending'): ?>
-                            <div class="action-buttons">
-                                <button class="btn-approve" onclick="approveRequest(<?php echo $req['request_id']; ?>, '<?php echo htmlspecialchars($req['full_name']); ?>', '<?php echo htmlspecialchars($req['new_role']); ?>')">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button class="btn-reject" onclick="rejectRequest(<?php echo $req['request_id']; ?>, '<?php echo htmlspecialchars($req['full_name']); ?>')">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        <?php endif; ?>
+                        <?php 
+                            $statusClass = 'badge-warning';
+                            if($req['status'] === 'approved') $statusClass = 'badge-success';
+                            if($req['status'] === 'rejected') $statusClass = 'badge-danger';
+                        ?>
+                        <span class="badge <?php echo $statusClass; ?>">
+                            <?php echo ucfirst($req['status']); ?>
+                        </span>
                     </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
+
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Department</label>
+                            <div class="value"><?php echo htmlspecialchars($req['department_name'] ?? 'N/A'); ?></div>
+                        </div>
+
+                        <div class="detail-item">
+                            <label>Email</label>
+                            <div class="value"><?php echo htmlspecialchars($req['email']); ?></div>
+                        </div>
+
+                        <div class="detail-item">
+                            <label>Request Date</label>
+                            <div class="value"><?php echo date('d M Y, h:i A', strtotime($req['request_date'])); ?></div>
+                        </div>
+
+                        <div class="detail-item">
+                            <label>Requested By</label>
+                            <div class="value"><?php echo htmlspecialchars($req['requested_by_name'] ?? 'System Admin'); ?></div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255, 243, 205, 0.5); border: 1px solid rgba(255, 243, 205, 1); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; color: #856404; display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                        <?php echo htmlspecialchars($req['old_role']); ?>
+                        <i class="fas fa-arrow-right" style="color: #856404;"></i>
+                        <?php echo htmlspecialchars($req['new_role']); ?>
+                    </div>
+
+                    <div style="background: #f7fafc; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #667eea;">
+                        <strong>Change Reason:</strong><br>
+                        <?php echo htmlspecialchars($req['change_reason']); ?>
+                    </div>
+
+                    <?php if ($req['status'] !== 'pending'): ?>
+                        <div style="background: #f7fafc; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; color: #718096;">
+                            <strong>Review Comments:</strong><br>
+                            <?php echo htmlspecialchars($req['review_comments'] ?? 'No additional comments'); ?><br>
+                            <div style="margin-top: 5px; font-style: italic;">
+                                Reviewed by: <?php echo htmlspecialchars($req['reviewed_by_name'] ?? 'System'); ?> on <?php echo date('d M Y, h:i A', strtotime($req['review_date'])); ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($req['status'] === 'pending'): ?>
+                        <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
+                            <button class="btn btn-success" style="border: none;" onclick="approveRequest(<?php echo $req['request_id']; ?>, '<?php echo htmlspecialchars($req['full_name']); ?>', '<?php echo htmlspecialchars($req['new_role']); ?>')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-danger" style="border: none;" onclick="rejectRequest(<?php echo $req['request_id']; ?>, '<?php echo htmlspecialchars($req['full_name']); ?>')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 
     <!-- Approve Modal -->
-    <div id="approveModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 5px 30px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom: 15px; color: #333;">
-                <i class="fas fa-check-circle" style="color: #28a745;"></i> Approve Role Change
-            </h3>
-            <p id="approveMessage" style="color: #666; margin-bottom: 15px;"></p>
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle" style="color: #10b981;"></i> Approve Role Change</h3>
+            </div>
+            <p id="approveMessage" style="color: #718096; margin-bottom: 20px;"></p>
             
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Comments (Optional)</label>
-                <textarea id="approveComments" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 80px; font-family: inherit;" placeholder="Add any comments about this approval..."></textarea>
+            <div class="form-group">
+                <label for="approveComments">Comments (Optional)</label>
+                <textarea id="approveComments" placeholder="Add any comments about this approval..."></textarea>
             </div>
 
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button onclick="closeApproveModal()" style="padding: 10px 20px; background: #e0e0e0; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
-                <button onclick="submitApprove()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+            <div class="modal-actions">
+                <button onclick="closeApproveModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="submitApprove()" class="btn btn-success">
                     <i class="fas fa-check"></i> Confirm Approval
                 </button>
             </div>
@@ -572,21 +237,21 @@ $error = $_GET['error'] ?? '';
     </div>
 
     <!-- Reject Modal -->
-    <div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 5px 30px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom: 15px; color: #333;">
-                <i class="fas fa-times-circle" style="color: #dc3545;"></i> Reject Role Change
-            </h3>
-            <p id="rejectMessage" style="color: #666; margin-bottom: 15px;"></p>
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-times-circle" style="color: #ef4444;"></i> Reject Role Change</h3>
+            </div>
+            <p id="rejectMessage" style="color: #718096; margin-bottom: 20px;"></p>
             
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Reason for Rejection <span style="color: #dc3545;">*</span></label>
-                <textarea id="rejectComments" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 80px; font-family: inherit;" placeholder="Please explain why you are rejecting this request..." required></textarea>
+            <div class="form-group">
+                <label for="rejectComments">Reason for Rejection <span style="color: #ef4444;">*</span></label>
+                <textarea id="rejectComments" required placeholder="Please explain why you are rejecting this request..."></textarea>
             </div>
 
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button onclick="closeRejectModal()" style="padding: 10px 20px; background: #e0e0e0; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
-                <button onclick="submitReject()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+            <div class="modal-actions">
+                <button onclick="closeRejectModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="submitReject()" class="btn btn-danger">
                     <i class="fas fa-times"></i> Confirm Rejection
                 </button>
             </div>
@@ -600,11 +265,11 @@ $error = $_GET['error'] ?? '';
             currentRequestId = requestId;
             document.getElementById('approveMessage').innerHTML = 
                 `Are you sure you want to approve the role change for <strong>${employeeName}</strong> to <strong>${newRole}</strong>?`;
-            document.getElementById('approveModal').style.display = 'flex';
+            document.getElementById('approveModal').classList.add('show');
         }
 
         function closeApproveModal() {
-            document.getElementById('approveModal').style.display = 'none';
+            document.getElementById('approveModal').classList.remove('show');
             document.getElementById('approveComments').value = '';
             currentRequestId = null;
         }
@@ -641,11 +306,11 @@ $error = $_GET['error'] ?? '';
             currentRequestId = requestId;
             document.getElementById('rejectMessage').innerHTML = 
                 `Are you sure you want to reject the role change for <strong>${employeeName}</strong>?`;
-            document.getElementById('rejectModal').style.display = 'flex';
+            document.getElementById('rejectModal').classList.add('show');
         }
 
         function closeRejectModal() {
-            document.getElementById('rejectModal').style.display = 'none';
+            document.getElementById('rejectModal').classList.remove('show');
             document.getElementById('rejectComments').value = '';
             currentRequestId = null;
         }
@@ -681,6 +346,13 @@ $error = $_GET['error'] ?? '';
 
             document.body.appendChild(form);
             form.submit();
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
         }
     </script>
 </body>
