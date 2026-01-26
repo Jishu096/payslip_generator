@@ -9,7 +9,10 @@ if (!isset($_SESSION['role'])) {
 
 require_once "../../app/Config/database.php";
 require_once "../../app/Models/Employee.php";
-require_once "../../app/Helpers/AttendanceStatementHelper.php";
+require_once "../../app/Helpers/ExcelExportHelper.php";
+require_once "../../vendor/autoload.php";
+
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 $db = getDBConnection();
 
@@ -45,11 +48,40 @@ $reportType = $_GET['report_type'] ?? 'regular'; // 'regular' or 'contract'
 $isExport = isset($_GET['export']) && $_GET['export'] === 'excel';
 if ($isExport) {
     $monthName = date('F', mktime(0, 0, 0, $selectedMonth, 1));
-    $filename = "Attendance_Statement_{$reportType}_{$monthName}_{$selectedYear}.xls";
-    header("Content-Type: application/vnd.ms-excel");
-    header("Content-Disposition: attachment; filename=\"$filename\"");
-    header("Pragma: no-cache");
-    header("Expires: 0");
+    
+    // Get data first - fetch BOTH for combined export
+    $regularEmployees = getRegularEmployeesStatement($db, $selectedMonth, $selectedYear);
+    $contractEmployees = getContractEmployeesStatement($db, $selectedMonth, $selectedYear);
+    
+    // Group contract employees
+    $groupedContractEmployees = [];
+    if (!empty($contractEmployees)) {
+        foreach ($contractEmployees as $emp) {
+            $group = $emp['employee_group'] ?? 'Others';
+            $location = $emp['location'] ?? 'NIELIT Bhubaneswar';
+            $key = "$location - $group";
+            if (!isset($groupedContractEmployees[$key])) {
+                $groupedContractEmployees[$key] = [];
+            }
+            $groupedContractEmployees[$key][] = $emp;
+        }
+    }
+    
+    // Calculate days in month
+    $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
+    
+    // Generate combined Excel file using ExcelExportHelper
+    $spreadsheet = \App\Helpers\ExcelExportHelper::generateCombinedAttendanceExcel($regularEmployees, $groupedContractEmployees, $db, $selectedMonth, $selectedYear, $monthName, $daysInMonth);
+    
+    // Download Excel file
+    $filename = "Attendance_Statement_Combined_{$monthName}_{$selectedYear}.xlsx";
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: max-age=0');
+    
+    $writer = new Xlsx($spreadsheet);
+    $writer->save('php://output');
+    exit;
 }
 
 // Calculate days in month
@@ -139,8 +171,8 @@ function getContractEmployeesStatement($db, $month, $year) {
 function getLeaveDetails($db, $employeeId, $month, $year) {
     $sql = "SELECT 
                 leave_type,
-                DATE_FORMAT(start_date, '%d/%m') as start_date,
-                DATE_FORMAT(end_date, '%d/%m') as end_date,
+                DATE_FORMAT(start_date, '%d.%m.%Y') as start_date,
+                DATE_FORMAT(end_date, '%d.%m.%Y') as end_date,
                 total_days,
                 nature_of_leave,
                 CONCAT(
@@ -457,51 +489,65 @@ if (!empty($contractEmployees)) {
                     <table class="govt-table" border="1">
                         <thead>
                             <?php if ($isExport): ?>
-                                <tr><th colspan="7" style="border:none; font-size:16px; font-weight:bold;">NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</th></tr>
-                                <tr><th colspan="7" style="border:none; font-size:14px;">NIELIT BHUBANESWAR</th></tr>
-                                <tr><th colspan="7" style="border:none; font-weight:bold;">ABSENTEE STATEMENT OF CONTRACT EMPLOYEES</th></tr>
-                                <tr><th colspan="7" style="border:none;">For the month of <?= $monthName ?> <?= $selectedYear ?></th></tr>
-                                <tr><th colspan="7" style="border:none;"></th></tr>
+                                <tr><th colspan="9" style="border:none; font-size:16px; font-weight:bold;">NATIONAL INSTITUTE OF ELECTRONICS & INFORMATION TECHNOLOGY</th></tr>
+                                <tr><th colspan="9" style="border:none; font-size:14px;">NIELIT BHUBANESWAR</th></tr>
+                                <tr><th colspan="9" style="border:none; font-weight:bold;">ABSENTEE STATEMENT OF CONTRACT EMPLOYEES</th></tr>
+                                <tr><th colspan="9" style="border:none;">For the month of <?= $monthName ?> <?= $selectedYear ?></th></tr>
+                                <tr><th colspan="9" style="border:none;"></th></tr>
                             <?php endif; ?>
                             <tr>
-                                <th>S.No.</th>
-                                <th>Name & Designation</th>
-                                <th>Period of Leave<br>(From – To)</th>
-                                <th>Nature of Leave/OD</th>
-                                <th>Period of Absence<br>(From – To)</th>
-                                <th>Absent<br>Days</th>
-                                <th>Remarks</th>
+                                <th rowspan="2">S.No.</th>
+                                <th rowspan="2">Name & Designation</th>
+                                <th colspan="2">Period of Leave</th>
+                                <th rowspan="2">Nature of Leave/OD</th>
+                                <th colspan="2">Period of Absence</th>
+                                <th rowspan="2">Absent<br>Days</th>
+                                <th rowspan="2">Remarks</th>
+                            </tr>
+                            <tr>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>From</th>
+                                <th>To</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($groupedContractEmployees)): ?>
-                                <tr><td colspan="7" style="padding: 20px;">No data available</td></tr>
+                                <b><tr><td colspan="9" style="padding: 20px;">No data available</td></tr></b>
                             <?php else: ?>
                                 <?php 
                                 $serialNo = 1;
                                 foreach ($groupedContractEmployees as $groupName => $employees): 
                                 ?>
                                     <tr>
-                                        <td colspan="7" class="text-left" style="background: #eee; font-weight: bold;">
+                                        <td colspan="9" class="text-left" style="background: #eee; font-weight: bold;">
                                             <?= htmlspecialchars($groupName) ?>
                                         </td>
                                     </tr>
                                     <?php foreach ($employees as $emp): 
                                         $leaveDetails = getLeaveDetails($db, $emp['employee_id'], $selectedMonth, $selectedYear);
-                                        $leavePeriods = [];
+                                        $leaveFrom = [];
+                                        $leaveTo = [];
                                         $leaveNatures = [];
-                                        $absencePeriods = [];
+                                        $absenceFrom = [];
+                                        $absenceTo = [];
+                                        
                                         foreach ($leaveDetails as $leave) {
                                             if ($leave['leave_type'] === 'Absent') {
-                                                $absencePeriods[] = $leave['period'];
+                                                $absenceFrom[] = $leave['start_date'];
+                                                $absenceTo[] = $leave['end_date'];
                                             } else {
-                                                $leavePeriods[] = $leave['period'];
+                                                $leaveFrom[] = $leave['start_date'];
+                                                $leaveTo[] = $leave['end_date'];
                                                 $leaveNatures[] = $leave['leave_type'] . ($leave['nature_of_leave'] ? ': ' . $leave['nature_of_leave'] : '');
                                             }
                                         }
-                                        $leavePerStr = !empty($leavePeriods) ? implode(', ', $leavePeriods) : '---';
+                                        $leaveFromStr = !empty($leaveFrom) ? implode('<br>', $leaveFrom) : '---';
+                                        $leaveToStr = !empty($leaveTo) ? implode('<br>', $leaveTo) : '---';
                                         $leaveNatStr = !empty($leaveNatures) ? implode('; ', $leaveNatures) : '---';
-                                        $absenceStr = !empty($absencePeriods) ? implode(', ', $absencePeriods) : '---';
+                                        
+                                        $absFromStr = !empty($absenceFrom) ? implode('<br>', $absenceFrom) : '---';
+                                        $absToStr = !empty($absenceTo) ? implode('<br>', $absenceTo) : '---';
                                         
                                         // Auto-Remarks for Contract
                                         $finalRemarks = $emp['remarks'] ?: '';
@@ -530,9 +576,11 @@ if (!empty($contractEmployees)) {
                                                 <strong><?= htmlspecialchars($emp['full_name']) ?></strong><br>
                                                 <span style="font-size: 9px;"><?= htmlspecialchars($emp['designation']) ?></span>
                                             </td>
-                                            <td><?= $leavePerStr ?></td>
+                                            <td><?= $leaveFromStr ?></td>
+                                            <td><?= $leaveToStr ?></td>
                                             <td class="text-left"><?= $leaveNatStr ?></td>
-                                            <td><?= $absenceStr ?></td>
+                                            <td><?= $absFromStr ?></td>
+                                            <td><?= $absToStr ?></td>
                                             <td><strong><?= $emp['absent_days'] > 0 ? $emp['absent_days'] : '---' ?></strong></td>
                                             <td class="text-left"><?= htmlspecialchars($finalRemarks) ?></td>
                                         </tr>
