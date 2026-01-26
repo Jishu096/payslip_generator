@@ -63,13 +63,51 @@ try {
         ");
         $stmt->execute([$reviewer_id, $reviewer_name, $comments, $request_id]);
 
-        // Update user role
-        $stmt = $db->prepare("
-            UPDATE users 
-            SET role = ?
-            WHERE employee_id = ?
-        ");
-        $stmt->execute([$request['new_role'], $request['employee_id']]);
+        // Fetch user_id for the employee
+        $stmt = $db->prepare("SELECT user_id FROM users WHERE employee_id = ?");
+        $stmt->execute([$request['employee_id']]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            $userId = $user['user_id'];
+            $newRoleName = $request['new_role'];
+            $oldRoleName = $request['old_role'];
+
+            // Handle New Role Assignment
+            if ($newRoleName && $newRoleName !== 'None') {
+                // Get role_id
+                $stmt = $db->prepare("SELECT role_id FROM roles WHERE role_name = ?");
+                $stmt->execute([$newRoleName]);
+                $roleRow = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($roleRow) {
+                    $roleId = $roleRow['role_id'];
+                    // Insert into user_roles if not exists
+                    $stmt = $db->prepare("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)");
+                    $stmt->execute([$userId, $roleId]);
+                }
+
+                // Legacy: Also update users.role for primary role compatibility if needed
+                // Only if it looks like a primary role switch or single role system
+                $stmt = $db->prepare("UPDATE users SET role = ? WHERE user_id = ?");
+                $stmt->execute([$newRoleName, $userId]);
+            }
+
+            // Handle Old Role Removal
+            if ($oldRoleName && $oldRoleName !== 'None') {
+                // Get role_id
+                $stmt = $db->prepare("SELECT role_id FROM roles WHERE role_name = ?");
+                $stmt->execute([$oldRoleName]);
+                $roleRow = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($roleRow) {
+                    $roleId = $roleRow['role_id'];
+                    // Remove from user_roles
+                    $stmt = $db->prepare("DELETE FROM user_roles WHERE user_id = ? AND role_id = ?");
+                    $stmt->execute([$userId, $roleId]);
+                }
+            }
+        }
 
         $db->commit();
 

@@ -34,36 +34,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($userId > 0 && $roleId > 0) {
         try {
+            // Get user details including employee_id
+            $stmt = $db->prepare("SELECT username, employee_id FROM users WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$user) {
+                throw new Exception("User not found");
+            }
+
+            // Get role details
+            $stmt = $db->prepare("SELECT role_name FROM roles WHERE role_id = ?");
+            $stmt->execute([$roleId]);
+            $role = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$role) {
+                throw new Exception("Role not found");
+            }
+
+            $employeeId = $user['employee_id'];
+            $roleName = $role['role_name'];
+            $requestedBy = $_SESSION['user_id'];
+            
+            // Check if there is already a pending request for this user
+            $stmt = $db->prepare("SELECT COUNT(*) FROM role_change_requests WHERE employee_id = ? AND status = 'pending'");
+            $stmt->execute([$employeeId]);
+            if ($stmt->fetchColumn() > 0) {
+                 throw new Exception("This user already has a pending role change request.");
+            }
+
+            // Prepare request data
+            $oldRole = null;
+            $newRole = null;
+            $changeReason = '';
+
             if ($action === 'assign') {
-                // Check if user already has this role
+                // Check if user already has this role (bypass request if so)
                 $stmt = $db->prepare("SELECT COUNT(*) FROM user_roles WHERE user_id = ? AND role_id = ?");
                 $stmt->execute([$userId, $roleId]);
-                $exists = $stmt->fetchColumn();
-
-                if (!$exists) {
-                    $stmt = $db->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
-                    $stmt->execute([$userId, $roleId]);
-                    $message = "Role assigned successfully!";
-                    $messageType = "success";
-                } else {
-                    $message = "User already has this role.";
-                    $messageType = "warning";
+                if ($stmt->fetchColumn()) {
+                    throw new Exception("User already has this role.");
                 }
+                
+                $newRole = $roleName;
+                $changeReason = "Role assignment requested by Admin " . ($_SESSION['username'] ?? 'Admin');
             } elseif ($action === 'remove') {
-                $stmt = $db->prepare("DELETE FROM user_roles WHERE user_id = ? AND role_id = ?");
-                $stmt->execute([$userId, $roleId]);
-                $message = "Role removed successfully!";
-                $messageType = "success";
+                $oldRole = $roleName;
+                $newRole = 'None'; // Explicitly mark as removal
+                $changeReason = "Role removal requested by Admin " . ($_SESSION['username'] ?? 'Admin');
             }
+
+            // Determine employee name for the request
+            // If employee_id is null, we can't really link it to role_change_requests which depends on employee_id
+            // This is a system design limitation. We will assume user is linked to employee.
+            if (!$employeeId) {
+                // Try to find if the user IS an employee by email or name? 
+                // For now, let's error if not linked, or we'd need to change role_change_requests schema to support user_id
+                throw new Exception("User is not linked to an employee record. Cannot create approval request.");
+            }
+            
+            // Get Employee Name
+            $stmt = $db->prepare("SELECT full_name FROM employees WHERE employee_id = ?");
+            $stmt->execute([$employeeId]);
+            $emp = $stmt->fetch(PDO::FETCH_ASSOC);
+            $employeeName = $emp ? $emp['full_name'] : $user['username'];
+
+            // Insert Request
+            $stmt = $db->prepare("
+                INSERT INTO role_change_requests 
+                (employee_id, employee_name, requested_by, status, request_date, old_role, new_role, change_reason)
+                VALUES (?, ?, ?, 'pending', NOW(), ?, ?, ?)
+            ");
+            
+            $stmt->execute([
+                $employeeId,
+                $employeeName,
+                $requestedBy,
+                $oldRole ?? 'None',
+                $newRole,
+                $changeReason
+            ]);
+
+            $message = "Role change request for '{$roleName}' submitted for Director approval.";
+            $messageType = "success";
+
         } catch (Exception $e) {
             $message = "Error: " . $e->getMessage();
             $messageType = "error";
         }
-
-        // Refresh users list
-        $stmt = $db->prepare("SELECT user_id, username, email, role FROM users ORDER BY username");
-        $stmt->execute();
-        $allUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 
