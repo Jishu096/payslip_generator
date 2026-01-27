@@ -1,40 +1,45 @@
 <?php
-session_start();
+require_once __DIR__ . '/../../app/Helpers/SessionManager.php';
+SessionManager::start();
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['all_roles'])) {
+if (!SessionManager::has('user_id') || !SessionManager::has('all_roles')) {
     header("Location: login.php");
     exit;
 }
 
+
 // If only one role, redirect directly to that dashboard
-if (count($_SESSION['all_roles']) === 1) {
-    $role = $_SESSION['all_roles'][0];
+// If only one role, redirect directly to that dashboard
+$allRoles = SessionManager::get('all_roles', []);
+if (count($allRoles) === 1) {
+    $role = $allRoles[0];
     $redirect = match($role) {
-        'employee' => '/payslip_generator/public/employee/dashboard.php',
-        'accountant' => '/payslip_generator/public/accountant/accountant_dashboard.php',
-        'director' => '/payslip_generator/public/director/director_dashboard.php',
-        'administrator' => '/payslip_generator/public/admin/admin_dashboard.php',
-        default => '/payslip_generator/public/auth/login.php'
+        'employee' => '../employee/dashboard.php',
+        'accountant' => '../accountant/accountant_dashboard.php',
+        'director' => '../director/director_dashboard.php',
+        'administrator' => '../admin/admin_dashboard.php',
+        default => 'login.php'
     };
     header("Location: $redirect");
     exit;
 }
+
 
 // Handle role selection
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selected_role'])) {
     $selectedRole = $_POST['selected_role'];
     
     // Verify user has this role
-    if (in_array($selectedRole, $_SESSION['all_roles'])) {
-        $_SESSION['current_role'] = $selectedRole;
+    if (in_array($selectedRole, $allRoles)) {
+        SessionManager::set('current_role', $selectedRole);
         
         $redirect = match($selectedRole) {
-            'employee' => '/payslip_generator/public/employee/dashboard.php',
-            'accountant' => '/payslip_generator/public/accountant/accountant_dashboard.php',
-            'director' => '/payslip_generator/public/director/director_dashboard.php',
-            'administrator' => '/payslip_generator/public/admin/admin_dashboard.php',
-            default => '/payslip_generator/public/auth/login.php'
+            'employee' => '../employee/dashboard.php',
+            'accountant' => '../accountant/accountant_dashboard.php',
+            'director' => '../director/director_dashboard.php',
+            'administrator' => '../admin/admin_dashboard.php',
+            default => 'login.php'
         };
         
         header("Location: $redirect");
@@ -42,8 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selected_role'])) {
     }
 }
 
-$userName = $_SESSION['username'] ?? 'User';
-$allRoles = $_SESSION['all_roles'] ?? [];
+
+$userName = SessionManager::get('username', 'User');
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

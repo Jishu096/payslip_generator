@@ -5,7 +5,9 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../../app/Helpers/Config.php';
 require_once __DIR__ . '/../../app/Helpers/SessionManager.php';
 require_once __DIR__ . '/../../app/Helpers/InputValidator.php';
+require_once __DIR__ . '/../../app/Helpers/CSRFProtection.php';
 require_once __DIR__ . '/../../app/Config/database.php';
+
 require_once __DIR__ . '/../../app/Models/User.php';
 require_once __DIR__ . '/../../app/Models/Employee.php';
 require_once __DIR__ . '/../../app/Helpers/LoginAttemptHelper.php';
@@ -21,7 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Validate CSRF Token
+if (!CSRFProtection::validateRequest()) {
+    echo json_encode(['success' => false, 'message' => 'Invalid or expired CSRF token. Please refresh the page.']);
+    exit;
+}
+
 // Sanitize and validate input
+
 $username = InputValidator::sanitizeString($_POST['username'] ?? '');
 $password = $_POST['password'] ?? ''; // Don't sanitize passwords
 
@@ -54,15 +63,21 @@ try {
         // Regenerate session ID to prevent session fixation
         SessionManager::regenerate();
         
+        // Normalize role to lowercase to avoid case-sensitivity issues
+        $primaryRole = strtolower($user['role']);
+
         // Successful login
         SessionManager::set('user_id', $user['user_id']);
         SessionManager::set('username', $user['username']);
-        SessionManager::set('role', $user['role']); // Keep primary role for backward compatibility
+        SessionManager::set('role', $primaryRole); // Keep primary role for backward compatibility
 
         // Get all roles from RBAC system
         $userRoles = $userModel->getUserRoles($user['user_id']);
-        SessionManager::set('all_roles', array_column($userRoles, 'role_name')); // Array of all role names
+        $normalizedRoles = array_map('strtolower', array_column($userRoles, 'role_name'));
+        
+        SessionManager::set('all_roles', $normalizedRoles); // Array of all role names
         SessionManager::set('has_multiple_roles', count(SessionManager::get('all_roles')) > 1);
+
 
         if ($user['role'] === 'employee' || in_array('employee', SessionManager::get('all_roles'))) {
             SessionManager::set('employee_id', $user['employee_id']);
@@ -73,22 +88,23 @@ try {
 
         $attemptHelper->recordSuccessfulAttempt($username);
 
-        // Determine primary redirect based on primary role or first role
-        $baseURL = "/payslip_generator/public/";
-        $primaryRole = $user['role'];
+        // Use relative paths for redirects (safer for local/prod compatibility)
+        // From: public/auth/login.php
         
         // If has multiple roles, show role selector page
         if (SessionManager::get('has_multiple_roles')) {
-            $redirect = $baseURL . 'auth/role_selector.php';
+            $redirect = 'role_selector.php';
         } else {
             $redirect = match($primaryRole) {
-                'employee' => $baseURL . 'employee/dashboard.php',
-                'accountant' => $baseURL . 'accountant/accountant_dashboard.php',
-                'director' => $baseURL . 'director/director_dashboard.php',
-                'administrator' => $baseURL . 'admin/admin_dashboard.php',
-                default => $baseURL . 'admin/admin_dashboard.php'
+                'employee' => '../employee/dashboard.php',
+                'accountant' => '../accountant/accountant_dashboard.php',
+                'director' => '../director/director_dashboard.php',
+                'administrator' => '../admin/admin_dashboard.php',
+                default => '../admin/admin_dashboard.php'
             };
         }
+
+
 
         echo json_encode(['success' => true, 'redirect' => $redirect]);
     } else {

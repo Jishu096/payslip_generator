@@ -2,6 +2,9 @@
 
 require_once __DIR__ . '/../Models/Department.php';
 require_once __DIR__ . '/../Config/database.php';
+require_once __DIR__ . '/../Helpers/Config.php';
+require_once __DIR__ . '/../Helpers/CSRFProtection.php';
+
 
 class DepartmentController
 {
@@ -16,10 +19,14 @@ class DepartmentController
 
     public function createDepartment()
     {
+        CSRFProtection::validateOrDie();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header("Location: ../admin/departments.php");
+
+            header("Location: " . Config::get('APP_URL') . "/public/admin/departments.php");
             exit;
         }
+
 
         $department_name = $_POST['department_name'] ?? '';
         $description = $_POST['description'] ?? '';
@@ -35,19 +42,24 @@ class DepartmentController
         ]);
 
         if ($result['success']) {
-            header("Location: ../admin/departments.php?created=1");
+            header("Location: " . Config::get('APP_URL') . "/public/admin/departments.php?created=1");
         } else {
-            header("Location: ../admin/departments.php?error=" . urlencode($result['error']));
+            header("Location: " . Config::get('APP_URL') . "/public/admin/departments.php?error=" . urlencode($result['error']));
         }
+
         exit;
     }
 
     public function updateDepartment()
     {
+        CSRFProtection::validateOrDie();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header("Location: ../admin/departments.php");
+
+            header("Location: " . Config::get('APP_URL') . "/public/admin/departments.php");
             exit;
         }
+
 
         $id = $_GET['id'] ?? null;
         $department_name = $_POST['department_name'] ?? '';

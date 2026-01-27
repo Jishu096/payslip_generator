@@ -1,19 +1,22 @@
 <?php
-session_start();
+require_once __DIR__ . '/../../app/Helpers/SessionManager.php';
+SessionManager::start();
 
 // Support both single-role and multi-role scenarios
-if (!isset($_SESSION['role'])) {
+if (!SessionManager::has('role')) {
     header("Location: ../auth/login.php");
     exit;
 }
+
 
 // RBAC Check
 require_once __DIR__ . "/../../app/Helpers/RBACHelper.php";
-$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role']];
-if (!in_array('employee', $userRoles) && $_SESSION['role'] !== 'employee') {
+$userRoles = SessionManager::get('all_roles', [SessionManager::get('role')]);
+if (!in_array('employee', $userRoles) && SessionManager::get('role') !== 'employee') {
     header("Location: ../auth/login.php");
     exit;
 }
+
 
 // DB & Models
 require_once __DIR__ . "/../../app/Config/database.php";
@@ -22,9 +25,10 @@ require_once __DIR__ . "/../../app/Models/Attendance.php";
 require_once __DIR__ . "/../../app/Models/LeaveRequest.php";
 require_once __DIR__ . "/../../app/Models/Payslip.php";
 
-$userId = $_SESSION['user_id'] ?? null;
-$employeeId = $_SESSION['employee_id'] ?? null;
-$employeeName = $_SESSION['employee_name'] ?? "Employee";
+$userId = SessionManager::get('user_id');
+$employeeId = SessionManager::get('employee_id');
+$employeeName = SessionManager::get('employee_name', "Employee");
+
 
 // Initialize Models
 $empModel = new Employee();

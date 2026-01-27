@@ -1,6 +1,9 @@
 <?php
 
+require_once __DIR__ . "/../Helpers/Config.php";
+
 $request = $_GET['page'] ?? 'home';
+
 
 switch ($request) {
 
@@ -94,13 +97,15 @@ switch ($request) {
     case 'logout':
         session_start();
         session_destroy();
-        header("Location: /payslip_generator/public/auth/login.php");
+        header("Location: " . Config::get('APP_URL') . "/public/auth/login.php");
         exit;
         break;
 
+
     default:
         // Redirect to login page if no route matches
-        header("Location: /payslip_generator/public/auth/login.php");
+        header("Location: " . Config::get('APP_URL') . "/public/auth/login.php");
         exit;
+
         break;
 }

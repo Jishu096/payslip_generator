@@ -1,5 +1,8 @@
 <?php
 // Session is now managed by SessionManager in index.php
+require_once __DIR__ . '/../../app/Helpers/CSRFProtection.php';
+$csrf_token = CSRFProtection::getToken();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -684,6 +687,8 @@
         <div class="login-container">
             <form id="loginForm">
                 <div id="loginAlert" style="display: none; padding: 12px; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); border-radius: 10px; color: #f87171; font-size: 13px; margin-bottom: 16px; text-align: center;"></div>
+                <input type="hidden" name="csrf_token" id="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+
                 
                 <div class="form-group">
                     <label for="username">Username</label>
@@ -875,7 +880,8 @@
             fetch('login_api.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ username, password })
+                body: new URLSearchParams({ username, password, csrf_token: document.getElementById('csrf_token').value })
+
             })
             .then(res => res.json())
             .then(result => {

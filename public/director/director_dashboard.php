@@ -1,20 +1,24 @@
 <?php
-session_start();
+require_once __DIR__ . '/../../app/Helpers/SessionManager.php';
+SessionManager::start();
 
 // Support both single-role and multi-role scenarios
-if (!isset($_SESSION['role'])) {
+if (!SessionManager::has('role')) {
     header("Location: ../auth/login.php");
     exit;
 }
+
 
 // Check if user has director role (either primary or in all_roles)
-$userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role']];
+// Check if user has director role (either primary or in all_roles)
+$userRoles = SessionManager::get('all_roles', [SessionManager::get('role')]);
 $hasDirectorRole = in_array('director', $userRoles);
 
-if (!$hasDirectorRole && $_SESSION['role'] !== 'director') {
+if (!$hasDirectorRole && SessionManager::get('role') !== 'director') {
     header("Location: ../auth/login.php");
     exit;
 }
+
 
 require_once __DIR__ . "/../../app/Models/Employee.php";
 require_once __DIR__ . "/../../app/Config/database.php";
@@ -22,7 +26,8 @@ require_once __DIR__ . "/../../app/Config/database.php";
 $db = getDBConnection();
 $employeeModel = new Employee();
 
-$username = $_SESSION['username'] ?? 'Director';
+$username = SessionManager::get('username', 'Director');
+
 $totalEmployees = count($employeeModel->getAllEmployees());
 
 // Get pending salary change requests count

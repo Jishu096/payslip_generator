@@ -1,11 +1,16 @@
 <?php
 require_once __DIR__ . "/../Models/User.php";
+require_once __DIR__ . "/../Helpers/Config.php";
+require_once __DIR__ . "/../Helpers/CSRFProtection.php";
+
 
     class UserController {
 
         public function createUser() {
+            CSRFProtection::validateOrDie();
 
             $userModel = new User();
+
 
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
@@ -45,12 +50,13 @@ require_once __DIR__ . "/../Models/User.php";
             $created = $userModel->createUserManually($username, $password, $role, $employee_id ?: null);
 
             if ($created) {
-                header("Location: /payslip_generator/public/admin/manage_users.php?created=1");
+                header("Location: " . Config::get('APP_URL') . "/public/admin/manage_users.php?created=1");
                 exit;
             } else {
-                header("Location: /payslip_generator/public/admin/create_user.php?error=username_exists");
+                header("Location: " . Config::get('APP_URL') . "/public/admin/create_user.php?error=username_exists");
                 exit;
             }
+
         }
 
         private function checkPasswordStrength($password) {
@@ -83,9 +89,10 @@ require_once __DIR__ . "/../Models/User.php";
             $hasAdminRole = in_array('administrator', $userRoles);
             
             if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
-                header("Location: /payslip_generator/public/auth/login.php");
+                header("Location: " . Config::get('APP_URL') . "/public/auth/login.php");
                 exit;
             }
+
 
             $userModel = new User();
             $user_id = $_GET['id'] ?? null;
@@ -99,12 +106,13 @@ require_once __DIR__ . "/../Models/User.php";
             $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
 
             if ($userModel->updatePassword($user_id, $hashed)) {
-                header("Location: /payslip_generator/public/admin/manage_users.php?success=1");
+                header("Location: " . Config::get('APP_URL') . "/public/admin/manage_users.php?success=1");
                 exit;
             } else {
-                header("Location: /payslip_generator/public/admin/manage_users.php?error=reset_failed");
+                header("Location: " . Config::get('APP_URL') . "/public/admin/manage_users.php?error=reset_failed");
                 exit;
             }
+
         }
 
         public function deleteUser() {
@@ -127,11 +135,12 @@ require_once __DIR__ . "/../Models/User.php";
             }
 
             if ($userModel->deleteUserById($user_id)) {
-                header("Location: /payslip_generator/public/admin/manage_users.php?deleted=1");
+                header("Location: " . Config::get('APP_URL') . "/public/admin/manage_users.php?deleted=1");
                 exit;
             } else {
-                header("Location: /payslip_generator/public/admin/manage_users.php?error=delete_failed");
+                header("Location: " . Config::get('APP_URL') . "/public/admin/manage_users.php?error=delete_failed");
                 exit;
             }
+
         }
 }

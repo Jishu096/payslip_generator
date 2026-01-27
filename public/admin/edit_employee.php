@@ -11,6 +11,8 @@ if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'admin
 
 require_once __DIR__ . '/../../app/Models/Employee.php';
 require_once __DIR__ . '/../../app/Config/database.php';
+require_once __DIR__ . '/../../app/Helpers/CSRFProtection.php';
+
 
 $id = $_GET['id'] ?? null;
 if (!$id) {
@@ -200,7 +202,9 @@ $username = $_SESSION['username'] ?? 'Admin';
 
         <div class="form-card">
             <form method="POST" action="../index.php?page=update-employee">
+                <?php echo CSRFProtection::getTokenField(); ?>
                 <input type="hidden" name="employee_id" value="<?php echo htmlspecialchars($emp['employee_id']); ?>">
+
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label for="full_name"><i class="fas fa-user"></i> Full Name</label>

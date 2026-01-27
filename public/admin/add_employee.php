@@ -10,6 +10,9 @@ if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'admin
 }
 
 $username = $_SESSION['username'] ?? 'Admin';
+
+require_once __DIR__ . '/../../app/Helpers/CSRFProtection.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -177,7 +180,9 @@ $username = $_SESSION['username'] ?? 'Admin';
 
         <div class="form-card">
             <form method="POST" action="../index.php?page=add-employee">
+                <?php echo CSRFProtection::getTokenField(); ?>
                 <div class="form-grid">
+
                     <div class="form-group full-width">
                         <label for="full_name"><i class="fas fa-user"></i> Full Name</label>
                         <input type="text" id="full_name" name="full_name" required placeholder="Enter full name">

@@ -3,6 +3,9 @@ require_once __DIR__ . "/../Models/Employee.php";
 require_once __DIR__ . "/../Models/User.php";
 require_once __DIR__ . "/../Helpers/NotificationHelper.php";
 require_once __DIR__ . "/../Config/database.php";
+require_once __DIR__ . "/../Helpers/Config.php";
+require_once __DIR__ . "/../Helpers/CSRFProtection.php";
+
 
 class EmployeeController {
 
@@ -14,7 +17,10 @@ class EmployeeController {
     }
 
     public function addEmployee() {
-    $employeeModel = new Employee();
+        CSRFProtection::validateOrDie();
+        
+        $employeeModel = new Employee();
+
     $userModel = new User();
 
     // 🔍 1) Insert employee (with validation inside model)
@@ -66,13 +72,21 @@ class EmployeeController {
                     $this->notificationHelper->notifyEmployeeUpdate($adminEmail, $employeeName, 'New Employee Added');
                 }
                 
-                header("Location: /payslip_generator/public/admin/employees.php?success=1");
+                $redirect = Config::get('APP_URL') . '/public/admin/employees.php?success=1';
+                // Remove double slashes if any (except protocol)
+                $redirect = preg_replace('#(?<!:)//+#', '/', $redirect);
+                
+                header("Location: " . $redirect);
                 exit;
             } else {
-                header("Location: /payslip_generator/public/admin/employees.php?error=user_create_failed");
+                $redirect = Config::get('APP_URL') . '/public/admin/employees.php?error=user_create_failed';
+                $redirect = preg_replace('#(?<!:)//+#', '/', $redirect);
+                
+                header("Location: " . $redirect);
                 exit;
             }
         }
+
 
 
     public function deleteEmployee() {
@@ -80,16 +94,23 @@ class EmployeeController {
         $id = $_GET['id'];
 
         if ($model->deleteEmployeeById($id)) {
-            header("Location: /payslip_generator/public/admin/employees.php?deleted=1");
+            $redirect = Config::get('APP_URL') . '/public/admin/employees.php?deleted=1';
+            $redirect = preg_replace('#(?<!:)//+#', '/', $redirect);
+            header("Location: " . $redirect);
             exit;
         }
 
-        header("Location: /payslip_generator/public/admin/employees.php?error=delete_failed");
+        $redirect = Config::get('APP_URL') . '/public/admin/employees.php?error=delete_failed';
+        $redirect = preg_replace('#(?<!:)//+#', '/', $redirect);
+        header("Location: " . $redirect);
         exit;
     }
 
     public function updateEmployee() {
+        CSRFProtection::validateOrDie();
+        
         $model = new Employee();
+
         $id = $_POST['employee_id'];
         $conn = getDBConnection();
 
@@ -168,12 +189,13 @@ class EmployeeController {
             if ($salaryChangePending) $redirectParams .= '&salary_pending=1';
             if ($roleChangePending) $redirectParams .= '&role_pending=1';
             
-            header("Location: /payslip_generator/public/admin/employees.php" . $redirectParams);
+            header("Location: " . Config::get('APP_URL') . "/public/admin/employees.php" . $redirectParams);
             exit;
         }
 
-        header("Location: /payslip_generator/public/admin/employees.php?error=update_failed");
+        header("Location: " . Config::get('APP_URL') . "/public/admin/employees.php?error=update_failed");
         exit;
+
     }
 
 }

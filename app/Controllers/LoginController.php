@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . "/../Models/User.php";
 require_once __DIR__ . "/../Models/Employee.php";
+require_once __DIR__ . "/../Helpers/Config.php";
+require_once __DIR__ . "/../Helpers/CSRFProtection.php";
 
 class LoginController {
 
@@ -9,7 +11,10 @@ class LoginController {
     }
 
     public function checkLogin() {
+        CSRFProtection::validateOrDie();
+
         if (empty($_POST['username']) || empty($_POST['password'])) {
+
             die("Username and password are required.");
         }
         $username = trim($_POST['username']);
@@ -39,14 +44,18 @@ class LoginController {
                 $_SESSION['employee_name'] = $emp['full_name'];
             }
             
-            // Base URL that works on localhost AND your IP
-                $baseURL = "/payslip_generator/public/";
+            // Base URL from Config
+            $baseURL = Config::get('APP_URL');
+            if (substr($baseURL, -1) !== '/') $baseURL .= '/';
+            if (strpos($baseURL, 'public') === false) $baseURL .= 'public/';
+
 
             // REDIRECT
             switch ($user['role']) {
                 case 'employee':
-                    header("Location: {$baseURL}employee/employee_dashboard.php");
+                    header("Location: {$baseURL}employee/dashboard.php");
                     break;
+
 
                 case 'accountant':
                     header("Location: {$baseURL}accountant/accountant_dashboard.php");
