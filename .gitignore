@@ -30,6 +30,7 @@ Thumbs.db
 # Uploaded files and generated content
 /storage/payslips/*.pdf
 /public/uploads/
+/public/test-database.php
 
 # Composer lock (optional - uncomment if you want to ignore)
 # composer.lock
