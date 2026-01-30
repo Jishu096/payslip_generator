@@ -286,4 +286,56 @@
             font-size: 12px;
         }
     }
+    
+    /* Select All Button */
+    .btn-select-all {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .btn-select-all:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-select-all i {
+        font-size: 11px;
+    }
+    
+    /* Multiple Select Styling */
+    #employeeSelect[multiple] {
+        padding: 8px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+    }
+    
+    #employeeSelect[multiple] option {
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 2px;
+        cursor: pointer;
+    }
+    
+    #employeeSelect[multiple] option:checked {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-weight: 600;
+    }
+    
+    #employeeSelect[multiple] option:hover {
+        background: #f1f5f9;
+    }
 </style>

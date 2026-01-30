@@ -82,6 +82,21 @@ class LeaveRequest {
      */
     public function approveLeaveRequest($requestId, $reviewerId, $reviewerName, $comments = null) {
         try {
+            // Start transaction
+            $this->conn->beginTransaction();
+            
+            // Get leave request details
+            $leaveStmt = $this->conn->prepare("SELECT * FROM leave_requests WHERE leave_id = ?");
+            $leaveStmt->execute([$requestId]);
+            $leave = $leaveStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$leave) {
+                $this->conn->rollBack();
+                error_log("Leave request not found: $requestId");
+                return false;
+            }
+            
+            // Update leave request status
             $sql = "UPDATE leave_requests 
                     SET status = 'approved', 
                         reviewed_by = ?, 
@@ -93,13 +108,52 @@ class LeaveRequest {
             $stmt = $this->conn->prepare($sql);
             $result = $stmt->execute([$reviewerId, $reviewerName, $comments, $requestId]);
             
-            // Log error if failed
             if (!$result) {
+                $this->conn->rollBack();
                 error_log("Leave approval failed for request_id: $requestId - " . print_r($stmt->errorInfo(), true));
+                return false;
             }
             
-            return $result;
+            // Automatically create attendance entries for all leave dates
+            $startDate = new DateTime($leave['start_date']);
+            $endDate = new DateTime($leave['end_date']);
+            $endDate->modify('+1 day'); // Include end date
+            
+            $interval = new DateInterval('P1D');
+            $dateRange = new DatePeriod($startDate, $interval, $endDate);
+            
+            $attendanceInsert = $this->conn->prepare("
+                INSERT INTO attendance (employee_id, date, status, leave_type, remarks, verification_status, workflow_status)
+                VALUES (?, ?, 'leave', ?, ?, 'Verified', 'draft')
+                ON DUPLICATE KEY UPDATE 
+                    status = 'leave',
+                    leave_type = VALUES(leave_type),
+                    remarks = VALUES(remarks),
+                    verification_status = 'Verified'
+            ");
+            
+            $remarks = "Leave approved by " . $reviewerName . " - " . $leave['reason'];
+            
+            foreach ($dateRange as $date) {
+                $dateStr = $date->format('Y-m-d');
+                $attendanceInsert->execute([
+                    $leave['employee_id'],
+                    $dateStr,
+                    $leave['leave_type'],
+                    $remarks
+                ]);
+            }
+            
+            // Commit transaction
+            $this->conn->commit();
+            
+            // Log success
+            $daysCount = iterator_count($dateRange);
+            error_log("Leave approved and $daysCount attendance entries created for employee #{$leave['employee_id']}");
+            
+            return true;
         } catch (PDOException $e) {
+            $this->conn->rollBack();
             error_log("Leave approval exception: " . $e->getMessage());
             return false;
         }

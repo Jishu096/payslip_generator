@@ -57,6 +57,12 @@ $username = $_SESSION['username'] ?? 'Accountant';
             Attendance & Reports
         </div>
         
+        <a href="<?php echo $baseURL; ?>accountant/finalized_attendance.php" class="<?php echo $currentPage === 'finalized_attendance.php' ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-check"></i>
+            <span>Finalized Attendance</span>
+            <span id="newAttendanceBadge" class="notification-badge" style="display: none;">NEW</span>
+        </a>
+        
         <a href="<?php echo $baseURL; ?>accountant/generate_attendance_statement.php" class="<?php echo $currentPage === 'generate_attendance_statement.php' ? 'active' : ''; ?>">
             <i class="fas fa-file-excel"></i>
             <span>Attendance Statement</span>

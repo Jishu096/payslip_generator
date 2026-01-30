@@ -24,10 +24,11 @@ if (!isset($input['employee_id']) || !isset($input['date']) || !isset($input['st
 $employeeId = $input['employee_id'];
 $date = $input['date'];
 $status = $input['status'];
-$timeIn = $input['time_in'] ?? null;
-$timeOut = $input['time_out'] ?? null;
-$leaveType = $input['leave_type'] ?? null;
-$remarks = $input['remarks'] ?? null;
+// Convert empty strings to NULL for time fields
+$timeIn = (!empty($input['time_in'])) ? $input['time_in'] : null;
+$timeOut = (!empty($input['time_out'])) ? $input['time_out'] : null;
+$leaveType = (!empty($input['leave_type'])) ? $input['leave_type'] : null;
+$remarks = (!empty($input['remarks'])) ? $input['remarks'] : null;
 
 try {
     // Check if entry already exists

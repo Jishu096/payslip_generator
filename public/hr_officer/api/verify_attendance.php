@@ -27,13 +27,16 @@ try {
     // Begin transaction
     $conn->beginTransaction();
     
-    // Update all attendance records for this date to Verified
+    // Update all attendance records for this date to Verified and change workflow status
     $stmt = $conn->prepare("
         UPDATE attendance 
-        SET verification_status = 'Verified' 
+        SET verification_status = 'Verified',
+            workflow_status = 'hr_verified',
+            verified_by = ?,
+            verified_at = NOW()
         WHERE date = ?
     ");
-    $stmt->execute([$date]);
+    $stmt->execute([$_SESSION['user_id'], $date]);
     
     $recordsUpdated = $stmt->rowCount();
     

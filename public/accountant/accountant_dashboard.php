@@ -92,9 +92,32 @@ $currentMonth = date('F Y');
                 <h1><i class="fas fa-chart-line"></i> Accountant Dashboard</h1>
                 <p>Manage payroll and salary processing</p>
             </div>
-            <div style="text-align: right;">
-                <div style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">Current Period</div>
-                <div style="font-size: 20px; font-weight: 700; color: var(--accent);"><?php echo $currentMonth; ?></div>
+            <div style="display: flex; align-items: center; gap: 30px;">
+                <!-- Notification Bell -->
+                <div class="notification-bell-container">
+                    <button class="notification-bell" onclick="toggleNotificationDropdown()" type="button">
+                        <i class="fas fa-bell"></i>
+                        <span id="notificationCount" class="notification-count" style="display: none;">0</span>
+                    </button>
+                    <!-- Notification Dropdown -->
+                    <div id="notificationDropdown" class="notification-dropdown" style="display: none;">
+                        <div class="notification-dropdown-header">
+                            <h3>Notifications</h3>
+                            <button onclick="markAllAsRead()" class="mark-all-read">Mark all as read</button>
+                        </div>
+                        <div id="notificationList" class="notification-list">
+                            <div class="notification-empty">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>No new notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Current Period -->
+                <div style="text-align: right;">
+                    <div style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">Current Period</div>
+                    <div style="font-size: 20px; font-weight: 700; color: var(--accent);"><?php echo $currentMonth; ?></div>
+                </div>
             </div>
         </div>
 
@@ -434,5 +457,7 @@ $currentMonth = date('F Y');
             }
         }
     </style>
+
+    <?php include 'includes/notification_popup.php'; ?>
 </body>
 </html>

@@ -24,9 +24,14 @@ $username = $_SESSION['username'] ?? 'Administrator';
             <span>Dashboard</span>
         </a>
         
-        <a href="<?php echo $baseURL; ?>admin/upload_attendance.php" class="<?php echo $currentPage === 'upload_attendance.php' ? 'active' : ''; ?>">
-            <i class="fas fa-upload"></i>
-            <span>Upload Attendance</span>
+        <a href="<?php echo $baseURL; ?>admin/attendance_finalize.php" class="<?php echo $currentPage === 'attendance_finalize.php' ? 'active' : ''; ?>">
+            <i class="fas fa-lock"></i>
+            <span>Finalize Attendance</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>admin/attendance_export.php" class="<?php echo $currentPage === 'attendance_export.php' ? 'active' : ''; ?>">
+            <i class="fas fa-file-export"></i>
+            <span>Export Attendance</span>
         </a>
         
         <a href="<?php echo $baseURL; ?>admin/employees.php" class="<?php echo $currentPage === 'employees.php' || $currentPage === 'add_employee.php' || $currentPage === 'edit_employee.php' ? 'active' : ''; ?>">
@@ -42,6 +47,11 @@ $username = $_SESSION['username'] ?? 'Administrator';
         <a href="<?php echo $baseURL; ?>admin/holidays_nielit.php" class="<?php echo $currentPage === 'holidays_nielit.php' ? 'active' : ''; ?>">
             <i class="fas fa-calendar-alt"></i>
             <span>Holiday Calendar</span>
+        </a>
+        
+        <a href="<?php echo $baseURL; ?>admin/leave_approvals.php" class="<?php echo $currentPage === 'leave_approvals.php' ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-check"></i>
+            <span>Leave Approvals</span>
         </a>
         
         <a href="<?php echo $baseURL; ?>admin/create_user.php" class="<?php echo $currentPage === 'create_user.php' ? 'active' : ''; ?>">
