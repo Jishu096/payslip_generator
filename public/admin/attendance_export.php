@@ -56,33 +56,143 @@ $baseURL = "/payslip_generator/public/";
     <title>Attendance Export - Admin Portal</title>
     <?php include 'includes/admin_styles.php'; ?>
     <style>
+        .page-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
+        }
+
+        .page-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        .stat-box i {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .stat-box.green i { color: #10b981; }
+        .stat-box.blue i { color: #3b82f6; }
+        .stat-box.purple i { color: #8b5cf6; }
+        .stat-box.orange i { color: #f59e0b; }
+
+        .stat-box .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .stat-box .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 30px 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #10b981;
+        }
+
         .export-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
             margin-bottom: 30px;
         }
 
         .export-card {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            border-left: 4px solid #10b981;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .export-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2);
         }
 
         .month-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--text);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .month-title i {
+            color: #10b981;
+            font-size: 20px;
         }
 
         .export-info {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 12px;
         }
 
         .info-row {
@@ -93,6 +203,7 @@ $baseURL = "/payslip_generator/public/";
 
         .info-label {
             color: var(--muted);
+            font-weight: 500;
         }
 
         .info-value {
@@ -102,38 +213,59 @@ $baseURL = "/payslip_generator/public/";
 
         .export-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
 
         .btn-export {
             flex: 1;
-            padding: 12px;
+            padding: 14px 20px;
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            transition: all 0.3s ease;
         }
 
         .btn-export:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
         }
 
         .btn-csv {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
         }
 
+        .btn-csv:hover {
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
         .history-section {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
+            padding: 30px;
+            border-radius: 16px;
             margin-top: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .history-section h2 {
+            margin: 0 0 25px 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-section h2 i {
+            color: #10b981;
         }
 
         table {
@@ -142,67 +274,120 @@ $baseURL = "/payslip_generator/public/";
         }
 
         th, td {
-            padding: 12px;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        thead {
-            background: #f7fafc;
+        th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
         }
 
         .download-link {
-            color: var(--accent);
+            color: #10b981;
             text-decoration: none;
             font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
         .download-link:hover {
-            text-decoration: underline;
+            background: #10b981;
+            color: white;
         }
 
         .badge {
-            padding: 4px 10px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
         }
 
         .badge-excel {
-            background: #d1fae5;
-            color: #065f46;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
         }
 
         .badge-csv {
-            background: #dbeafe;
-            color: #1e3a8a;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid;
-        }
-
-        .alert-info {
-            background: #dbeafe;
-            color: #1e3a8a;
-            border-color: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
         }
 
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
         .empty-state i {
-            font-size: 64px;
+            font-size: 80px;
+            color: #cbd5e1;
+            margin-bottom: 25px;
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
             color: var(--muted);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .empty-state .btn-export {
+            width: 220px;
+            margin: 0 auto;
+        }
+
+        .quick-tips {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .quick-tips h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #166534;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-tips ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #15803d;
+        }
+
+        .quick-tips li {
+            margin-bottom: 8px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -212,12 +397,41 @@ $baseURL = "/payslip_generator/public/";
     <div class="main-content" id="mainContent">
         <div class="page-header">
             <h1><i class="fas fa-file-export"></i> Attendance Export</h1>
-            <p>Export finalized attendance data to Excel for Accountant</p>
+            <p>Export finalized attendance data to Excel or CSV for payroll processing</p>
         </div>
 
-        <div class="alert alert-info">
-            <strong><i class="fas fa-info-circle"></i> Workflow:</strong>
-            Export finalized attendance as Excel file → Send to Accountant → Accountant imports for salary calculation
+        <!-- Stats Overview -->
+        <div class="stats-overview">
+            <div class="stat-box green">
+                <i class="fas fa-calendar-check"></i>
+                <div class="stat-value"><?php echo count($availableMonths); ?></div>
+                <div class="stat-label">Ready to Export</div>
+            </div>
+            <div class="stat-box blue">
+                <i class="fas fa-download"></i>
+                <div class="stat-value"><?php echo count($exportHistory); ?></div>
+                <div class="stat-label">Total Exports</div>
+            </div>
+            <div class="stat-box purple">
+                <i class="fas fa-file-excel"></i>
+                <div class="stat-value"><?php echo count(array_filter($exportHistory, fn($e) => $e['export_format'] === 'excel')); ?></div>
+                <div class="stat-label">Excel Files</div>
+            </div>
+            <div class="stat-box orange">
+                <i class="fas fa-file-csv"></i>
+                <div class="stat-value"><?php echo count(array_filter($exportHistory, fn($e) => $e['export_format'] === 'csv')); ?></div>
+                <div class="stat-label">CSV Files</div>
+            </div>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="quick-tips">
+            <h3><i class="fas fa-lightbulb"></i> Quick Tips</h3>
+            <ul>
+                <li><strong>Excel format</strong> is recommended for Accountants - includes formatting and formulas</li>
+                <li><strong>CSV format</strong> is best for importing into other systems</li>
+                <li>Exported files are stored in the system and can be re-downloaded from history</li>
+            </ul>
         </div>
 
         <?php if (empty($availableMonths)): ?>
@@ -225,12 +439,12 @@ $baseURL = "/payslip_generator/public/";
                 <i class="fas fa-inbox"></i>
                 <h3>No Finalized Months Available</h3>
                 <p>Please finalize attendance months first before exporting.</p>
-                <a href="attendance_finalize.php" class="btn-export" style="width: 200px; margin: 20px auto;">
-                    Go to Finalization
+                <a href="attendance_finalize.php" class="btn-export">
+                    <i class="fas fa-lock"></i> Go to Finalization
                 </a>
             </div>
         <?php else: ?>
-            <h2 style="margin-top: 30px; margin-bottom: 20px;">Available for Export</h2>
+            <h2 class="section-title"><i class="fas fa-download"></i> Available for Export</h2>
             <div class="export-grid">
                 <?php foreach($availableMonths as $month): ?>
                     <div class="export-card">
@@ -241,16 +455,16 @@ $baseURL = "/payslip_generator/public/";
 
                         <div class="export-info">
                             <div class="info-row">
-                                <span class="info-label">Total Records:</span>
-                                <span class="info-value"><?php echo $month['total_records']; ?></span>
+                                <span class="info-label"><i class="fas fa-database"></i> Total Records:</span>
+                                <span class="info-value"><?php echo number_format($month['total_records']); ?></span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">Finalized:</span>
+                                <span class="info-label"><i class="fas fa-lock"></i> Finalized:</span>
                                 <span class="info-value"><?php echo date('d M Y', strtotime($month['locked_at'])); ?></span>
                             </div>
                             <?php if ($month['last_exported']): ?>
                                 <div class="info-row">
-                                    <span class="info-label">Last Exported:</span>
+                                    <span class="info-label"><i class="fas fa-history"></i> Last Exported:</span>
                                     <span class="info-value"><?php echo date('d M Y', strtotime($month['last_exported'])); ?></span>
                                 </div>
                             <?php endif; ?>
@@ -271,10 +485,11 @@ $baseURL = "/payslip_generator/public/";
             </div>
         <?php endif; ?>
 
-        <h2 style="margin-top: 40px; margin-bottom: 20px;">Export History</h2>
+        <!-- Export History -->
         <div class="history-section">
+            <h2><i class="fas fa-history"></i> Export History</h2>
             <?php if (empty($exportHistory)): ?>
-                <p style="text-align: center; color: var(--muted);">No exports yet</p>
+                <p style="text-align: center; color: var(--muted); padding: 40px;">No exports yet. Export your first month above!</p>
             <?php else: ?>
                 <table>
                     <thead>

@@ -6,96 +6,185 @@ if (!isset($_SESSION['role'])) {
     header("Location: ../auth/login.php");
     exit;
 }
-?>
 
+$username = $_SESSION['username'] ?? 'User';
+
+// Holiday data
+$closedHolidays = [
+    ['name' => 'Republic Day', 'date' => '26 January', 'day' => 'Monday'],
+    ['name' => 'Holi', 'date' => '04 March', 'day' => 'Wednesday'],
+    ['name' => 'Ram Navami', 'date' => '27 March', 'day' => 'Friday'],
+    ['name' => 'Mahavir Jayanti', 'date' => '31 March', 'day' => 'Tuesday'],
+    ['name' => 'Good Friday', 'date' => '03 April', 'day' => 'Friday'],
+    ['name' => 'Mahabishuba Sankranti / Dr. B.R. Ambedkar Jayanti', 'date' => '14 April', 'day' => 'Tuesday'],
+    ['name' => 'Budha Purnima', 'date' => '01 May', 'day' => 'Friday'],
+    ['name' => 'Id-ul-Zuha (Bakrid)', 'date' => '27 May', 'day' => 'Wednesday'],
+    ['name' => 'Muharram', 'date' => '26 June', 'day' => 'Friday'],
+    ['name' => 'Rath Yatra', 'date' => '16 July', 'day' => 'Thursday'],
+    ['name' => 'Milad-un-Nabi / Id-e-Milad', 'date' => '26 August', 'day' => 'Wednesday'],
+    ['name' => 'Janmashtami (Vaishnava)', 'date' => '04 September', 'day' => 'Friday'],
+    ['name' => "Mahatma Gandhi's Birthday", 'date' => '02 October', 'day' => 'Friday'],
+    ['name' => 'Dussehra (Mahanavami)', 'date' => '19 October', 'day' => 'Monday'],
+    ['name' => 'Dussehra', 'date' => '20 October', 'day' => 'Tuesday'],
+    ['name' => "Guru Nanak's Birthday", 'date' => '24 November', 'day' => 'Tuesday'],
+    ['name' => 'Christmas Day', 'date' => '25 December', 'day' => 'Friday'],
+];
+
+$restrictedHolidays = [
+    ['name' => "New Year's Day", 'date' => '01 January', 'day' => 'Thursday'],
+    ['name' => 'Makar Sankranti / Magha Bihu / Pongal', 'date' => '14 January', 'day' => 'Wednesday'],
+    ['name' => 'Basanta Panchami / Sri Panchami', 'date' => '23 January', 'day' => 'Friday'],
+    ['name' => 'Birthday of Swami Dayananda Saraswati', 'date' => '12 February', 'day' => 'Thursday'],
+    ['name' => 'Shivaji Jayanti', 'date' => '19 February', 'day' => 'Thursday'],
+    ['name' => 'Holika Dahan / Dol Yatra', 'date' => '03 March', 'day' => 'Tuesday'],
+    ['name' => 'Chaitra Sukladi / Gudi Padava / Ugadi / Cheti Chand', 'date' => '19 March', 'day' => 'Thursday'],
+    ['name' => 'Jamat-Ul-Vida', 'date' => '20 March', 'day' => 'Friday'],
+    ['name' => 'Vaisakhadi (Bengal) / Bahag Bihu (Assam)', 'date' => '15 April', 'day' => 'Wednesday'],
+    ['name' => 'Raksha Bandhan', 'date' => '28 August', 'day' => 'Friday'],
+    ['name' => 'Ganesh Chaturthi / Vinayaka Chaturthi', 'date' => '14 September', 'day' => 'Monday'],
+    ['name' => "Maharishi Valmiki's Birthday", 'date' => '26 October', 'day' => 'Monday'],
+    ['name' => 'Karaka Chaturthi (Karwa Chouth)', 'date' => '29 October', 'day' => 'Thursday'],
+    ['name' => 'Govardhan Puja', 'date' => '09 November', 'day' => 'Monday'],
+    ['name' => 'Bhai Duj', 'date' => '11 November', 'day' => 'Wednesday'],
+    ['name' => "Guru Teg Bahadur's Martyrdom Day", 'date' => '24 November', 'day' => 'Tuesday'],
+    ['name' => "Hazarat Ali's Birthday", 'date' => '23 December', 'day' => 'Wednesday'],
+    ['name' => 'Christmas Eve', 'date' => '24 December', 'day' => 'Thursday'],
+];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holiday List 2026 - NIELIT Bhubaneswar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Holiday Calendar 2026 - Payroll System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include 'includes/admin_styles.php'; ?>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 30px 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
+        /* Page Header */
         .page-header {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            text-align: center;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .page-header h1 {
-            color: #2d3748;
-            font-size: 32px;
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 10px;
+        }
+
+        .page-header h1 i {
+            margin-right: 12px;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .header-year {
+            text-align: right;
+            background: rgba(255,255,255,0.15);
+            padding: 15px 30px;
+            border-radius: 12px;
+        }
+
+        .header-year .year {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .header-year .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-card.blue::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .stat-card.orange::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .stat-card.purple::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            font-size: 22px;
+            color: white;
         }
 
-        .page-header .subtitle {
-            color: #718096;
-            font-size: 18px;
-            font-weight: 400;
-        }
+        .stat-card.blue .stat-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-card.orange .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stat-card.purple .stat-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
 
-        .breadcrumb {
-            background: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-        }
-
-        .breadcrumb a {
-            color: #667eea;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .breadcrumb a:hover {
-            color: #764ba2;
-        }
-
-        .breadcrumb i.fa-chevron-right {
-            color: #cbd5e0;
-            font-size: 10px;
-        }
-
-        .breadcrumb span {
-            color: #4a5568;
-        }
-
+        /* Holiday Sections */
         .holiday-section {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             margin-bottom: 30px;
             overflow: hidden;
         }
@@ -105,30 +194,55 @@ if (!isset($_SESSION['role'])) {
             display: flex;
             align-items: center;
             gap: 15px;
-            font-size: 24px;
-            font-weight: 600;
             color: white;
         }
 
         .section-header.closed {
-            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         }
 
         .section-header.restricted {
-            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
-        .section-header .icon {
-            font-size: 28px;
+        .section-header-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .section-header-text h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            color: white;
+        }
+
+        .section-header-text p {
+            font-size: 14px;
+            margin: 0;
+            opacity: 0.9;
         }
 
         .section-note {
             padding: 15px 30px;
-            background: #fef5e7;
-            border-left: 4px solid #f39c12;
-            color: #856404;
-            font-style: italic;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Holiday Table */
+        .holiday-table-wrapper {
+            overflow-x: auto;
         }
 
         .holiday-table {
@@ -137,217 +251,226 @@ if (!isset($_SESSION['role'])) {
         }
 
         .holiday-table thead {
-            background: #f7fafc;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
         }
 
         .holiday-table thead th {
             padding: 18px 20px;
             text-align: left;
             font-weight: 600;
-            color: #2d3748;
-            font-size: 14px;
+            color: var(--text);
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e2e8f0;
         }
 
+        .holiday-table thead th:first-child {
+            width: 80px;
+            text-align: center;
+        }
+
         .holiday-table tbody tr {
-            transition: background 0.2s;
+            transition: all 0.2s ease;
         }
 
         .holiday-table tbody tr:hover {
-            background: #f7fafc;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
         }
 
         .holiday-table tbody tr:not(:last-child) {
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
         .holiday-table tbody td {
-            padding: 16px 20px;
-            color: #4a5568;
+            padding: 18px 20px;
+            color: var(--text);
             font-size: 14px;
         }
 
         .holiday-table tbody td:first-child {
-            font-weight: 500;
-            color: #2d3748;
-            width: 60px;
             text-align: center;
         }
 
-        .holiday-table tbody td:nth-child(2) {
-            font-weight: 500;
-            color: #2d3748;
+        .holiday-number {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
         }
 
-        .holiday-table tbody td:nth-child(3) {
+        .holiday-name {
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .holiday-date {
             color: #667eea;
-            font-weight: 500;
-        }
-
-        .holiday-table tbody td:nth-child(4) {
-            font-weight: 400;
-            color: #718096;
+            font-weight: 600;
         }
 
         .day-badge {
             display: inline-block;
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
-            background: #edf2f7;
-            color: #4a5568;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            color: #475569;
         }
 
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+        .day-badge.weekend {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            color: #667eea;
         }
 
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
+        /* Print Button */
+        .btn-print {
+            background: rgba(255,255,255,0.2);
             color: white;
-        }
-
-        .stat-icon.closed {
-            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-        }
-
-        .stat-icon.restricted {
-            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
-        }
-
-        .stat-content h3 {
-            font-size: 14px;
-            color: #718096;
-            font-weight: 400;
-            margin-bottom: 5px;
-        }
-
-        .stat-content .number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d3748;
-        }
-
-        .back-button {
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.3s;
-            font-weight: 500;
-            margin-bottom: 20px;
+            gap: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
 
-        .back-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .btn-print:hover {
+            background: rgba(255,255,255,0.3);
         }
 
-        @media print {
-            body {
-                background: white;
-                padding: 0;
-            }
-
-            .breadcrumb,
-            .back-button,
-            .stats-container {
-                display: none;
-            }
-
-            .holiday-section {
-                box-shadow: none;
-                page-break-inside: avoid;
-            }
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
-            .page-header h1 {
-                font-size: 24px;
+            .page-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+                padding: 30px;
             }
 
-            .holiday-table {
-                font-size: 12px;
+            .header-year {
+                text-align: center;
+            }
+
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
             }
 
             .holiday-table thead th,
             .holiday-table tbody td {
                 padding: 12px 10px;
             }
+        }
 
-            .section-header {
-                font-size: 18px;
-                padding: 20px 15px;
+        /* Print Styles */
+        @media print {
+            body {
+                background: white !important;
+            }
+
+            .sidebar, .mobile-menu-toggle, .sidebar-overlay, .btn-print {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 20px !important;
+            }
+
+            .page-header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .holiday-section {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            .section-header.closed {
+                background: #3b82f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .section-header.restricted {
+                background: #f59e0b !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="admin_dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
-            <i class="fas fa-chevron-right"></i>
-            <span>Holiday List 2026</span>
-        </div>
 
+    <?php include 'includes/admin_navbar.php'; ?>
+
+    <main class="main-content" id="mainContent">
         <!-- Page Header -->
         <div class="page-header">
-            <h1>
-                <i class="fas fa-calendar-star"></i>
-                Holiday List 2026
-            </h1>
-            <div class="subtitle">NIELIT Bhubaneswar</div>
-        </div>
-
-        <!-- Statistics -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-icon closed">
-                    <i class="fas fa-calendar-times"></i>
-                </div>
-                <div class="stat-content">
-                    <h3>Closed Holidays</h3>
-                    <div class="number">17</div>
+            <div>
+                <h1><i class="fas fa-calendar-alt"></i> Holiday Calendar</h1>
+                <p>NIELIT Bhubaneswar - Official Holiday List</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button class="btn-print" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Calendar
+                </button>
+                <div class="header-year">
+                    <div class="year">2026</div>
+                    <div class="label">Calendar Year</div>
                 </div>
             </div>
+        </div>
 
-            <div class="stat-card">
-                <div class="stat-icon restricted">
-                    <i class="fas fa-calendar-check"></i>
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-value"><?php echo count($closedHolidays); ?></div>
+                        <div class="stat-label">Closed Holidays</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
                 </div>
-                <div class="stat-content">
-                    <h3>Restricted Holidays</h3>
-                    <div class="number">18</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-value"><?php echo count($restrictedHolidays); ?></div>
+                        <div class="stat-label">Restricted Holidays</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-value"><?php echo count($closedHolidays) + count($restrictedHolidays); ?></div>
+                        <div class="stat-label">Total Holidays</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-star"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -355,259 +478,87 @@ if (!isset($_SESSION['role'])) {
         <!-- Closed Holidays Section -->
         <div class="holiday-section">
             <div class="section-header closed">
-                <span class="icon">🟦</span>
-                <span>Closed Holidays – NIELIT Bhubaneswar (2026)</span>
+                <div class="section-header-icon">
+                    <i class="fas fa-building-lock"></i>
+                </div>
+                <div class="section-header-text">
+                    <h2>Closed Holidays</h2>
+                    <p>Office remains closed on these days</p>
+                </div>
             </div>
-            <table class="holiday-table">
-                <thead>
-                    <tr>
-                        <th>S. No.</th>
-                        <th>Holiday</th>
-                        <th>Date</th>
-                        <th>Day</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Republic Day</td>
-                        <td>26 January</td>
-                        <td><span class="day-badge">Monday</span></td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Holi</td>
-                        <td>04 March</td>
-                        <td><span class="day-badge">Wednesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Ram Navami</td>
-                        <td>27 March</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>Mahavir Jayanti</td>
-                        <td>31 March</td>
-                        <td><span class="day-badge">Tuesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>Good Friday</td>
-                        <td>03 April</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>6</td>
-                        <td>Mahabishuba Sankranti / Dr. B.R. Ambedkar Jayanti</td>
-                        <td>14 April</td>
-                        <td><span class="day-badge">Tuesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>7</td>
-                        <td>Budha Purnima</td>
-                        <td>01 May</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>8</td>
-                        <td>Id-ul-Zuha (Bakrid)</td>
-                        <td>27 May</td>
-                        <td><span class="day-badge">Wednesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>9</td>
-                        <td>Muharram</td>
-                        <td>26 June</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>10</td>
-                        <td>Rath Yatra</td>
-                        <td>16 July</td>
-                        <td><span class="day-badge">Thursday</span></td>
-                    </tr>
-                    <tr>
-                        <td>11</td>
-                        <td>Milad-un-Nabi / Id-e-Milad (Birthday of Prophet Mohammad)</td>
-                        <td>26 August</td>
-                        <td><span class="day-badge">Wednesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>12</td>
-                        <td>Janmashtami (Vaishnava)</td>
-                        <td>04 September</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>13</td>
-                        <td>Mahatma Gandhi's Birthday</td>
-                        <td>02 October</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>14</td>
-                        <td>Dussehra (Mahanavami)</td>
-                        <td>19 October</td>
-                        <td><span class="day-badge">Monday</span></td>
-                    </tr>
-                    <tr>
-                        <td>15</td>
-                        <td>Dussehra</td>
-                        <td>20 October</td>
-                        <td><span class="day-badge">Tuesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>16</td>
-                        <td>Guru Nanak's Birthday</td>
-                        <td>24 November</td>
-                        <td><span class="day-badge">Tuesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>17</td>
-                        <td>Christmas Day</td>
-                        <td>25 December</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="holiday-table-wrapper">
+                <table class="holiday-table">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Holiday</th>
+                            <th>Date</th>
+                            <th>Day</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($closedHolidays as $index => $holiday): ?>
+                            <tr>
+                                <td><span class="holiday-number"><?php echo $index + 1; ?></span></td>
+                                <td class="holiday-name"><?php echo htmlspecialchars($holiday['name']); ?></td>
+                                <td class="holiday-date"><?php echo htmlspecialchars($holiday['date']); ?></td>
+                                <td>
+                                    <span class="day-badge <?php echo in_array($holiday['day'], ['Saturday', 'Sunday']) ? 'weekend' : ''; ?>">
+                                        <?php echo htmlspecialchars($holiday['day']); ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Restricted Holidays Section -->
         <div class="holiday-section">
             <div class="section-header restricted">
-                <span class="icon">🟨</span>
-                <span>Restricted Holidays – NIELIT Bhubaneswar (2026)</span>
+                <div class="section-header-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="section-header-text">
+                    <h2>Restricted Holidays</h2>
+                    <p>Optional holidays - choose any two</p>
+                </div>
             </div>
             <div class="section-note">
-                <i class="fas fa-info-circle"></i> Any two holidays may be availed by employees from the list below.
+                <i class="fas fa-info-circle"></i>
+                <span><strong>Note:</strong> Employees may avail any two holidays from the restricted holiday list during the year.</span>
             </div>
-            <table class="holiday-table">
-                <thead>
-                    <tr>
-                        <th>S. No.</th>
-                        <th>Holiday</th>
-                        <th>Date</th>
-                        <th>Day</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>New Year's Day</td>
-                        <td>01 January</td>
-                        <td><span class="day-badge">Thursday</span></td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Makar Sankranti / Magha Bihu / Pongal</td>
-                        <td>14 January</td>
-                        <td><span class="day-badge">Wednesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Basanta Panchami / Sri Panchami</td>
-                        <td>23 January</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>Birthday of Swami Dayananda Saraswati</td>
-                        <td>12 February</td>
-                        <td><span class="day-badge">Thursday</span></td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>Shivaji Jayanti</td>
-                        <td>19 February</td>
-                        <td><span class="day-badge">Thursday</span></td>
-                    </tr>
-                    <tr>
-                        <td>6</td>
-                        <td>Holika Dahan / Dol Yatra</td>
-                        <td>03 March</td>
-                        <td><span class="day-badge">Tuesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>7</td>
-                        <td>Chaitra Sukladi / Gudi Padava / Ugadi / Cheti Chand</td>
-                        <td>19 March</td>
-                        <td><span class="day-badge">Thursday</span></td>
-                    </tr>
-                    <tr>
-                        <td>8</td>
-                        <td>Jamat-Ul-Vida</td>
-                        <td>20 March</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>9</td>
-                        <td>Vaisakhadi (Bengal) / Bahag Bihu (Assam)</td>
-                        <td>15 April</td>
-                        <td><span class="day-badge">Wednesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>10</td>
-                        <td>Raksha Bandhan</td>
-                        <td>28 August</td>
-                        <td><span class="day-badge">Friday</span></td>
-                    </tr>
-                    <tr>
-                        <td>11</td>
-                        <td>Ganesh Chaturthi / Vinayaka Chaturthi</td>
-                        <td>14 September</td>
-                        <td><span class="day-badge">Monday</span></td>
-                    </tr>
-                    <tr>
-                        <td>12</td>
-                        <td>Maharishi Valmiki's Birthday</td>
-                        <td>26 October</td>
-                        <td><span class="day-badge">Monday</span></td>
-                    </tr>
-                    <tr>
-                        <td>13</td>
-                        <td>Karaka Chaturthi (Karwa Chouth)</td>
-                        <td>29 October</td>
-                        <td><span class="day-badge">Thursday</span></td>
-                    </tr>
-                    <tr>
-                        <td>14</td>
-                        <td>Govardhan Puja</td>
-                        <td>09 November</td>
-                        <td><span class="day-badge">Monday</span></td>
-                    </tr>
-                    <tr>
-                        <td>15</td>
-                        <td>Bhai Duj</td>
-                        <td>11 November</td>
-                        <td><span class="day-badge">Wednesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>16</td>
-                        <td>Guru Teg Bahadur's Martyrdom Day</td>
-                        <td>24 November</td>
-                        <td><span class="day-badge">Tuesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>17</td>
-                        <td>Hazarat Ali's Birthday</td>
-                        <td>23 December</td>
-                        <td><span class="day-badge">Wednesday</span></td>
-                    </tr>
-                    <tr>
-                        <td>18</td>
-                        <td>Christmas Eve</td>
-                        <td>24 December</td>
-                        <td><span class="day-badge">Thursday</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="holiday-table-wrapper">
+                <table class="holiday-table">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Holiday</th>
+                            <th>Date</th>
+                            <th>Day</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($restrictedHolidays as $index => $holiday): ?>
+                            <tr>
+                                <td><span class="holiday-number" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><?php echo $index + 1; ?></span></td>
+                                <td class="holiday-name"><?php echo htmlspecialchars($holiday['name']); ?></td>
+                                <td class="holiday-date" style="color: #d97706;"><?php echo htmlspecialchars($holiday['date']); ?></td>
+                                <td>
+                                    <span class="day-badge <?php echo in_array($holiday['day'], ['Saturday', 'Sunday']) ? 'weekend' : ''; ?>">
+                                        <?php echo htmlspecialchars($holiday['day']); ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </main>
 
-        <a href="admin_dashboard.php" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
+    <?php include 'includes/admin_scripts.php'; ?>
+
 </body>
 </html>

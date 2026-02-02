@@ -227,4 +227,18 @@ class LeaveRequest {
             return 0;
         }
     }
+
+    /**
+     * Get leave request by ID
+     */
+    public function getLeaveRequestById($requestId) {
+        try {
+            $sql = "SELECT * FROM leave_requests WHERE leave_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$requestId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
 }

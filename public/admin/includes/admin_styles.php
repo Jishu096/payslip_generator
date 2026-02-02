@@ -47,10 +47,28 @@
         text-align: center;
     }
 
+    .sidebar-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: contain;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        background: white;
+        padding: 8px;
+    }
+
+    .sidebar-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        opacity: 0.9;
+    }
+
     .sidebar-header h3 {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         margin-bottom: 5px;
+        line-height: 1.3;
     }
 
     .sidebar-header p {
@@ -523,6 +541,16 @@
     .notification-icon.info {
         background: #dbeafe;
         color: #2563eb;
+    }
+
+    .notification-icon.holiday-closed {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15));
+        color: #2563eb;
+    }
+
+    .notification-icon.holiday-restricted {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.15));
+        color: #d97706;
     }
 
     .notification-item-content {

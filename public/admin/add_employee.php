@@ -10,6 +10,25 @@ if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'admin
 }
 
 $username = $_SESSION['username'] ?? 'Admin';
+
+// Fetch Pay Levels for permanent employees (7th CPC)
+require_once __DIR__ . '/../../app/Config/database.php';
+$db = new Database();
+$conn = $db->connect();
+
+$payLevels = [];
+$hraCities = [];
+try {
+    // Get pay levels
+    $stmt = $conn->query("SELECT level_id, level_name, level_number, min_basic, max_basic, transport_allowance, description FROM pay_levels WHERE is_active = 1 ORDER BY level_number");
+    $payLevels = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get HRA cities grouped by category
+    $stmt = $conn->query("SELECT city_id, city_name, state, hra_category, hra_percentage FROM hra_cities WHERE is_active = 1 ORDER BY hra_category, city_name");
+    $hraCities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Silent fail - will show empty dropdowns
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -162,6 +181,28 @@ $username = $_SESSION['username'] ?? 'Admin';
                 justify-content: center;
             }
         }
+
+        .form-hint {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .pay-level-group, .hra-group {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -217,6 +258,35 @@ $username = $_SESSION['username'] ?? 'Admin';
                             <option value="contract">Contract</option>
                             <option value="intern">Intern</option>
                         </select>
+                    </div>
+
+                    <!-- Pay Level - Only for Permanent Employees (7th CPC) -->
+                    <div class="form-group pay-level-group" id="payLevelGroup" style="display: none;">
+                        <label for="pay_level_id"><i class="fas fa-layer-group"></i> Pay Level (7th CPC)</label>
+                        <select id="pay_level_id" name="pay_level_id">
+                            <option value="">Select Pay Level</option>
+                            <?php foreach ($payLevels as $level): ?>
+                            <option value="<?= $level['level_id'] ?>" 
+                                    data-min="<?= $level['min_basic'] ?>" 
+                                    data-max="<?= $level['max_basic'] ?>"
+                                    data-ta="<?= $level['transport_allowance'] ?>">
+                                <?= htmlspecialchars($level['level_name']) ?> 
+                                (₹<?= number_format($level['min_basic']) ?> - ₹<?= number_format($level['max_basic']) ?>)
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-hint" id="payLevelHint">Transport Allowance will be set based on selected level</small>
+                    </div>
+
+                    <!-- HRA Type - Only for Permanent Employees -->
+                    <div class="form-group hra-group" id="hraGroup" style="display: none;">
+                        <label for="hra_type"><i class="fas fa-home"></i> HRA City Category</label>
+                        <select id="hra_type" name="hra_type">
+                            <option value="city_b">Category B - 16% (Default)</option>
+                            <option value="city_a">Category A - 24% (Metro Cities)</option>
+                            <option value="city_c">Category C - 8% (Other Cities)</option>
+                        </select>
+                        <small class="form-hint">HRA percentage is calculated on Basic Pay</small>
                     </div>
 
                     <div class="form-group">
@@ -275,7 +345,17 @@ $username = $_SESSION['username'] ?? 'Admin';
 
                     <div class="form-group">
                         <label for="pan_no"><i class="fas fa-id-badge"></i> PAN Number</label>
-                        <input type="text" id="pan_no" name="pan_no" placeholder="PAN number">
+                        <input type="text" id="pan_no" name="pan_no" placeholder="e.g. ABCDE1234F">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bank_name"><i class="fas fa-landmark"></i> Bank Name</label>
+                        <input type="text" id="bank_name" name="bank_name" placeholder="e.g. State Bank of India">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bank_branch"><i class="fas fa-map-marker-alt"></i> Bank Branch</label>
+                        <input type="text" id="bank_branch" name="bank_branch" placeholder="e.g. Bhubaneswar Main Branch">
                     </div>
 
                     <div class="form-group">
@@ -285,7 +365,7 @@ $username = $_SESSION['username'] ?? 'Admin';
 
                     <div class="form-group">
                         <label for="ifsc_code"><i class="fas fa-barcode"></i> IFSC Code</label>
-                        <input type="text" id="ifsc_code" name="ifsc_code" placeholder="IFSC code">
+                        <input type="text" id="ifsc_code" name="ifsc_code" placeholder="e.g. SBIN0001234">
                     </div>
 
                     <div class="form-group">
@@ -319,10 +399,14 @@ $username = $_SESSION['username'] ?? 'Admin';
     <?php include 'includes/admin_scripts.php'; ?>
 
     <script>
-        // Handle salary based on employment type
+        // Handle salary and Pay Level visibility based on employment type
         const employmentTypeSelect = document.getElementById('employment_type');
         const salaryInput = document.getElementById('basic_salary');
         const salaryLabel = document.getElementById('salary_label');
+        const payLevelGroup = document.getElementById('payLevelGroup');
+        const hraGroup = document.getElementById('hraGroup');
+        const payLevelSelect = document.getElementById('pay_level_id');
+        const payLevelHint = document.getElementById('payLevelHint');
         
         employmentTypeSelect.addEventListener('change', function() {
             if (this.value === 'intern') {
@@ -331,24 +415,72 @@ $username = $_SESSION['username'] ?? 'Admin';
                 salaryInput.readOnly = true;
                 salaryInput.placeholder = '10000.00 (Fixed)';
                 salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Stipend (Fixed for Interns)';
+                payLevelGroup.style.display = 'none';
+                hraGroup.style.display = 'none';
+                payLevelSelect.required = false;
             } else if (this.value === 'contract') {
                 // Contract: Manual entry (contractual basis)
                 salaryInput.readOnly = false;
                 salaryInput.value = '';
                 salaryInput.placeholder = 'Enter contractual amount';
                 salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Contractual Pay (Manual Entry)';
+                payLevelGroup.style.display = 'none';
+                hraGroup.style.display = 'none';
+                payLevelSelect.required = false;
             } else if (this.value === 'permanent') {
-                // Permanent: Standard basic salary
+                // Permanent: Show Pay Level fields (7th CPC)
                 salaryInput.readOnly = false;
                 salaryInput.value = '';
-                salaryInput.placeholder = 'Enter basic salary';
-                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+                salaryInput.placeholder = 'Enter basic salary within Pay Level range';
+                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary (7th CPC)';
+                payLevelGroup.style.display = 'block';
+                hraGroup.style.display = 'block';
+                payLevelSelect.required = true;
             } else {
                 // Default
                 salaryInput.readOnly = false;
                 salaryInput.value = '';
                 salaryInput.placeholder = '0.00';
                 salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+                payLevelGroup.style.display = 'none';
+                hraGroup.style.display = 'none';
+                payLevelSelect.required = false;
+            }
+        });
+
+        // Update salary hint when Pay Level changes
+        payLevelSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const minBasic = parseFloat(selectedOption.dataset.min);
+                const maxBasic = parseFloat(selectedOption.dataset.max);
+                const ta = parseFloat(selectedOption.dataset.ta);
+                
+                salaryInput.min = minBasic;
+                salaryInput.max = maxBasic;
+                salaryInput.placeholder = `₹${minBasic.toLocaleString()} - ₹${maxBasic.toLocaleString()}`;
+                payLevelHint.innerHTML = `<strong>Range:</strong> ₹${minBasic.toLocaleString()} - ₹${maxBasic.toLocaleString()} | <strong>TA:</strong> ₹${ta.toLocaleString()}/month`;
+                payLevelHint.style.color = '#10b981';
+            } else {
+                payLevelHint.innerHTML = 'Transport Allowance will be set based on selected level';
+                payLevelHint.style.color = '#64748b';
+            }
+        });
+
+        // Validate basic salary is within Pay Level range on form submit
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const empType = employmentTypeSelect.value;
+            if (empType === 'permanent' && payLevelSelect.value) {
+                const selectedOption = payLevelSelect.options[payLevelSelect.selectedIndex];
+                const minBasic = parseFloat(selectedOption.dataset.min);
+                const maxBasic = parseFloat(selectedOption.dataset.max);
+                const salary = parseFloat(salaryInput.value);
+                
+                if (salary < minBasic || salary > maxBasic) {
+                    e.preventDefault();
+                    alert(`Basic salary must be between ₹${minBasic.toLocaleString()} and ₹${maxBasic.toLocaleString()} for the selected Pay Level.`);
+                    salaryInput.focus();
+                }
             }
         });
     </script>

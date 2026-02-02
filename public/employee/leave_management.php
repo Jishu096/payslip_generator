@@ -15,9 +15,13 @@ $employeeId = $_SESSION['employee_id'];
 
 require_once "../../app/Models/Employee.php";
 require_once "../../app/Models/LeaveRequest.php";
+require_once "../../app/Helpers/NotificationHelper.php";
+require_once "../../app/Config/database.php";
 
 $employeeModel = new Employee();
 $leaveModel = new LeaveRequest();
+$db = getDBConnection();
+$notificationHelper = new NotificationHelper($db);
 
 // Get employee details
 $employeeData = $employeeModel->getEmployeeById($employeeId);
@@ -40,6 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_leave'])) {
     } else {
         if ($leaveModel->submitLeaveRequest($employeeId, $employeeName, $leaveType, $startDate, $endDate, $reason)) {
             $success = true;
+            
+            // Notify admin about new leave request
+            $adminStmt = $db->prepare("SELECT email FROM users WHERE role = 'administrator' AND is_active = 1 LIMIT 1");
+            $adminStmt->execute();
+            $adminData = $adminStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($adminData && !empty($adminData['email'])) {
+                $notificationHelper->notifyLeaveSubmitted(
+                    $adminData['email'],
+                    $employeeName,
+                    $leaveType,
+                    $startDate,
+                    $endDate
+                );
+            }
         } else {
             $error = "Failed to submit leave request. Please try again.";
         }

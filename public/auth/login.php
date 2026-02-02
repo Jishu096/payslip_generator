@@ -98,15 +98,21 @@ session_start();
         .logo-container {
             display: flex;
             justify-content: center;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 15px;
         }
 
         .logo-container img {
-            max-width: 90px;
+            max-width: 100px;
+            max-height: 100px;
             height: auto;
-            border-radius: 18px;
+            object-fit: contain;
+            border-radius: 12px;
             box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
             animation: fadeIn 0.8s ease-out;
+            background: white;
+            padding: 10px;
         }
 
         @keyframes fadeIn {
@@ -675,14 +681,20 @@ session_start();
     <div class="login-wrapper">
         <div class="login-header">
             <div class="logo-container">
-                <img src="../assets/images/e-HRMS logo.png" alt="e-HRMS Logo">
+                <img src="../assets/images/NIELIT-Preview.png" alt="NIELIT Logo">
             </div>
-            <h2>NIELIT Bhubaneswar</h2>
+            <h2>NIELIT e-HRMS</h2>
             <p>Electronic Human Resource Management System</p>
         </div>
         
         <div class="login-container">
             <form id="loginForm">
+                <?php if (isset($_GET['timeout'])): ?>
+                <div style="padding: 12px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; color: #d97706; font-size: 13px; margin-bottom: 16px; text-align: center;">
+                    <i class="fas fa-clock"></i> Your session has expired due to inactivity. Please login again.
+                </div>
+                <?php endif; ?>
+                
                 <div id="loginAlert" style="display: none; padding: 12px; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); border-radius: 10px; color: #f87171; font-size: 13px; margin-bottom: 16px; text-align: center;"></div>
                 
                 <div class="form-group">

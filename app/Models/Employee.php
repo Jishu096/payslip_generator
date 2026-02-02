@@ -58,12 +58,14 @@ class Employee {
         $employee_code = $this->generateNextEmployeeCode();
 
         $sql = "INSERT INTO employees 
-            (employee_code, full_name, email, phone, designation, department_id, employment_type, basic_salary, address,
+            (employee_code, full_name, email, phone, designation, department_id, employment_type, basic_salary, 
+             pay_level_id, hra_type, address,
              city, state, pincode, emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
-             aadhaar_no, pan_no, bank_account_no, ifsc_code, experience_years, last_appraisal_date, remarks, join_date)
-            VALUES (:employee_code, :full_name, :email, :phone, :designation, :department_id, :employment_type, :basic_salary, :address,
+             aadhaar_no, pan_no, bank_name, bank_branch, bank_account_no, ifsc_code, experience_years, last_appraisal_date, remarks, join_date)
+            VALUES (:employee_code, :full_name, :email, :phone, :designation, :department_id, :employment_type, :basic_salary,
+             :pay_level_id, :hra_type, :address,
              :city, :state, :pincode, :emergency_contact_name, :emergency_contact_phone, :emergency_contact_relation,
-             :aadhaar_no, :pan_no, :bank_account_no, :ifsc_code, :experience_years, :last_appraisal_date, :remarks, NOW())";
+             :aadhaar_no, :pan_no, :bank_name, :bank_branch, :bank_account_no, :ifsc_code, :experience_years, :last_appraisal_date, :remarks, NOW())";
 
         $stmt = $this->conn->prepare($sql);
 
@@ -88,6 +90,8 @@ class Employee {
             ':department_id' => $data['department_id'],
             ':employment_type' => $data['employment_type'],
             ':basic_salary' => $data['basic_salary'],
+            ':pay_level_id' => $data['pay_level_id'] ?? null,
+            ':hra_type' => $data['hra_type'] ?? 'city_b',
             ':address' => $data['address'] ?? null,
             ':city' => $data['city'] ?? null,
             ':state' => $data['state'] ?? null,
@@ -97,6 +101,8 @@ class Employee {
             ':emergency_contact_relation' => $data['emergency_contact_relation'] ?? null,
             ':aadhaar_no' => $data['aadhaar_no'] ?? null,
             ':pan_no' => $data['pan_no'] ?? null,
+            ':bank_name' => $data['bank_name'] ?? null,
+            ':bank_branch' => $data['bank_branch'] ?? null,
             ':bank_account_no' => $data['bank_account_no'] ?? null,
             ':ifsc_code' => $data['ifsc_code'] ?? null,
             ':experience_years' => $exp_years,
@@ -195,11 +201,13 @@ class Employee {
         $sql = "UPDATE employees SET full_name=:full_name, email=:email, phone=:phone,
             designation=:designation, department_id=:department_id,
             employment_type=:employment_type, basic_salary=:basic_salary,
+            pay_level_id=:pay_level_id, hra_type=:hra_type,
             address=:address, city=:city, state=:state, pincode=:pincode,
             emergency_contact_name=:emergency_contact_name,
             emergency_contact_phone=:emergency_contact_phone,
             emergency_contact_relation=:emergency_contact_relation,
             aadhaar_no=:aadhaar_no, pan_no=:pan_no,
+            bank_name=:bank_name, bank_branch=:bank_branch,
             bank_account_no=:bank_account_no, ifsc_code=:ifsc_code,
             experience_years=:experience_years, last_appraisal_date=:last_appraisal_date,
             remarks=:remarks
@@ -220,6 +228,8 @@ class Employee {
             ':department_id' => $data['department_id'],
             ':employment_type' => $data['employment_type'],
             ':basic_salary' => $data['basic_salary'],
+            ':pay_level_id' => $data['pay_level_id'] ?? null,
+            ':hra_type' => $data['hra_type'] ?? 'city_b',
             ':address' => $data['address'] ?? null,
             ':city' => $data['city'] ?? null,
             ':state' => $data['state'] ?? null,
@@ -229,6 +239,8 @@ class Employee {
             ':emergency_contact_relation' => $data['emergency_contact_relation'] ?? null,
             ':aadhaar_no' => $data['aadhaar_no'] ?? null,
             ':pan_no' => $data['pan_no'] ?? null,
+            ':bank_name' => $data['bank_name'] ?? null,
+            ':bank_branch' => $data['bank_branch'] ?? null,
             ':bank_account_no' => $data['bank_account_no'] ?? null,
             ':ifsc_code' => $data['ifsc_code'] ?? null,
             ':experience_years' => $experience_years,

@@ -75,9 +75,32 @@ try {
 
 // Pre-process variables to avoid null coalescing in heredoc
 $deptName = $payslip['department_name'] ?? 'N/A';
-$companyName = 'Payslip Generator Corp';
-$companyAddress = '123 Business Street, City';
-$companyPhone = '+1-800-PAYSLIP';
+
+// Load company settings from database
+$companyName = 'NIELIT e-HRMS';
+$companyAddress = 'NIELIT Bhubaneswar, Odisha';
+$companyPhone = '+91-674-XXXXXXX';
+$companyEmail = 'info@nielit.gov.in';
+$companyLogo = 'NIELIT-Preview.png';
+
+try {
+    $settingsStmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_email', 'company_phone', 'company_address', 'company_logo')");
+    while ($setting = $settingsStmt->fetch(PDO::FETCH_ASSOC)) {
+        switch ($setting['setting_key']) {
+            case 'company_name': $companyName = $setting['setting_value']; break;
+            case 'company_email': $companyEmail = $setting['setting_value']; break;
+            case 'company_phone': $companyPhone = $setting['setting_value']; break;
+            case 'company_address': $companyAddress = $setting['setting_value'] ?: 'NIELIT Bhubaneswar, Odisha'; break;
+            case 'company_logo': $companyLogo = $setting['setting_value']; break;
+        }
+    }
+} catch (Exception $e) {
+    // Use defaults
+}
+
+// Build logo URL for PDF
+$logoPath = __DIR__ . '/../assets/images/' . $companyLogo;
+$logoUrl = file_exists($logoPath) ? '../assets/images/' . htmlspecialchars($companyLogo) : '';
 
 
 // Generate PDF using mPDF library approach (pure PHP HTML-to-PDF via browser print)
@@ -138,6 +161,9 @@ $html = <<<HTML
         .footer-box { text-align: center; padding: 10px 0; border-top: 1px solid #333; }
         .footer-label { font-size: 10px; color: #666; margin-top: 5px; }
         
+        .company-logo { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; }
+        .company-header { display: flex; align-items: center; gap: 15px; }
+        
         .no-print { background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
         .btn-print, .btn-download { background: #0ea5e9; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; }
         .btn-print:hover { background: #0284c7; }
@@ -156,10 +182,14 @@ $html = <<<HTML
         <!-- Header -->
         <div class="header">
             <div class="company-info">
-                <div>
-                    <div class="company-name">💼 {$companyName}</div>
-                    <div class="company-detail">{$companyAddress}</div>
-                    <div class="company-detail">📞 {$companyPhone}</div>
+                <div class="company-header">
+                    {$logoUrl ? "<img src='{$logoUrl}' alt='Logo' class='company-logo'>" : ""}
+                    <div>
+                        <div class="company-name">{$companyName}</div>
+                        <div class="company-detail">{$companyAddress}</div>
+                        <div class="company-detail">📞 {$companyPhone} | ✉️ {$companyEmail}</div>
+                    </div>
+                </div>
                 </div>
                 <div>
                     <div style="font-size: 11px; text-align: right; color: #666;">

@@ -4,11 +4,10 @@ session_start();
 
 require_once __DIR__ . '/../../../app/Config/database.php';
 require_once __DIR__ . '/../../../app/Helpers/PermissionHelper.php';
-require_once __DIR__ . '/../../../app/Helpers/AuditLogger.php';
 
 // Verify super admin permission
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
 
@@ -16,12 +15,12 @@ $conn = getDBConnection();
 $perm = new PermissionHelper($conn, $_SESSION['user_id']);
 
 if (!$perm->hasPermission('user.create')) {
-    echo json_encode(['success' => false, 'message' => 'Permission denied']);
+    echo json_encode(['success' => false, 'error' => 'Permission denied']);
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
     exit;
 }
 
@@ -31,7 +30,7 @@ $password = trim($_POST['password'] ?? '');
 $role = trim($_POST['role'] ?? '');
 
 if (empty($username) || empty($password) || empty($role)) {
-    echo json_encode(['success' => false, 'message' => 'Username, password, and role are required']);
+    echo json_encode(['success' => false, 'error' => 'Username, password, and role are required']);
     exit;
 }
 
@@ -40,7 +39,7 @@ try {
     $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ?");
     $stmt->execute([$username]);
     if ($stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'Username already exists']);
+        echo json_encode(['success' => false, 'error' => 'Username already exists']);
         exit;
     }
 
@@ -61,17 +60,17 @@ try {
     $roleData = $roleStmt->fetch(PDO::FETCH_ASSOC);
     
     if ($roleData) {
-        $stmt = $conn->prepare("INSERT INTO user_roles_new (user_id, role_id) VALUES (?, ?)");
+        $stmt = $conn->prepare("INSERT INTO user_roles_new (user_id, role_id, assigned_at) VALUES (?, ?, NOW())");
         $stmt->execute([$newUserId, $roleData['role_id']]);
     }
 
     // Log audit
-    $audit = new AuditLogger($conn);
-    $audit->log($_SESSION['user_id'], 'user.create', "Created user: $username (ID: $newUserId)");
+    $logStmt = $conn->prepare("INSERT INTO audit_log (user_id, action, log_time) VALUES (?, ?, NOW())");
+    $logStmt->execute([$_SESSION['user_id'], "user.create: $username"]);
 
     echo json_encode(['success' => true, 'message' => 'User created successfully', 'user_id' => $newUserId]);
 } catch (Exception $e) {
     error_log("Create user error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
 }
 ?>

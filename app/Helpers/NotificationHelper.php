@@ -1,40 +1,37 @@
 <?php
 
+require_once __DIR__ . '/EmailHelper.php';
+
 class NotificationHelper
 {
     private $conn;
     private $settings;
+    private $emailHelper;
 
     public function __construct($conn)
     {
         $this->conn = $conn;
         $this->loadSettings();
+        $this->emailHelper = new EmailHelper($conn);
     }
 
     private function loadSettings()
     {
         $this->settings = [];
-        $stmt = $this->conn->query("SELECT setting_key, setting_value FROM settings");
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $this->settings[$row['setting_key']] = $row['setting_value'];
+        try {
+            $stmt = $this->conn->query("SELECT setting_key, setting_value FROM settings");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $this->settings[$row['setting_key']] = $row['setting_value'];
+            }
+        } catch (Exception $e) {
+            // Use defaults if settings table doesn't exist
         }
     }
 
     public function sendEmailNotification($to, $subject, $message)
     {
-        // Only send if email notifications are enabled
-        if (($this->settings['email_notifications'] ?? '0') !== '1') {
-            return false;
-        }
-
-        $companyEmail = $this->settings['company_email'] ?? 'noreply@company.com';
-        $companyName = $this->settings['company_name'] ?? 'Company';
-
-        $headers = "From: {$companyName} <{$companyEmail}>\r\n";
-        $headers .= "Reply-To: {$companyEmail}\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-
-        return mail($to, $subject, $message, $headers);
+        // Use EmailHelper which handles SMTP
+        return $this->emailHelper->sendEmail($to, $subject, $message);
     }
 
     public function notifyPayslipGeneration($employeeEmail, $employeeName, $month)
@@ -89,6 +86,96 @@ class NotificationHelper
         return $this->sendEmailNotification($adminEmail, $subject, $message);
     }
 
+    public function notifyLeaveSubmitted($adminEmail, $employeeName, $leaveType, $startDate, $endDate)
+    {
+        // Only send if leave notifications are enabled
+        if (($this->settings['leave_notifications'] ?? '0') !== '1') {
+            return false;
+        }
+
+        $subject = "New Leave Request from {$employeeName}";
+        $message = "
+            <html>
+            <body>
+                <h2>New Leave Request Submitted</h2>
+                <p>A new leave request has been submitted:</p>
+                <ul>
+                    <li><strong>Employee:</strong> {$employeeName}</li>
+                    <li><strong>Leave Type:</strong> {$leaveType}</li>
+                    <li><strong>From:</strong> {$startDate}</li>
+                    <li><strong>To:</strong> {$endDate}</li>
+                </ul>
+                <p>Please review and process this request in the admin panel.</p>
+                <br>
+                <p>Best regards,<br>" . ($this->settings['company_name'] ?? 'e-HRMS') . "</p>
+            </body>
+            </html>
+        ";
+
+        return $this->sendEmailNotification($adminEmail, $subject, $message);
+    }
+
+    public function notifyLeaveApproved($employeeEmail, $employeeName, $leaveType, $startDate, $endDate, $comments = '')
+    {
+        // Only send if leave notifications are enabled
+        if (($this->settings['leave_notifications'] ?? '0') !== '1') {
+            return false;
+        }
+
+        $subject = "Leave Request Approved";
+        $commentsHtml = $comments ? "<li><strong>Comments:</strong> {$comments}</li>" : "";
+        $message = "
+            <html>
+            <body>
+                <h2 style='color: #10b981;'>Leave Request Approved ✓</h2>
+                <p>Dear {$employeeName},</p>
+                <p>Your leave request has been <strong>approved</strong>:</p>
+                <ul>
+                    <li><strong>Leave Type:</strong> {$leaveType}</li>
+                    <li><strong>From:</strong> {$startDate}</li>
+                    <li><strong>To:</strong> {$endDate}</li>
+                    {$commentsHtml}
+                </ul>
+                <p>Enjoy your time off!</p>
+                <br>
+                <p>Best regards,<br>" . ($this->settings['company_name'] ?? 'e-HRMS') . "</p>
+            </body>
+            </html>
+        ";
+
+        return $this->sendEmailNotification($employeeEmail, $subject, $message);
+    }
+
+    public function notifyLeaveRejected($employeeEmail, $employeeName, $leaveType, $startDate, $endDate, $reason)
+    {
+        // Only send if leave notifications are enabled
+        if (($this->settings['leave_notifications'] ?? '0') !== '1') {
+            return false;
+        }
+
+        $subject = "Leave Request Rejected";
+        $message = "
+            <html>
+            <body>
+                <h2 style='color: #ef4444;'>Leave Request Rejected</h2>
+                <p>Dear {$employeeName},</p>
+                <p>Unfortunately, your leave request has been <strong>rejected</strong>:</p>
+                <ul>
+                    <li><strong>Leave Type:</strong> {$leaveType}</li>
+                    <li><strong>From:</strong> {$startDate}</li>
+                    <li><strong>To:</strong> {$endDate}</li>
+                    <li><strong>Reason:</strong> {$reason}</li>
+                </ul>
+                <p>Please contact HR if you have any questions.</p>
+                <br>
+                <p>Best regards,<br>" . ($this->settings['company_name'] ?? 'e-HRMS') . "</p>
+            </body>
+            </html>
+        ";
+
+        return $this->sendEmailNotification($employeeEmail, $subject, $message);
+    }
+
     public function logNotification($type, $recipient, $subject, $status)
     {
         // Create notifications log table if not exists
@@ -116,7 +203,8 @@ class NotificationHelper
         $typeMap = [
             'email' => 'email_notifications',
             'payslip' => 'payslip_alerts',
-            'employee_update' => 'employee_updates'
+            'employee_update' => 'employee_updates',
+            'leave' => 'leave_notifications'
         ];
 
         $key = $typeMap[$type] ?? null;

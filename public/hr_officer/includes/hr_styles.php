@@ -47,8 +47,25 @@
         text-align: center;
     }
 
+    .sidebar-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: contain;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        background: white;
+        padding: 8px;
+    }
+
+    .sidebar-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        opacity: 0.9;
+    }
+
     .sidebar-header h3 {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         margin-bottom: 5px;
     }

@@ -1,0 +1,20 @@
+﻿Date,"Employee Code","Employee Name",Department,Status,"Workflow Status","Check In","Check Out","Hours Worked"
+2026-01-07,EMP006,"Harihar Dash",Administration,Present,admin_finalized,09:00:00,17:00:00,8
+2026-01-07,EMP001,"Jishu Sahoo",IT,Present,admin_finalized,09:56:00,18:02:00,8
+2026-01-07,EMP005,"Kumar Dinesh Behera",IT,Leave,admin_finalized,10:00:00,18:10:00,8
+2026-01-07,EMP003,"Namita Barik",IT,Leave,admin_finalized,,,0
+2026-01-07,EMP004,"Saimon Raj Patro",IT,Leave,admin_finalized,,,0
+2026-01-07,EMP002,"Suraj Kumar Mahali",IT,Leave,admin_finalized,,,0
+2026-01-26,EMP009,"Amit Verma",Accounts,Holiday,admin_finalized,09:00:00,17:00:00,8
+2026-01-26,EMP013,"Anil Kumar Shaw",Administration,Holiday,admin_finalized,,,0
+2026-01-26,EMP011,"Dr. Arun Mehta",IT,Holiday,admin_finalized,,,0
+2026-01-26,EMP006,"Harihar Dash",Administration,Holiday,admin_finalized,09:50:00,17:30:00,7
+2026-01-26,EMP001,"Jishu Sahoo",IT,Holiday,admin_finalized,09:55:00,04:50:00,-5
+2026-01-26,EMP005,"Kumar Dinesh Behera",IT,Holiday,admin_finalized,,,0
+2026-01-26,EMP003,"Namita Barik",IT,Holiday,admin_finalized,,,0
+2026-01-26,EMP008,"Priya Sharma",Administration,Holiday,admin_finalized,,,0
+2026-01-26,EMP012,"Rahul Singh",Administration,Holiday,admin_finalized,,,0
+2026-01-26,EMP007,"Rajesh Kumar",Administration,Holiday,admin_finalized,,,0
+2026-01-26,EMP004,"Saimon Raj Patro",IT,Holiday,admin_finalized,,,0
+2026-01-26,EMP010,"Sneha Patel",HR,Holiday,admin_finalized,,,0
+2026-01-26,EMP002,"Suraj Kumar Mahali",IT,Holiday,admin_finalized,,,0

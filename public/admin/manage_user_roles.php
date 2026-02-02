@@ -3,10 +3,18 @@ session_start();
 require_once '../../app/Models/User.php';
 require_once '../../app/Helpers/RBACHelper.php';
 
-// Check if user is logged in and is administrator
+// Only Super Admin can access role management
 $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? ''];
-if (!in_array('administrator', $userRoles) && $_SESSION['role'] !== 'administrator') {
-    header("Location: /payslip_generator/public/auth/login.php");
+$hasSuperAdminRole = in_array('super_admin', $userRoles);
+
+if (!$hasSuperAdminRole) {
+    // Redirect admins to admin dashboard, others to login
+    $hasAdminRole = in_array('administrator', $userRoles);
+    if ($hasAdminRole) {
+        header("Location: admin_dashboard.php?error=unauthorized");
+    } else {
+        header("Location: /payslip_generator/public/auth/login.php");
+    }
     exit;
 }
 

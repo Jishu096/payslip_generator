@@ -16,30 +16,53 @@ class EmailHelper {
 
     private function loadSettings() {
         $this->settings = [];
-        $stmt = $this->conn->query("SELECT setting_key, setting_value FROM settings");
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $this->settings[$row['setting_key']] = $row['setting_value'];
+        try {
+            $stmt = $this->conn->query("SELECT setting_key, setting_value FROM settings");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $this->settings[$row['setting_key']] = $row['setting_value'];
+            }
+        } catch (Exception $e) {
+            // Use defaults if settings table doesn't exist
         }
     }
 
     public function sendEmail($to, $subject, $body, $fromName = null) {
+        // Check if email notifications are enabled
+        if (($this->settings['email_notifications'] ?? '0') !== '1') {
+            return false;
+        }
+
         $mail = new PHPMailer(true);
 
         try {
+            // Get SMTP settings from database (with fallback defaults)
+            $smtpHost = $this->settings['smtp_host'] ?? 'smtp.gmail.com';
+            $smtpPort = $this->settings['smtp_port'] ?? '587';
+            $smtpUsername = $this->settings['smtp_username'] ?? '';
+            $smtpPassword = $this->settings['smtp_password'] ?? '';
+            $smtpEncryption = $this->settings['smtp_encryption'] ?? 'tls';
+            $smtpFromEmail = $this->settings['smtp_from_email'] ?? $smtpUsername;
+            $companyName = $this->settings['company_name'] ?? 'NIELIT e-HRMS';
+
+            // Check if SMTP is configured
+            if (empty($smtpUsername) || empty($smtpPassword)) {
+                $this->logNotification('email', $to, $subject, false, 'SMTP not configured');
+                return false;
+            }
+
             // Server settings
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            $mail->Host       = $smtpHost;
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'jishusahu096@gmail.com';
-            $mail->Password   = 'rdxu nrvx xnit xozm';  // Gmail App Password
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
+            $mail->Username   = $smtpUsername;
+            $mail->Password   = $smtpPassword;
+            $mail->SMTPSecure = $smtpEncryption === 'ssl' ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = (int)$smtpPort;
             $mail->Timeout    = 10;
             $mail->SMTPDebug  = 0;
 
             // Recipients
-            $companyName = $this->settings['company_name'] ?? 'Enterprise Payroll';
-            $mail->setFrom('jishusahu096@gmail.com', $fromName ?? $companyName);
+            $mail->setFrom($smtpFromEmail, $fromName ?? $companyName);
             $mail->addAddress($to);
 
             // Content

@@ -1,11 +1,18 @@
 <?php
 session_start();
 
-// Support both single-role and multi-role
+// Only Super Admin can access user management
 $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
-$hasAdminRole = in_array('administrator', $userRoles);
-if (!isset($_SESSION['role']) || (!$hasAdminRole && $_SESSION['role'] !== 'administrator')) {
-    header("Location: ../auth/login.php");
+$hasSuperAdminRole = in_array('super_admin', $userRoles);
+
+if (!isset($_SESSION['role']) || !$hasSuperAdminRole) {
+    // Redirect admins to admin dashboard, others to login
+    $hasAdminRole = in_array('administrator', $userRoles);
+    if ($hasAdminRole) {
+        header("Location: admin_dashboard.php?error=unauthorized");
+    } else {
+        header("Location: ../auth/login.php");
+    }
     exit;
 }
 

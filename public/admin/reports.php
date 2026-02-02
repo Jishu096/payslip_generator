@@ -75,6 +75,18 @@ if (isset($_GET['export'])) {
             fputcsv($out, ['Above ₹100,000', $ranges['above_100k'] ?? 0]);
             break;
 
+        case 'attendance':
+            fputcsv($out, ['Employee Name', 'Department', 'Date', 'Status']);
+            $stmt = $conn->query("SELECT e.full_name, d.department_name, a.date, a.status
+                                   FROM attendance a
+                                   JOIN employees e ON a.employee_id = e.employee_id
+                                   LEFT JOIN departments d ON e.department_id = d.department_id
+                                   ORDER BY a.date DESC, e.full_name ASC");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                fputcsv($out, $row);
+            }
+            break;
+
         default:
             fputcsv($out, ['Unsupported report type']);
             break;
@@ -121,171 +133,340 @@ $stmt = $conn->query("SELECT
                       SUM(CASE WHEN basic_salary >= 100000 THEN 1 ELSE 0 END) as above_100k
                       FROM employees");
 $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Attendance stats
+$stmt = $conn->query("SELECT 
+                      COUNT(*) as total,
+                      SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present,
+                      SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent,
+                      SUM(CASE WHEN status = 'leave' THEN 1 ELSE 0 END) as on_leave
+                      FROM attendance 
+                      WHERE MONTH(date) = MONTH(CURRENT_DATE()) AND YEAR(date) = YEAR(CURRENT_DATE())");
+$attendanceStats = $stmt->fetch(PDO::FETCH_ASSOC);
+$attendanceRate = ($attendanceStats['total'] > 0) ? round(($attendanceStats['present'] / $attendanceStats['total']) * 100, 1) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports & Analytics - Payroll System</title>
+    <title>Reports & Analytics - Admin Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php include 'includes/admin_styles.php'; ?>
     <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --bg-tertiary: #f1f3f5;
-            --text-primary: #1a1f36;
-            --text-secondary: #555;
-            --text-tertiary: #7f8c8d;
-            --border-color: #e0e0e0;
-            --card-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        body {
-            font-family: "Roboto", sans-serif;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            transition: background 0.3s ease, color 0.3s ease;
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
         }
 
         .page-header h1 {
-            font-family: "Roboto", sans-serif;
-            font-size: 32px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .page-header h1 i {
+            margin-right: 12px;
         }
 
         .page-header p {
-            color: var(--text-tertiary);
-        }
-        .reports-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 16px;
         }
 
-        .report-card {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            padding: 28px;
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-
-        .report-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        }
-
-        .report-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .report-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: white;
-        }
-
-        .report-icon.blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .report-icon.green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .report-icon.orange { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .report-icon.purple { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-
-        .report-card h3 {
-            font-family: "Roboto", sans-serif;
+        /* Section Title */
+        .section-title {
             font-size: 20px;
-            color: var(--text-primary);
-            margin-bottom: 10px;
-        }
-
-        .report-card p {
-            color: var(--text-tertiary);
-            font-size: 14px;
-            margin-bottom: 20px;
-            line-height: 1.7;
-        }
-
-        .report-actions {
+            font-weight: 700;
+            color: var(--text);
+            margin: 35px 0 20px 0;
             display: flex;
+            align-items: center;
             gap: 10px;
         }
 
-        .btn-view, .btn-download {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
+        .section-title i {
+            color: #667eea;
+        }
+
+        /* Reports Grid */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
             transition: all 0.3s ease;
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .report-card-header {
+            padding: 25px;
             display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .report-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .report-icon.purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .report-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
+        .report-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .report-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .report-icon.pink { background: linear-gradient(135deg, #ec4899, #db2777); }
+
+        .report-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0 0 8px 0;
+        }
+
+        .report-info p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .report-card-body {
+            padding: 20px 25px;
+            background: #f8fafc;
+        }
+
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .report-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .report-stat-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .report-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .report-card-footer {
+            padding: 20px 25px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .report-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
 
-        .btn-view {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .report-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
 
-        .btn-download {
-            background: #ecf0f1;
-            color: #2c3e50;
+        .report-btn.secondary {
+            background: #e2e8f0;
+            color: var(--text);
         }
 
-        .btn-view:hover, .btn-download:hover {
+        .report-btn:hover {
             transform: translateY(-2px);
         }
 
-        .chart-card {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            padding: 30px;
-            margin-top: 30px;
-            border: 1px solid var(--border-color);
+        .report-btn.primary:hover {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .chart-card h3 {
-            font-family: "Roboto", sans-serif;
-            font-size: 22px;
-            color: var(--text-primary);
+        /* Analysis Cards */
+        .analysis-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
             margin-bottom: 25px;
         }
 
-        .chart-placeholder {
-            height: 300px;
-            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
-            border-radius: 8px;
+        .analysis-header {
+            padding: 20px 25px;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .analysis-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #7f8c8d;
+            gap: 10px;
+        }
+
+        .analysis-header h3 i {
+            color: #667eea;
+        }
+
+        .analysis-body {
+            padding: 25px;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 14px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
         }
 
         tbody tr:hover {
-            background: #f8f9fa !important;
+            background: #f8fafc;
         }
 
-        .btn-download:hover {
-            background: #d5dbdb;
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Salary Range Cards */
+        .salary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .salary-card {
+            padding: 25px;
+            border-radius: 14px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .salary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .salary-card.purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .salary-card.green { background: linear-gradient(135deg, #10b981, #059669); }
+        .salary-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .salary-card.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+
+        .salary-card-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .salary-card-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .salary-card-sub {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 30px;
+            }
+
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .salary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .report-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -294,134 +475,187 @@ $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
     <?php include 'includes/admin_navbar.php'; ?>
 
     <main class="main-content" id="mainContent">
+        <!-- Page Header -->
         <div class="page-header">
             <h1><i class="fas fa-chart-bar"></i> Reports & Analytics</h1>
-            <p>View and download various payroll and employee reports</p>
+            <p>Comprehensive reports and data analytics for your organization</p>
         </div>
 
+        <!-- Available Reports -->
+        <h2 class="section-title"><i class="fas fa-folder-open"></i> Available Reports</h2>
+        
         <div class="reports-grid">
+            <!-- Payroll Summary Report -->
             <div class="report-card">
-                <div class="report-header">
-                    <div class="report-icon blue">
+                <div class="report-card-header">
+                    <div class="report-icon purple">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
-                    <div>
+                    <div class="report-info">
                         <h3>Payroll Summary</h3>
+                        <p>Complete salary distribution and payroll analysis by department</p>
                     </div>
                 </div>
-                <p>Total monthly payroll expense and salary distribution across departments.</p>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #7f8c8d;">Total Monthly Payroll:</span>
-                        <strong style="color: #2c3e50; font-size: 18px;">₹<?php echo number_format($totalPayroll, 2); ?></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #7f8c8d;">Average Salary:</span>
-                        <strong style="color: #2c3e50; font-size: 18px;">₹<?php echo number_format($avgSalary, 2); ?></strong>
+                <div class="report-card-body">
+                    <div class="report-stats">
+                        <div class="report-stat">
+                            <span class="report-stat-label">Monthly Payroll</span>
+                            <span class="report-stat-value">₹<?= number_format($totalPayroll, 0) ?></span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="report-stat-label">Average Salary</span>
+                            <span class="report-stat-value">₹<?= number_format($avgSalary, 0) ?></span>
+                        </div>
                     </div>
                 </div>
-                <div class="report-actions">
-                    <a href="payroll_report.php" class="btn-view" style="text-decoration: none; color: white;"><i class="fas fa-eye"></i> View</a>
-                    <a href="reports.php?export=payroll" class="btn-download" style="text-decoration: none; color: #2c3e50;"><i class="fas fa-download"></i> CSV</a>
+                <div class="report-card-footer">
+                    <a href="payroll_report.php" class="report-btn primary">
+                        <i class="fas fa-eye"></i> View Report
+                    </a>
+                    <a href="reports.php?export=payroll" class="report-btn secondary">
+                        <i class="fas fa-download"></i> CSV
+                    </a>
                 </div>
             </div>
 
+            <!-- Employee Report -->
             <div class="report-card">
-                <div class="report-header">
+                <div class="report-card-header">
                     <div class="report-icon green">
                         <i class="fas fa-users"></i>
                     </div>
-                    <div>
-                        <h3>Employee Report</h3>
+                    <div class="report-info">
+                        <h3>Employee Directory</h3>
+                        <p>Complete employee listing with contact and employment details</p>
                     </div>
                 </div>
-                <p>Complete employee directory with contact information, departments, and employment details.</p>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #7f8c8d;">Total Employees:</span>
-                        <strong style="color: #2c3e50; font-size: 18px;"><?php echo $totalEmployees; ?></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #7f8c8d;">Total Users:</span>
-                        <strong style="color: #2c3e50; font-size: 18px;"><?php echo $totalUsers; ?></strong>
+                <div class="report-card-body">
+                    <div class="report-stats">
+                        <div class="report-stat">
+                            <span class="report-stat-label">Total Employees</span>
+                            <span class="report-stat-value"><?= $totalEmployees ?></span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="report-stat-label">System Users</span>
+                            <span class="report-stat-value"><?= $totalUsers ?></span>
+                        </div>
                     </div>
                 </div>
-                <div class="report-actions">
-                    <a href="employees.php" class="btn-view" style="text-decoration: none; color: white;"><i class="fas fa-eye"></i> View</a>
-                    <a href="reports.php?export=employees" class="btn-download" style="text-decoration: none; color: #2c3e50;"><i class="fas fa-download"></i> CSV</a>
+                <div class="report-card-footer">
+                    <a href="employees.php" class="report-btn primary">
+                        <i class="fas fa-eye"></i> View Report
+                    </a>
+                    <a href="reports.php?export=employees" class="report-btn secondary">
+                        <i class="fas fa-download"></i> CSV
+                    </a>
                 </div>
             </div>
 
+            <!-- Attendance Report -->
             <div class="report-card">
-                <div class="report-header">
+                <div class="report-card-header">
+                    <div class="report-icon blue">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="report-info">
+                        <h3>Attendance Reports</h3>
+                        <p>Detailed attendance tracking with filters and visualization</p>
+                    </div>
+                </div>
+                <div class="report-card-body">
+                    <div class="report-stats">
+                        <div class="report-stat">
+                            <span class="report-stat-label">This Month</span>
+                            <span class="report-stat-value"><?= $attendanceStats['total'] ?? 0 ?> records</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="report-stat-label">Attendance Rate</span>
+                            <span class="report-stat-value"><?= $attendanceRate ?>%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="report-card-footer">
+                    <a href="attendance_reports.php" class="report-btn primary">
+                        <i class="fas fa-eye"></i> View Report
+                    </a>
+                    <a href="reports.php?export=attendance" class="report-btn secondary">
+                        <i class="fas fa-download"></i> CSV
+                    </a>
+                </div>
+            </div>
+
+            <!-- Department Report -->
+            <div class="report-card">
+                <div class="report-card-header">
                     <div class="report-icon orange">
-                        <i class="fas fa-chart-pie"></i>
-                    </div>
-                    <div>
-                        <h3>Department Report</h3>
-                    </div>
-                </div>
-                <p>Department-wise employee distribution, budget allocation, and salary analysis.</p>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #7f8c8d;">Total Departments:</span>
-                        <strong style="color: #2c3e50; font-size: 18px;"><?php echo $totalDepartments; ?></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #7f8c8d;">Avg Dept Size:</span>
-                        <strong style="color: #2c3e50; font-size: 18px;"><?php echo $totalDepartments > 0 ? round($totalEmployees / $totalDepartments, 1) : 0; ?></strong>
-                    </div>
-                </div>
-                <div class="report-actions">
-                    <a href="departments.php" class="btn-view" style="text-decoration: none; color: white;"><i class="fas fa-eye"></i> View</a>
-                    <a href="reports.php?export=departments" class="btn-download" style="text-decoration: none; color: #2c3e50;"><i class="fas fa-download"></i> CSV</a>
-                </div>
-            </div>
-
-            <div class="report-card">
-                <div class="report-header">
-                    <div class="report-icon purple">
                         <i class="fas fa-building"></i>
                     </div>
-                    <div>
-                        <h3>Salary Distribution</h3>
+                    <div class="report-info">
+                        <h3>Department Analysis</h3>
+                        <p>Department-wise employee distribution and budget allocation</p>
                     </div>
                 </div>
-                <p>Analyze employee salary ranges and distribution across different salary brackets.</p>
-                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;">
-                    <div style="margin-bottom: 8px;"><span style="color: #7f8c8d;">Below ₹25K:</span> <strong><?php echo $salaryRanges['below_25k'] ?? 0; ?></strong></div>
-                    <div style="margin-bottom: 8px;"><span style="color: #7f8c8d;">₹25-50K:</span> <strong><?php echo $salaryRanges['range_25_50k'] ?? 0; ?></strong></div>
-                    <div style="margin-bottom: 8px;"><span style="color: #7f8c8d;">₹50-100K:</span> <strong><?php echo $salaryRanges['range_50_100k'] ?? 0; ?></strong></div>
-                    <div><span style="color: #7f8c8d;">Above ₹100K:</span> <strong><?php echo $salaryRanges['above_100k'] ?? 0; ?></strong></div>
+                <div class="report-card-body">
+                    <div class="report-stats">
+                        <div class="report-stat">
+                            <span class="report-stat-label">Departments</span>
+                            <span class="report-stat-value"><?= $totalDepartments ?></span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="report-stat-label">Avg Dept Size</span>
+                            <span class="report-stat-value"><?= $totalDepartments > 0 ? round($totalEmployees / $totalDepartments, 1) : 0 ?></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="report-actions">
-                    <a href="salary_distribution.php" class="btn-view" style="text-decoration: none; color: #2c3e50;"><i class="fas fa-eye"></i> View</a>
-                    <a href="reports.php?export=salary_ranges" class="btn-download" style="text-decoration: none; color: #2c3e50;"><i class="fas fa-download"></i> CSV</a>
+                <div class="report-card-footer">
+                    <a href="departments.php" class="report-btn primary">
+                        <i class="fas fa-eye"></i> View Report
+                    </a>
+                    <a href="reports.php?export=departments" class="report-btn secondary">
+                        <i class="fas fa-download"></i> CSV
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Department Analysis -->
-        <div class="chart-card">
-            <h3><i class="fas fa-chart-bar"></i> Department-wise Employee & Salary Analysis</h3>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
+        <!-- Department Analysis Table -->
+        <div class="analysis-card">
+            <div class="analysis-header">
+                <h3><i class="fas fa-chart-bar"></i> Department-wise Employee & Salary Analysis</h3>
+            </div>
+            <div class="analysis-body">
+                <table>
                     <thead>
-                        <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
-                            <th style="padding: 12px; text-align: left; color: #2c3e50; font-weight: 600;">Department</th>
-                            <th style="padding: 12px; text-align: center; color: #2c3e50; font-weight: 600;">Employees</th>
-                            <th style="padding: 12px; text-align: right; color: #2c3e50; font-weight: 600;">Avg Salary</th>
-                            <th style="padding: 12px; text-align: right; color: #2c3e50; font-weight: 600;">% of Total</th>
+                        <tr>
+                            <th>Department</th>
+                            <th>Employees</th>
+                            <th>Average Salary</th>
+                            <th>Distribution</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($deptDistribution as $dept): ?>
-                            <tr style="border-bottom: 1px solid #e0e0e0;">
-                                <td style="padding: 12px; color: #2c3e50;"><?php echo htmlspecialchars($dept['department_name'] ?? 'Unassigned'); ?></td>
-                                <td style="padding: 12px; text-align: center; color: #667eea; font-weight: 600;"><?php echo $dept['count']; ?></td>
-                                <td style="padding: 12px; text-align: right; color: #2c3e50;">₹<?php echo number_format($dept['avg_salary'] ?? 0, 2); ?></td>
-                                <td style="padding: 12px; text-align: right; color: #7f8c8d;">
-                                    <?php echo $totalEmployees > 0 ? round(($dept['count'] / $totalEmployees) * 100, 1) : 0; ?>%
+                        <?php foreach ($deptDistribution as $dept): 
+                            $percent = $totalEmployees > 0 ? ($dept['count'] / $totalEmployees) * 100 : 0;
+                        ?>
+                            <tr>
+                                <td>
+                                    <strong><?= htmlspecialchars($dept['department_name'] ?? 'Unassigned') ?></strong>
+                                </td>
+                                <td>
+                                    <span style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); color: #667eea; padding: 4px 12px; border-radius: 6px; font-weight: 600;">
+                                        <?= $dept['count'] ?>
+                                    </span>
+                                </td>
+                                <td>₹<?= number_format($dept['avg_salary'] ?? 0, 0) ?></td>
+                                <td style="width: 200px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="progress-bar" style="flex: 1;">
+                                            <div class="progress-fill" style="width: <?= $percent ?>%;"></div>
+                                        </div>
+                                        <span style="color: var(--muted); font-size: 13px; min-width: 45px;">
+                                            <?= round($percent, 1) ?>%
+                                        </span>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -430,30 +664,29 @@ $salaryRanges = $stmt->fetch(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- Salary Distribution Chart -->
-        <div class="chart-card">
-            <h3><i class="fas fa-chart-pie"></i> Salary Range Distribution</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white;">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">Below ₹25,000</div>
-                    <div style="font-size: 28px; font-weight: 600; margin-bottom: 5px;"><?php echo $salaryRanges['below_25k'] ?? 0; ?></div>
-                    <div style="font-size: 12px; opacity: 0.8;">Employees</div>
-                </div>
-                <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 20px; border-radius: 8px; color: white;">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">₹25K - ₹50K</div>
-                    <div style="font-size: 28px; font-weight: 600; margin-bottom: 5px;"><?php echo $salaryRanges['range_25_50k'] ?? 0; ?></div>
-                    <div style="font-size: 12px; opacity: 0.8;">Employees</div>
-                </div>
-                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 8px; color: white;">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">₹50K - ₹100K</div>
-                    <div style="font-size: 28px; font-weight: 600; margin-bottom: 5px;"><?php echo $salaryRanges['range_50_100k'] ?? 0; ?></div>
-                    <div style="font-size: 12px; opacity: 0.8;">Employees</div>
-                </div>
-                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 8px; color: white;">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">Above ₹100K</div>
-                    <div style="font-size: 28px; font-weight: 600; margin-bottom: 5px;"><?php echo $salaryRanges['above_100k'] ?? 0; ?></div>
-                    <div style="font-size: 12px; opacity: 0.8;">Employees</div>
-                </div>
+        <!-- Salary Range Distribution -->
+        <h2 class="section-title"><i class="fas fa-coins"></i> Salary Range Distribution</h2>
+        
+        <div class="salary-grid">
+            <div class="salary-card purple">
+                <div class="salary-card-label">Below ₹25,000</div>
+                <div class="salary-card-value"><?= $salaryRanges['below_25k'] ?? 0 ?></div>
+                <div class="salary-card-sub">Employees</div>
+            </div>
+            <div class="salary-card green">
+                <div class="salary-card-label">₹25K - ₹50K</div>
+                <div class="salary-card-value"><?= $salaryRanges['range_25_50k'] ?? 0 ?></div>
+                <div class="salary-card-sub">Employees</div>
+            </div>
+            <div class="salary-card orange">
+                <div class="salary-card-label">₹50K - ₹100K</div>
+                <div class="salary-card-value"><?= $salaryRanges['range_50_100k'] ?? 0 ?></div>
+                <div class="salary-card-sub">Employees</div>
+            </div>
+            <div class="salary-card blue">
+                <div class="salary-card-label">Above ₹100K</div>
+                <div class="salary-card-value"><?= $salaryRanges['above_100k'] ?? 0 ?></div>
+                <div class="salary-card-sub">Employees</div>
             </div>
         </div>
     </main>

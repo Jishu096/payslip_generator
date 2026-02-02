@@ -170,7 +170,41 @@ $error = $_GET['error'] ?? '';
         .table-wrapper {
             overflow-x: auto;
             max-width: 100%;
+            max-height: 600px;
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            border-radius: 0 0 16px 16px;
+        }
+
+        /* Custom Scrollbar Styling */
+        .table-wrapper::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            border: 2px solid #f1f5f9;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd6, #6a4190);
+        }
+
+        .table-wrapper::-webkit-scrollbar-corner {
+            background: #f1f5f9;
+        }
+
+        /* Firefox scrollbar */
+        .table-wrapper {
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f1f5f9;
         }
 
         table {
@@ -180,37 +214,46 @@ $error = $_GET['error'] ?? '';
         }
 
         thead {
-            background: var(--bg-secondary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             position: sticky;
             top: 0;
             z-index: 10;
         }
 
         th {
-            padding: 16px 14px;
+            padding: 18px 16px;
             text-align: left;
             font-weight: 600;
-            color: var(--text-primary);
-            font-size: 13px;
+            color: white;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             white-space: nowrap;
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: none;
         }
 
         td {
-            padding: 16px 14px;
-            border-top: 1px solid var(--border-light);
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
             color: var(--text-secondary);
             font-size: 14px;
         }
 
         tr {
-            transition: background 0.2s ease;
+            transition: all 0.2s ease;
         }
 
-        tr:hover {
-            background: var(--hover-bg);
+        tbody tr:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.05));
+            transform: scale(1.001);
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.05));
         }
 
         .badge {
@@ -238,6 +281,23 @@ $error = $_GET['error'] ?? '';
             color: #f59e0b;
         }
 
+        .badge-new {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            animation: pulse-new 2s infinite;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        @keyframes pulse-new {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
 
         .filters-section {
             padding: 20px 30px;
@@ -617,6 +677,76 @@ $error = $_GET['error'] ?? '';
                 justify-content: center;
             }
         }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .page-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 16px;
+        }
+
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        .stat-card i {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card.purple i { color: #667eea; }
+        .stat-card.green i { color: #10b981; }
+        .stat-card.orange i { color: #f59e0b; }
+        .stat-card.red i { color: #ef4444; }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -626,7 +756,31 @@ $error = $_GET['error'] ?? '';
     <main class="main-content" id="mainContent">
         <div class="page-header">
             <h1><i class="fas fa-users"></i> Employees Management</h1>
-            <p>View and manage all employee records</p>
+            <p>View and manage all employee records in your organization</p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card purple">
+                <i class="fas fa-users"></i>
+                <div class="stat-value"><?php echo count($employees); ?></div>
+                <div class="stat-label">Total Employees</div>
+            </div>
+            <div class="stat-card green">
+                <i class="fas fa-user-check"></i>
+                <div class="stat-value"><?php echo count(array_filter($employees, fn($e) => $e['status'] === 'active')); ?></div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card orange">
+                <i class="fas fa-user-clock"></i>
+                <div class="stat-value"><?php echo count(array_filter($employees, fn($e) => $e['status'] === 'on_leave')); ?></div>
+                <div class="stat-label">On Leave</div>
+            </div>
+            <div class="stat-card red">
+                <i class="fas fa-user-times"></i>
+                <div class="stat-value"><?php echo count(array_filter($employees, fn($e) => $e['status'] === 'inactive')); ?></div>
+                <div class="stat-label">Inactive</div>
+            </div>
         </div>
 
         <?php if ($success): ?>
@@ -772,6 +926,14 @@ $error = $_GET['error'] ?? '';
                                     <a href="javascript:void(0)" class="employee-name-clickable" onclick='showEmployeeDetails(<?php echo json_encode($emp); ?>)'>
                                         <?php echo htmlspecialchars($emp['full_name']); ?>
                                     </a>
+                                    <?php 
+                                    // Show "New" badge for employees who joined within last 30 days
+                                    $joinDate = strtotime($emp['join_date'] ?? $emp['created_at'] ?? '');
+                                    $thirtyDaysAgo = strtotime('-30 days');
+                                    if ($joinDate && $joinDate >= $thirtyDaysAgo): 
+                                    ?>
+                                    <span class="badge-new">New</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($emp['email']); ?></td>
                                 <td><?php echo htmlspecialchars($emp['phone']); ?></td>

@@ -26,3 +26,9 @@
         });
     });
 </script>
+
+<?php
+// Session timeout warning script
+require_once __DIR__ . '/../../../app/Helpers/SessionHelper.php';
+echo SessionHelper::getTimeoutWarningScript();
+?>

@@ -32,6 +32,15 @@ $stmt->execute([$id]);
 $userRecord = $stmt->fetch(PDO::FETCH_ASSOC);
 $currentUserRole = $userRecord['role'] ?? 'employee';
 
+// Fetch Pay Levels for permanent employees (7th CPC)
+$payLevels = [];
+try {
+    $stmt = $db->query("SELECT level_id, level_name, level_number, min_basic, max_basic, transport_allowance, description FROM pay_levels WHERE is_active = 1 ORDER BY level_number");
+    $payLevels = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Silent fail
+}
+
 $username = $_SESSION['username'] ?? 'Admin';
 ?>
 <!DOCTYPE html>
@@ -185,6 +194,28 @@ $username = $_SESSION['username'] ?? 'Admin';
                 justify-content: center;
             }
         }
+
+        .form-hint {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .pay-level-group, .hra-group {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -241,6 +272,36 @@ $username = $_SESSION['username'] ?? 'Admin';
                             <option value="contract" <?php echo $emp['employment_type']==='contract'?'selected':''; ?>>Contract</option>
                             <option value="intern" <?php echo $emp['employment_type']==='intern'?'selected':''; ?>>Intern</option>
                         </select>
+                    </div>
+
+                    <!-- Pay Level - Only for Permanent Employees (7th CPC) -->
+                    <div class="form-group pay-level-group" id="payLevelGroup" style="<?php echo $emp['employment_type']==='permanent'?'':'display: none;'; ?>">
+                        <label for="pay_level_id"><i class="fas fa-layer-group"></i> Pay Level (7th CPC)</label>
+                        <select id="pay_level_id" name="pay_level_id">
+                            <option value="">Select Pay Level</option>
+                            <?php foreach ($payLevels as $level): ?>
+                            <option value="<?= $level['level_id'] ?>" 
+                                    data-min="<?= $level['min_basic'] ?>" 
+                                    data-max="<?= $level['max_basic'] ?>"
+                                    data-ta="<?= $level['transport_allowance'] ?>"
+                                    <?= ($emp['pay_level_id'] == $level['level_id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($level['level_name']) ?> 
+                                (₹<?= number_format($level['min_basic']) ?> - ₹<?= number_format($level['max_basic']) ?>)
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-hint" id="payLevelHint">Transport Allowance based on Pay Level</small>
+                    </div>
+
+                    <!-- HRA Type - Only for Permanent Employees -->
+                    <div class="form-group hra-group" id="hraGroup" style="<?php echo $emp['employment_type']==='permanent'?'':'display: none;'; ?>">
+                        <label for="hra_type"><i class="fas fa-home"></i> HRA City Category</label>
+                        <select id="hra_type" name="hra_type">
+                            <option value="city_b" <?php echo ($emp['hra_type'] ?? 'city_b')==='city_b'?'selected':''; ?>>Category B - 16% (Default)</option>
+                            <option value="city_a" <?php echo ($emp['hra_type'] ?? 'city_b')==='city_a'?'selected':''; ?>>Category A - 24% (Metro Cities)</option>
+                            <option value="city_c" <?php echo ($emp['hra_type'] ?? 'city_b')==='city_c'?'selected':''; ?>>Category C - 8% (Other Cities)</option>
+                        </select>
+                        <small class="form-hint">HRA percentage is calculated on Basic Pay</small>
                     </div>
 
                     <div class="form-group">
@@ -339,17 +400,27 @@ $username = $_SESSION['username'] ?? 'Admin';
 
                     <div class="form-group">
                         <label for="pan_no"><i class="fas fa-id-badge"></i> PAN Number</label>
-                        <input type="text" id="pan_no" name="pan_no" value="<?php echo htmlspecialchars($emp['pan_no']); ?>">
+                        <input type="text" id="pan_no" name="pan_no" value="<?php echo htmlspecialchars($emp['pan_no'] ?? ''); ?>" placeholder="ABCDE1234F">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bank_name"><i class="fas fa-landmark"></i> Bank Name</label>
+                        <input type="text" id="bank_name" name="bank_name" value="<?php echo htmlspecialchars($emp['bank_name'] ?? ''); ?>" placeholder="e.g. State Bank of India">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bank_branch"><i class="fas fa-map-marker-alt"></i> Bank Branch</label>
+                        <input type="text" id="bank_branch" name="bank_branch" value="<?php echo htmlspecialchars($emp['bank_branch'] ?? ''); ?>" placeholder="e.g. Bhubaneswar Main Branch">
                     </div>
 
                     <div class="form-group">
                         <label for="bank_account_no"><i class="fas fa-university"></i> Bank Account Number</label>
-                        <input type="text" id="bank_account_no" name="bank_account_no" value="<?php echo htmlspecialchars($emp['bank_account_no']); ?>">
+                        <input type="text" id="bank_account_no" name="bank_account_no" value="<?php echo htmlspecialchars($emp['bank_account_no'] ?? ''); ?>" placeholder="Account Number">
                     </div>
 
                     <div class="form-group">
                         <label for="ifsc_code"><i class="fas fa-barcode"></i> IFSC Code</label>
-                        <input type="text" id="ifsc_code" name="ifsc_code" value="<?php echo htmlspecialchars($emp['ifsc_code']); ?>">
+                        <input type="text" id="ifsc_code" name="ifsc_code" value="<?php echo htmlspecialchars($emp['ifsc_code'] ?? ''); ?>" placeholder="e.g. SBIN0001234">
                     </div>
 
                     <div class="form-group">
@@ -386,6 +457,10 @@ $username = $_SESSION['username'] ?? 'Admin';
         // Handle salary based on employment type
         const employmentTypeSelect = document.getElementById('employment_type');
         const salaryLabel = document.getElementById('salary_label');
+        const payLevelGroup = document.getElementById('payLevelGroup');
+        const hraGroup = document.getElementById('hraGroup');
+        const payLevelSelect = document.getElementById('pay_level_id');
+        const payLevelHint = document.getElementById('payLevelHint');
         
         function handleEmploymentTypeSalary() {
             const salaryInput = document.getElementById('basic_salary');
@@ -394,10 +469,63 @@ $username = $_SESSION['username'] ?? 'Admin';
                 salaryInput.value = '10000.00';
                 salaryInput.readOnly = true;
                 salaryInput.placeholder = '10000.00 (Fixed)';
-                salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Stipend (Fixed for Interns)';
+                if (salaryLabel) salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Stipend (Fixed for Interns)';
+                payLevelGroup.style.display = 'none';
+                hraGroup.style.display = 'none';
+                payLevelSelect.required = false;
             } else if (employmentTypeSelect.value === 'contract') {
                 // Contract: Manual entry (contractual basis)
                 salaryInput.readOnly = false;
+                salaryInput.placeholder = 'Enter contractual amount';
+                if (salaryLabel) salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Contractual Pay (Manual Entry)';
+                payLevelGroup.style.display = 'none';
+                hraGroup.style.display = 'none';
+                payLevelSelect.required = false;
+            } else if (employmentTypeSelect.value === 'permanent') {
+                // Permanent: Show Pay Level fields (7th CPC)
+                salaryInput.readOnly = false;
+                salaryInput.placeholder = 'Enter basic salary within Pay Level range';
+                if (salaryLabel) salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary (7th CPC)';
+                payLevelGroup.style.display = 'block';
+                hraGroup.style.display = 'block';
+                payLevelSelect.required = true;
+            } else {
+                // Default
+                salaryInput.readOnly = false;
+                if (salaryLabel) salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Basic Salary';
+                payLevelGroup.style.display = 'none';
+                hraGroup.style.display = 'none';
+                payLevelSelect.required = false;
+            }
+        }
+        
+        // Check on page load
+        handleEmploymentTypeSalary();
+        
+        employmentTypeSelect.addEventListener('change', handleEmploymentTypeSalary);
+
+        // Update salary hint when Pay Level changes
+        payLevelSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const minBasic = parseFloat(selectedOption.dataset.min);
+                const maxBasic = parseFloat(selectedOption.dataset.max);
+                const ta = parseFloat(selectedOption.dataset.ta);
+                
+                payLevelHint.innerHTML = `<strong>Range:</strong> ₹${minBasic.toLocaleString()} - ₹${maxBasic.toLocaleString()} | <strong>TA:</strong> ₹${ta.toLocaleString()}/month`;
+                payLevelHint.style.color = '#10b981';
+            } else {
+                payLevelHint.innerHTML = 'Transport Allowance based on Pay Level';
+                payLevelHint.style.color = '#64748b';
+            }
+        });
+
+        // Trigger change event on load to show current Pay Level info
+        if (payLevelSelect.value) {
+            payLevelSelect.dispatchEvent(new Event('change'));
+        }
+        
+        // Show/hide salary change fields when salary is modified
                 salaryInput.placeholder = 'Enter contractual amount';
                 salaryLabel.innerHTML = '<i class="fas fa-dollar-sign"></i> Contractual Pay (Manual Entry)';
             } else if (employmentTypeSelect.value === 'permanent') {
@@ -460,6 +588,22 @@ $username = $_SESSION['username'] ?? 'Admin';
 
         // Form validation
         document.querySelector('form').addEventListener('submit', function(e) {
+            // Validate Pay Level salary range for permanent employees
+            const empType = employmentTypeSelect.value;
+            if (empType === 'permanent' && payLevelSelect.value) {
+                const selectedOption = payLevelSelect.options[payLevelSelect.selectedIndex];
+                const minBasic = parseFloat(selectedOption.dataset.min);
+                const maxBasic = parseFloat(selectedOption.dataset.max);
+                const salary = parseFloat(salaryInput.value);
+                
+                if (salary < minBasic || salary > maxBasic) {
+                    e.preventDefault();
+                    alert(`Basic salary must be between ₹${minBasic.toLocaleString()} and ₹${maxBasic.toLocaleString()} for the selected Pay Level.`);
+                    salaryInput.focus();
+                    return false;
+                }
+            }
+
             if (parseFloat(salaryInput.value) !== parseFloat(originalSalary)) {
                 if (!changeReasonField.value.trim()) {
                     e.preventDefault();

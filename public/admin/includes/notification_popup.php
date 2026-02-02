@@ -52,8 +52,25 @@
         let html = '';
         notifications.forEach(notif => {
             const timeAgo = getTimeAgo(notif.created_at);
-            const iconClass = notif.type === 'finalization_window' ? 'info' : 'success';
-            const icon = notif.type === 'finalization_window' ? 'fa-calendar-check' : 'fa-bell';
+            
+            // Determine icon and color based on notification type
+            let iconClass = 'info';
+            let icon = 'fa-bell';
+            
+            if (notif.type === 'finalization_window') {
+                iconClass = 'info';
+                icon = 'fa-calendar-check';
+            } else if (notif.type && notif.type.startsWith('holiday_reminder_')) {
+                // Holiday notification - check if closed or restricted from title
+                if (notif.title && notif.title.includes('🔵')) {
+                    iconClass = 'holiday-closed';
+                    icon = 'fa-building-lock';
+                } else {
+                    iconClass = 'holiday-restricted';
+                    icon = 'fa-calendar-day';
+                }
+            }
+            
             const unreadClass = !notif.is_read ? 'unread' : '';
             
             html += `

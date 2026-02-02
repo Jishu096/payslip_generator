@@ -23,6 +23,9 @@ if ((int)date('d') === 25) {
     include_once __DIR__ . '/../api/create_finalization_reminders.php';
 }
 
+// Automatically check for holiday reminders (runs daily)
+include_once __DIR__ . '/../api/create_holiday_reminders.php';
+
 // Database connection
 require_once __DIR__ . '/../../app/Config/database.php';
 require_once __DIR__ . '/../../app/Models/LeaveRequest.php';
@@ -86,12 +89,414 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php include 'includes/admin_styles.php'; ?>
-    <script>
-        // Force refresh - clear cache
-        if (performance.navigation.type === 1) {
-            location.reload(true);
+    <style>
+        /* Dashboard Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-    </script>
+
+        .dashboard-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .dashboard-header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .header-date {
+            text-align: right;
+            background: rgba(255,255,255,0.15);
+            padding: 15px 25px;
+            border-radius: 12px;
+        }
+
+        .header-date .date {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .header-date .day {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-card.purple::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+        .stat-card.orange::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .stat-card.blue::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .stat-card.green::before { background: linear-gradient(90deg, #10b981, #059669); }
+        .stat-card.yellow::before { background: linear-gradient(90deg, #eab308, #ca8a04); }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .stat-sublabel {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+        }
+
+        .stat-card.purple .stat-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-card.orange .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stat-card.blue .stat-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-card.green .stat-icon { background: linear-gradient(135deg, #10b981, #059669); }
+        .stat-card.yellow .stat-icon { background: linear-gradient(135deg, #eab308, #ca8a04); }
+
+        .stat-card.yellow {
+            cursor: pointer;
+        }
+
+        .stat-footer {
+            background: rgba(234, 179, 8, 0.1);
+            padding: 10px;
+            text-align: center;
+            border-radius: 0 0 12px 12px;
+            margin: 20px -25px -25px -25px;
+        }
+
+        .stat-footer span {
+            color: #ca8a04;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header h3 i {
+            color: #667eea;
+        }
+
+        .card-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .card-link:hover {
+            color: #764ba2;
+        }
+
+        /* Employee Item / List */
+        .upload-list {
+            padding: 15px;
+        }
+
+        .employee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            margin-bottom: 10px;
+        }
+
+        .employee-item:hover {
+            background: #f8fafc;
+        }
+
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .employee-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .employee-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .employee-dept {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        /* Department Stats / Progress Bars */
+        .dept-stats {
+            padding: 20px 25px;
+        }
+
+        .dept-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .dept-name {
+            width: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .dept-progress {
+            flex: 1;
+            height: 10px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .dept-progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .dept-count {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* Notification Bell */
+        .notification-bell-container {
+            position: relative;
+        }
+
+        .notification-bell {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            width: 350px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .notification-dropdown-header {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-dropdown-header h3 {
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .mark-all-read {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .notification-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .notification-empty i {
+            font-size: 40px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .header-date {
+                text-align: center;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -100,31 +505,36 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <main class="main-content" id="mainContent">
         <div class="dashboard-header">
             <div>
-                <h1><i class="fas fa-lock"></i> Attendance Finalization Dashboard</h1>
-                <p>Welcome back, <?php echo htmlspecialchars($username); ?>! Finalize and export verified attendance data.</p>
+                <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                <p>Welcome back, <?php echo htmlspecialchars($username); ?>! Manage your organization efficiently.</p>
             </div>
-            <div class="notification-bell-container">
-                <button class="notification-bell" onclick="toggleNotificationDropdown()" type="button">
-                    <i class="fas fa-bell"></i>
-                    <span id="notificationCount" class="notification-count" style="display: none;">0</span>
-                </button>
-                <!-- Notification Dropdown -->
-                <div id="notificationDropdown" class="notification-dropdown" style="display: none;">
-                    <div class="notification-dropdown-header">
-                        <h3>Notifications</h3>
-                        <button onclick="markAllAsRead()" class="mark-all-read">Mark all as read</button>
-                    </div>
-                    <div id="notificationList" class="notification-list">
-                        <div class="notification-empty">
-                            <i class="fas fa-bell-slash"></i>
-                            <p>No new notifications</p>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="notification-bell-container">
+                    <button class="notification-bell" onclick="toggleNotificationDropdown()">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="notification-count" id="notificationCount" style="display: none;">0</span>
+                    <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+                        <div class="notification-dropdown-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-read" onclick="markAllAsRead()">Mark all read</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>No new notifications</p>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="header-date">
+                    <div class="date"><?php echo date('d M Y'); ?></div>
+                    <div class="day"><?php echo date('l'); ?></div>
                 </div>
             </div>
         </div>
 
-        <!-- Attendance Workflow Statistics -->
+        <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card purple">
                 <div class="stat-header">
@@ -158,7 +568,7 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="stat-label">Finalized Months</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="fas fa-calendar"></i>
+                        <i class="fas fa-calendar-check"></i>
                     </div>
                 </div>
             </div>
@@ -167,14 +577,12 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="stat-header">
                     <div>
                         <?php if ($latestFinalization): ?>
-                            <div class="stat-value" style="font-size: 18px; font-weight: 600;">
+                            <div class="stat-value" style="font-size: 20px;">
                                 <?php echo htmlspecialchars($latestFinalization['month'] . ' ' . $latestFinalization['year']); ?>
                             </div>
                             <div class="stat-label">Latest Finalization</div>
                             <div style="margin-top: 8px;">
-                                <span class="badge badge-success" style="font-size: 11px;">
-                                    LOCKED
-                                </span>
+                                <span class="badge badge-success">LOCKED</span>
                             </div>
                         <?php else: ?>
                             <div class="stat-value">--</div>
@@ -187,7 +595,7 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
             
-            <div class="stat-card yellow" style="cursor: pointer;" onclick="window.location.href='leave_approvals.php'">
+            <div class="stat-card yellow" onclick="window.location.href='leave_approvals.php'">
                 <div class="stat-header">
                     <div>
                         <div class="stat-value"><?php echo $pendingLeaves; ?></div>
@@ -199,37 +607,10 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
                 <?php if ($pendingLeaves > 0): ?>
-                    <div class="stat-footer" style="background: rgba(245, 158, 11, 0.15); padding: 8px; text-align: center; border-radius: 0 0 15px 15px; margin: 15px -25px -20px -25px;">
-                        <span style="color: #f59e0b; font-weight: 600; font-size: 12px;">
-                            <i class="fas fa-exclamation-circle"></i> Action Required
-                        </span>
+                    <div class="stat-footer">
+                        <span><i class="fas fa-exclamation-circle"></i> Action Required</span>
                     </div>
                 <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="content-grid" style="margin-bottom: 30px;">
-            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
-                <div style="text-align: center; padding: 20px 0;">
-                    <i class="fas fa-lock" style="font-size: 48px; margin-bottom: 15px;"></i>
-                    <h3 style="color: white; margin-bottom: 10px;">Finalize Attendance</h3>
-                    <p style="opacity: 0.95; margin-bottom: 20px;">Lock HR-verified attendance months</p>
-                    <a href="attendance_finalize.php" style="padding: 12px 30px; background: white; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <i class="fas fa-lock"></i> Finalize Now
-                    </a>
-                </div>
-            </div>
-
-            <div class="card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border: none;">
-                <div style="text-align: center; padding: 20px 0;">
-                    <i class="fas fa-file-export" style="font-size: 48px; margin-bottom: 15px;"></i>
-                    <h3 style="color: white; margin-bottom: 10px;">Export Attendance</h3>
-                    <p style="opacity: 0.95; margin-bottom: 20px;">Export finalized data for Accountant</p>
-                    <a href="attendance_export.php" style="padding: 12px 30px; background: white; color: #11998e; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <i class="fas fa-file-export"></i> Export Now
-                    </a>
-                </div>
             </div>
         </div>
 
@@ -263,7 +644,11 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No finalizations found. Finalize HR-verified attendance!</p>
+                        <div style="text-align: center; color: var(--muted); padding: 40px 20px;">
+                            <i class="fas fa-inbox" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>No finalizations found</p>
+                            <a href="attendance_finalize.php" style="color: #667eea; text-decoration: none; font-weight: 500;">Finalize HR-verified attendance →</a>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -285,56 +670,22 @@ $monthlyTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                                 <div class="dept-count">
                                     <?php echo $trend['locked_count']; ?>/<?php echo $trend['count']; ?>
-                                    <small style="color: var(--text-tertiary); font-weight: 400; font-size: 11px; margin-left: 4px;">locked</small>
+                                    <small style="color: var(--muted); font-weight: 400; font-size: 11px;">locked</small>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p style="text-align: center; color: var(--text-tertiary); padding: 20px;">No trend data available.</p>
+                        <div style="text-align: center; color: var(--muted); padding: 40px 20px;">
+                            <i class="fas fa-chart-bar" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>No trend data available yet</p>
+                        </div>
                     <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Workflow Info Card -->
-        <div class="card" style="background: #f0f4ff; border: 2px solid #c7d2fe;">
-            <div style="display: flex; align-items: start; gap: 20px;">
-                <div style="min-width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <div>
-                    <h3 style="color: #667eea; margin-bottom: 12px; font-size: 20px;">Attendance Upload Workflow</h3>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">1</span>
-                            <span style="color: var(--text-primary); font-weight: 500;">Admin uploads monthly absentee PDF statement</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">2</span>
-                            <span style="color: var(--text-primary); font-weight: 500;">System saves file and sets status to <strong>UPLOADED</strong></span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">3</span>
-                            <span style="color: var(--text-primary); font-weight: 500;">HR Officer receives notification to verify data</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">4</span>
-                            <span style="color: var(--text-primary); font-weight: 500;">HR Officer converts PDF to table and verifies accuracy</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="background: #10b981; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;"><i class="fas fa-check"></i></span>
-                            <span style="color: var(--text-primary); font-weight: 500;">Verified data ready for payroll processing</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </main>
 
     <?php include 'includes/notification_popup.php'; ?>
-
-    <script>
-    </script>
 
 </body>
 </html>

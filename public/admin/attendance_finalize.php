@@ -62,114 +62,235 @@ $baseURL = "/payslip_generator/public/";
     <title>Attendance Finalization - Admin Portal</title>
     <?php include 'includes/admin_styles.php'; ?>
     <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .page-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 30px 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #667eea;
+        }
+
         .months-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
             margin-bottom: 30px;
         }
 
         .month-card {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            border-left: 4px solid var(--accent);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .month-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .month-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
         }
 
         .month-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .month-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .month-title i {
+            color: #667eea;
+            font-size: 18px;
         }
 
         .lock-status {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .lock-status.locked {
-            background: #d1fae5;
-            color: #065f46;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
         }
 
         .lock-status.unlocked {
-            background: #fee2e2;
-            color: #991b1b;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
         }
 
         .month-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .stat-item {
             text-align: center;
-            padding: 10px;
-            background: #f7fafc;
-            border-radius: 8px;
+            padding: 15px 10px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .stat-item:hover .stat-value,
+        .stat-item:hover .stat-label {
+            color: white;
         }
 
         .stat-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 700;
-            color: var(--accent);
+            color: #667eea;
+            transition: color 0.3s ease;
         }
 
         .stat-label {
             font-size: 11px;
             color: var(--muted);
             text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
         }
 
         .month-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             position: relative;
             z-index: 10;
         }
 
         .btn-finalize {
             flex: 1;
-            padding: 10px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-finalize:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
         .btn-finalize:disabled {
             background: #e2e8f0;
             color: #94a3b8;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-unlock {
-            padding: 10px 15px;
-            background: #ef4444;
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-unlock:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .history-section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-top: 30px;
+        }
+
+        .history-section h2 {
+            margin: 0 0 25px 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-section h2 i {
+            color: #667eea;
         }
 
         .history-table {
             background: white;
-            padding: 20px;
             border-radius: 12px;
+            overflow: hidden;
         }
 
         table {
@@ -178,31 +299,47 @@ $baseURL = "/payslip_generator/public/";
         }
 
         th, td {
-            padding: 12px;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        thead {
-            background: #f7fafc;
+        th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
         }
 
         .alert {
-            padding: 15px;
-            border-radius: 8px;
+            padding: 18px 20px;
+            border-radius: 12px;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .alert-warning {
-            background: #fef3c7;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
             color: #92400e;
-            border-left: 4px solid #f59e0b;
+            border: none;
         }
 
         .alert-info {
-            background: #dbeafe;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
             color: #1e3a8a;
-            border-left: 4px solid #3b82f6;
+            border: none;
         }
 
         .btn-view-details {
@@ -483,27 +620,18 @@ $baseURL = "/payslip_generator/public/";
     <div class="main-content" id="mainContent">
         <div class="page-header">
             <h1><i class="fas fa-lock"></i> Attendance Finalization</h1>
-            <p>Lock and finalize HR-verified attendance data</p>
+            <p>Lock and finalize HR-verified attendance data for payroll processing</p>
         </div>
 
-        <div class="alert alert-info">
-            <strong><i class="fas fa-info-circle"></i> Workflow:</strong>
-            HR Officers verify attendance → Admin finalizes and locks the month → Accountant imports finalized data for salary calculation
-        </div>
-
-        <div class="alert alert-warning">
-            <strong><i class="fas fa-exclamation-triangle"></i> Important:</strong>
-            Once a month is finalized and locked, no further attendance changes can be made for that period. Ensure all HR verifications are complete.
-        </div>
-
-        <h2 style="margin-top: 30px; margin-bottom: 20px;">Available Months for Finalization</h2>
+        <h2 class="section-title"><i class="fas fa-calendar-alt"></i> Available Months for Finalization</h2>
         <div class="months-grid">
             <?php foreach($monthsData as $monthData): ?>
                 <div class="month-card">
                     <div class="month-header">
-                        <div class="month-title"><?php echo $monthData['month'] . ' ' . $monthData['year']; ?></div>
+                        <div class="month-title"><i class="fas fa-calendar"></i> <?php echo $monthData['month'] . ' ' . $monthData['year']; ?></div>
                         <span class="lock-status <?php echo $monthData['is_locked'] ? 'locked' : 'unlocked'; ?>">
-                            <?php echo $monthData['is_locked'] ? '🔒 Locked' : '🔓 Unlocked'; ?>
+                            <i class="fas <?php echo $monthData['is_locked'] ? 'fa-lock' : 'fa-lock-open'; ?>"></i>
+                            <?php echo $monthData['is_locked'] ? 'Locked' : 'Unlocked'; ?>
                         </span>
                     </div>
 

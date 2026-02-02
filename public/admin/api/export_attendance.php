@@ -98,7 +98,12 @@ try {
     // Create exports directory if not exists
     $exportDir = __DIR__ . '/../../storage/exports';
     if (!file_exists($exportDir)) {
-        mkdir($exportDir, 0755, true);
+        mkdir($exportDir, 0777, true);
+    }
+    
+    // Ensure directory is writable
+    if (!is_writable($exportDir)) {
+        chmod($exportDir, 0777);
     }
     
     $filename = strtolower($month) . '_' . $year . '_attendance_export_' . time();
@@ -140,6 +145,10 @@ try {
         }
         
         fclose($file);
+        
+        // Log export to database
+        $logStmt = $db->prepare("INSERT INTO attendance_export_log (month, year, exported_by, file_path, record_count, export_format) VALUES (?, ?, ?, ?, ?, ?)");
+        $logStmt->execute([$month, $year, $_SESSION['user_id'], 'exports/' . $filename . '.csv', count($records), 'csv']);
         
         ob_clean();
         echo json_encode([
@@ -347,6 +356,10 @@ try {
         $filepath = $exportDir . '/' . $filename . '.xlsx';
         $writer = new Xlsx($spreadsheet);
         $writer->save($filepath);
+        
+        // Log export to database
+        $logStmt = $db->prepare("INSERT INTO attendance_export_log (month, year, exported_by, file_path, record_count, export_format) VALUES (?, ?, ?, ?, ?, ?)");
+        $logStmt->execute([$month, $year, $_SESSION['user_id'], 'exports/' . $filename . '.xlsx', count($records), 'excel']);
         
         ob_clean();
         echo json_encode([
