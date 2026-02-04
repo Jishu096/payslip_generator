@@ -125,9 +125,19 @@ class Config {
         // Replace ${VAR_NAME} with actual value
         return preg_replace_callback('/\$\{([A-Z_]+)\}/', function($matches) {
             $varName = $matches[1];
-            return self::get($varName, '');
+            // Access config directly to avoid recursion loop in get() -> load()
+            if (isset(self::$config[$varName])) {
+                return self::$config[$varName];
+            }
+            // Check environment variables
+            $envVal = getenv($varName);
+            if ($envVal !== false) {
+                return $envVal;
+            }
+            return $_ENV[$varName] ?? '';
         }, $value);
     }
+
     
     /**
      * Load configuration from environment variables
