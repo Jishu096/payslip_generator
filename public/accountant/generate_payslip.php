@@ -17,10 +17,8 @@ if (!$hasAccountantRole && $_SESSION['role'] !== 'accountant') {
 }
 
 require_once __DIR__ . '/../../app/Config/database.php';
-require_once __DIR__ . '/../../app/Helpers/NotificationHelper.php';
 $db = getDBConnection();
 $username = $_SESSION['username'] ?? 'Accountant';
-$notificationHelper = new NotificationHelper($db);
 
 // Standard salary component percentages (editable in one place)
 $standardRates = [
@@ -44,15 +42,10 @@ $stmt = $db->prepare("
         d.department_name,
         e.basic_salary,
         e.employment_type,
-        e.pay_level_id,
-        e.hra_type,
         e.email,
-        e.phone,
-        pl.level_name,
-        pl.transport_allowance
+        e.phone
     FROM employees e
     LEFT JOIN departments d ON e.department_id = d.department_id
-    LEFT JOIN pay_levels pl ON e.pay_level_id = pl.level_id
     ORDER BY e.full_name ASC
 ");
 $stmt->execute();
@@ -69,34 +62,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_payslip'])) 
     $taAmount = (float)($_POST['ta_amount'] ?? 0);
     $daTa = (float)($_POST['da_ta'] ?? 0);
     $bonus = (float)($_POST['bonus'] ?? 0);
-    $canteenSubsidy = (float)($_POST['canteen_subsidy'] ?? 0);
     $taxDeduction = (float)($_POST['tax_deduction'] ?? 0);
     $pfDeduction = (float)($_POST['pf_deduction'] ?? 0);
     $npsDeduction = (float)($_POST['nps_deduction'] ?? 0);
-    $cpfDeduction = (float)($_POST['cpf_deduction'] ?? 0);
     $professionalTax = (float)($_POST['professional_tax'] ?? 0);
-    $sudexoDeduction = (float)($_POST['sudexo_deduction'] ?? 0);
-    $incomeTax = (float)($_POST['income_tax'] ?? 0);
     $otherDeductions = (float)($_POST['other_deductions'] ?? 0);
-    $payLevel = $_POST['pay_level'] ?? '';
     
-    // Calculate totals using 7th CPC components
-    $grossSalary = $basicSalary + $hra + $da + $taAmount + $daTa + $bonus + $canteenSubsidy;
-    $totalDeductions = $taxDeduction + $pfDeduction + $npsDeduction + $cpfDeduction + $professionalTax + $sudexoDeduction + $incomeTax + $otherDeductions;
+    // Calculate totals using new components
+    $grossSalary = $basicSalary + $hra + $da + $taAmount + $daTa + $bonus;
+    $totalDeductions = $taxDeduction + $pfDeduction + $npsDeduction + $professionalTax + $otherDeductions;
     $netSalary = $grossSalary - $totalDeductions;
     
     // Insert payroll record first
     try {
         $db->beginTransaction();
         
-        // Insert into payroll table with 7th CPC components
+        // Insert into payroll table with new components
         $payrollStmt = $db->prepare("
             INSERT INTO payroll 
             (employee_id, month, year, basic, da_amount, hra_amount, ta_amount, da_on_ta, bonus,
-             canteen_subsidy, gross_salary, tax_deduction, pf_deduction, nps_deduction, cpf_deduction,
-             professional_tax, sudexo_deduction, income_tax, pay_level, other_deductions,
+             gross_salary, tax_deduction, pf_deduction, nps_deduction, professional_tax, other_deductions,
              total_deductions, net_salary, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         
         $payrollStmt->execute([
@@ -109,16 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_payslip'])) 
             $taAmount,
             $daTa,
             $bonus,
-            $canteenSubsidy,
             $grossSalary,
             $taxDeduction,
             $pfDeduction,
             $npsDeduction,
-            $cpfDeduction,
             $professionalTax,
-            $sudexoDeduction,
-            $incomeTax,
-            $payLevel,
             $otherDeductions,
             $totalDeductions,
             $netSalary
@@ -139,19 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_payslip'])) 
         
         $success = true;
         $payslipId = $db->lastInsertId();
-        
-        // Send payslip notification email to employee
-        $empStmt = $db->prepare("SELECT full_name, email FROM employees WHERE employee_id = ?");
-        $empStmt->execute([$employeeId]);
-        $empData = $empStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($empData && !empty($empData['email'])) {
-            $notificationHelper->notifyPayslipGeneration(
-                $empData['email'],
-                $empData['full_name'],
-                $month . ' ' . $year
-            );
-        }
     } catch (PDOException $e) {
         $db->rollBack();
         $error = "Failed to generate payslip: " . $e->getMessage();
@@ -537,16 +506,13 @@ $error = $_GET['error'] ?? '';
                                         data-designation="<?php echo htmlspecialchars($emp['designation']); ?>"
                                         data-department="<?php echo htmlspecialchars($emp['department_name'] ?? 'N/A'); ?>"
                                         data-email="<?php echo htmlspecialchars($emp['email']); ?>"
-                                        data-employment-type="<?php echo $emp['employment_type']; ?>"
-                                        data-pay-level="<?php echo htmlspecialchars($emp['level_name'] ?? ''); ?>"
-                                        data-hra-type="<?php echo $emp['hra_type'] ?? 'city_b'; ?>"
-                                        data-transport-allowance="<?php echo $emp['transport_allowance'] ?? 0; ?>">
+                                        data-employment-type="<?php echo $emp['employment_type']; ?>">
                                     <?php echo htmlspecialchars($emp['employee_code'] ?? 'EMP' . str_pad($emp['employee_id'], 3, '0', STR_PAD_LEFT)); ?> - <?php echo htmlspecialchars($emp['full_name']); ?> (<?php echo htmlspecialchars($emp['designation']); ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
                         <small style="color: #666; display: block; margin-top: 5px;">
-                            <i class="fas fa-info-circle"></i> 7th CPC components auto-calc based on Pay Level; you can edit any value.
+                            <i class="fas fa-info-circle"></i> All components auto-calc using current government rates; you can edit any value.
                         </small>
                     </div>
 
@@ -556,12 +522,9 @@ $error = $_GET['error'] ?? '';
                             <div id="emp_designation">Designation: -</div>
                             <div id="emp_department">Department: -</div>
                             <div id="emp_email">Email: -</div>
-                            <div id="emp_pay_level" style="color: #667eea; font-weight: 600;">Pay Level: -</div>
                         </div>
                     </div>
                 </div>
-
-                <input type="hidden" name="pay_level" id="pay_level" value="">
 
                 <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
                     <div class="form-group">
@@ -621,10 +584,14 @@ $error = $_GET['error'] ?? '';
                     <div class="form-group">
                         <label for="ta_amount">
                             <i class="fas fa-bus"></i> Transport Allowance (TA)
-                            <span style="color: #28a745; font-size: 11px;">Per Pay Level</span>
+                            <span style="color: #28a745; font-size: 11px;">Govt slabs</span>
                         </label>
-                        <input type="number" id="ta_amount" name="ta_amount" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Auto-set from Pay Level, editable</small>
+                        <select id="ta_amount" name="ta_amount">
+                            <option value="3600">₹3,600</option>
+                            <option value="1800">₹1,800</option>
+                            <option value="900">₹900</option>
+                        </select>
+                        <small style="color: #666;">Change if employee TA slab differs</small>
                     </div>
 
                     <div class="form-group">
@@ -637,14 +604,6 @@ $error = $_GET['error'] ?? '';
                     </div>
 
                     <div class="form-group">
-                        <label for="canteen_subsidy">
-                            <i class="fas fa-utensils"></i> Canteen Subsidy
-                        </label>
-                        <input type="number" id="canteen_subsidy" name="canteen_subsidy" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Enter if applicable</small>
-                    </div>
-
-                    <div class="form-group">
                         <label for="bonus"><i class="fas fa-gift"></i> Bonus</label>
                         <input type="number" id="bonus" name="bonus" step="0.01" value="0" min="0">
                         <small style="color: #666;">Optional, enter manually</small>
@@ -654,14 +613,23 @@ $error = $_GET['error'] ?? '';
                 <div class="section-header">
                     <i class="fas fa-minus-circle"></i> Deductions
                     <small style="font-size: 12px; font-weight: 400; opacity: 0.9; margin-left: 15px;">
-                        7th CPC standard deductions — you can edit any value
+                        Auto-calculated (govt. rates) — you can edit any value
                     </small>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
+                        <label for="tax_deduction">
+                            <i class="fas fa-receipt"></i> Tax Deduction (TDS)
+                            <span style="color: #dc3545; font-size: 11px;">10% of Gross</span>
+                        </label>
+                        <input type="number" id="tax_deduction" name="tax_deduction" step="0.01" value="0" min="0">
+                        <small style="color: #666;">Auto-calculated, editable</small>
+                    </div>
+
+                    <div class="form-group">
                         <label for="pf_deduction">
-                            <i class="fas fa-piggy-bank"></i> EPF (Employee Provident Fund)
+                            <i class="fas fa-piggy-bank"></i> EPF
                             <span style="color: #dc3545; font-size: 11px;">12% of Basic</span>
                         </label>
                         <input type="number" id="pf_deduction" name="pf_deduction" step="0.01" value="0" min="0">
@@ -670,7 +638,7 @@ $error = $_GET['error'] ?? '';
 
                     <div class="form-group">
                         <label for="nps_deduction">
-                            <i class="fas fa-university"></i> NPS (New Pension Scheme)
+                            <i class="fas fa-university"></i> NPS
                             <span style="color: #dc3545; font-size: 11px;">10% of Basic</span>
                         </label>
                         <input type="number" id="nps_deduction" name="nps_deduction" step="0.01" value="0" min="0">
@@ -678,44 +646,12 @@ $error = $_GET['error'] ?? '';
                     </div>
 
                     <div class="form-group">
-                        <label for="cpf_deduction">
-                            <i class="fas fa-landmark"></i> CPF (Central Provident Fund)
-                        </label>
-                        <input type="number" id="cpf_deduction" name="cpf_deduction" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Enter if applicable</small>
-                    </div>
-
-                    <div class="form-group">
                         <label for="professional_tax">
                             <i class="fas fa-id-badge"></i> Professional Tax
-                            <span style="color: #dc3545; font-size: 11px;">Flat ₹200</span>
+                            <span style="color: #dc3545; font-size: 11px;">Flat (state)</span>
                         </label>
                         <input type="number" id="professional_tax" name="professional_tax" step="0.01" value="<?php echo $standardRates['professional_tax']; ?>" min="0">
                         <small style="color: #666;">Edit if different state rate</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="sudexo_deduction">
-                            <i class="fas fa-credit-card"></i> Sudexo (Meal Card)
-                        </label>
-                        <input type="number" id="sudexo_deduction" name="sudexo_deduction" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Enter if applicable</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="income_tax">
-                            <i class="fas fa-receipt"></i> Income Tax (TDS)
-                        </label>
-                        <input type="number" id="income_tax" name="income_tax" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Enter based on tax slab</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="tax_deduction">
-                            <i class="fas fa-file-invoice-dollar"></i> Other Tax Deduction
-                        </label>
-                        <input type="number" id="tax_deduction" name="tax_deduction" step="0.01" value="0" min="0">
-                        <small style="color: #666;">Enter if applicable</small>
                     </div>
 
                     <div class="form-group">
@@ -726,43 +662,40 @@ $error = $_GET['error'] ?? '';
                 </div>
 
                 <div class="calculation-summary">
-                    <h3 style="margin-bottom: 15px;"><i class="fas fa-calculator"></i> Salary Summary (7th CPC)</h3>
+                    <h3 style="margin-bottom: 15px;"><i class="fas fa-calculator"></i> Salary Summary</h3>
                     
-                    <div style="font-weight: 600; color: #10b981; margin-bottom: 8px; font-size: 12px; text-transform: uppercase;">Earnings</div>
                     <div class="calc-row">
-                        <span>Basic Pay:</span>
+                        <span>Basic Salary:</span>
                         <span id="display_basic">₹0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span>HRA (20%):</span>
+                        <span id="display_hra">₹0.00</span>
                     </div>
                     <div class="calc-row">
                         <span>DA (58% of Basic):</span>
                         <span id="display_da">₹0.00</span>
                     </div>
                     <div class="calc-row">
-                        <span>HRA:</span>
-                        <span id="display_hra">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span>Transport Allowance:</span>
+                        <span>TA (Slab):</span>
                         <span id="display_ta">₹0.00</span>
                     </div>
                     <div class="calc-row">
-                        <span>DA on TPA (58%):</span>
+                        <span>DA on TA (58%):</span>
                         <span id="display_da_ta">₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span>Canteen Subsidy:</span>
-                        <span id="display_canteen">₹0.00</span>
                     </div>
                     <div class="calc-row">
                         <span>Bonus:</span>
                         <span id="display_bonus">₹0.00</span>
                     </div>
-                    <div class="calc-row" style="background: #e8f5e9; padding: 8px; border-radius: 4px; margin: 5px 0;">
+                    <div class="calc-row">
                         <span><strong>Gross Salary:</strong></span>
                         <span id="display_gross"><strong>₹0.00</strong></span>
                     </div>
-                    
-                    <div style="font-weight: 600; color: #dc3545; margin: 12px 0 8px 0; font-size: 12px; text-transform: uppercase;">Deductions</div>
+                    <div class="calc-row">
+                        <span style="color: #dc3545;">Tax Deduction (10%):</span>
+                        <span id="display_tax" style="color: #dc3545;">-₹0.00</span>
+                    </div>
                     <div class="calc-row">
                         <span style="color: #dc3545;">EPF (12% of Basic):</span>
                         <span id="display_pf" style="color: #dc3545;">-₹0.00</span>
@@ -772,24 +705,8 @@ $error = $_GET['error'] ?? '';
                         <span id="display_nps" style="color: #dc3545;">-₹0.00</span>
                     </div>
                     <div class="calc-row">
-                        <span style="color: #dc3545;">CPF:</span>
-                        <span id="display_cpf" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
                         <span style="color: #dc3545;">Professional Tax:</span>
                         <span id="display_pt" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">Sudexo:</span>
-                        <span id="display_sudexo" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">Income Tax:</span>
-                        <span id="display_incometax" style="color: #dc3545;">-₹0.00</span>
-                    </div>
-                    <div class="calc-row">
-                        <span style="color: #dc3545;">Other (TDS etc.):</span>
-                        <span id="display_tax" style="color: #dc3545;">-₹0.00</span>
                     </div>
                     <div class="calc-row">
                         <span style="color: #dc3545;">Other Deductions:</span>
@@ -868,13 +785,12 @@ $error = $_GET['error'] ?? '';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 7th CPC Standard percentage rates
+        // Standard percentage rates (kept in JS to mirror PHP config)
         const rates = {
-            hra_a: 24,       // HRA City A = 24% of Basic (Metro)
-            hra_b: 16,       // HRA City B = 16% of Basic
-            hra_c: 8,        // HRA City C = 8% of Basic  
+            hra: 20,         // HRA = 20% of Basic
             da: 58,          // DA = 58% of Basic
             daOnTa: 58,      // DA on TA = 58% of TA
+            tax: 10,         // Tax = 10% of Gross
             epf: 12,         // EPF = 12% of Basic
             nps: 10          // NPS = 10% of Basic
         };
@@ -884,16 +800,11 @@ $error = $_GET['error'] ?? '';
         const basicSalaryInput = document.getElementById('basic_salary');
         const hraInput = document.getElementById('hra');
         const daInput = document.getElementById('da');
-        const taInput = document.getElementById('ta_amount');
+        const taSelect = document.getElementById('ta_amount');
         const daTaInput = document.getElementById('da_ta');
         const pfInput = document.getElementById('pf_deduction');
         const npsInput = document.getElementById('nps_deduction');
-        const cpfInput = document.getElementById('cpf_deduction');
         const professionalTaxInput = document.getElementById('professional_tax');
-        const sudexoInput = document.getElementById('sudexo_deduction');
-        const incomeTaxInput = document.getElementById('income_tax');
-        const canteenInput = document.getElementById('canteen_subsidy');
-        const payLevelInput = document.getElementById('pay_level');
         
         employeeSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
@@ -903,23 +814,17 @@ $error = $_GET['error'] ?? '';
                 basicSalaryInput.value = '';
                 hraInput.value = 0;
                 daInput.value = 0;
-                taInput.value = 0;
+                taSelect.value = '3600';
                 daTaInput.value = 0;
                 pfInput.value = 0;
                 npsInput.value = 0;
-                cpfInput.value = 0;
                 document.getElementById('tax_deduction').value = 0;
                 professionalTaxInput.value = <?php echo $standardRates['professional_tax']; ?>;
-                sudexoInput.value = 0;
-                incomeTaxInput.value = 0;
-                canteenInput.value = 0;
                 document.getElementById('other_deductions').value = 0;
                 document.getElementById('bonus').value = 0;
                 document.getElementById('emp_designation').textContent = 'Designation: -';
                 document.getElementById('emp_department').textContent = 'Department: -';
                 document.getElementById('emp_email').textContent = 'Email: -';
-                document.getElementById('emp_pay_level').textContent = 'Pay Level: -';
-                payLevelInput.value = '';
                 
                 // Show all fields
                 showAllFields();
@@ -932,45 +837,31 @@ $error = $_GET['error'] ?? '';
             const department = selectedOption.dataset.department || '-';
             const email = selectedOption.dataset.email || '-';
             const employmentType = selectedOption.dataset.employmentType || 'permanent';
-            const payLevel = selectedOption.dataset.payLevel || '-';
-            const hraType = selectedOption.dataset.hraType || 'city_b';
-            const transportAllowance = parseFloat(selectedOption.dataset.transportAllowance) || 0;
             
             // Update employee info display
             document.getElementById('emp_designation').innerHTML = '<i class="fas fa-briefcase"></i> Designation: <strong>' + designation + '</strong>';
             document.getElementById('emp_department').innerHTML = '<i class="fas fa-building"></i> Department: <strong>' + department + '</strong>';
             document.getElementById('emp_email').innerHTML = '<i class="fas fa-envelope"></i> Email: <strong>' + email + '</strong>';
-            document.getElementById('emp_pay_level').innerHTML = '<i class="fas fa-layer-group"></i> Pay Level: <strong style="color: #667eea;">' + (payLevel || 'Not Assigned') + '</strong>';
-            
-            // Set pay level hidden field
-            payLevelInput.value = payLevel;
             
             // Set basic salary
             basicSalaryInput.value = salary.toFixed(2);
 
-            // Determine HRA rate based on city type
-            let hraRate = rates.hra_b; // Default 16%
-            if (hraType === 'city_a') hraRate = rates.hra_a; // 24%
-            else if (hraType === 'city_c') hraRate = rates.hra_c; // 8%
-
             // Check if employee is an intern or contract
             if (employmentType === 'intern') {
                 // For interns: Only stipend (10,000), no allowances, no deductions
+                // But allow manual bonus/DA/TA if needed
                 hraInput.value = 0;
                 daInput.value = 0;
-                taInput.value = 0;
+                taSelect.value = '0';
                 daTaInput.value = 0;
                 pfInput.value = 0;
                 npsInput.value = 0;
-                cpfInput.value = 0;
                 document.getElementById('tax_deduction').value = 0;
                 professionalTaxInput.value = 0;
-                sudexoInput.value = 0;
-                incomeTaxInput.value = 0;
-                canteenInput.value = 0;
                 document.getElementById('other_deductions').value = 0;
                 document.getElementById('bonus').value = 0;
                 
+                // Disable automatic allowances for interns (but keep them editable if needed)
                 basicSalaryInput.readOnly = true;
                 basicSalaryInput.style.background = '#f8f9fa';
                 
@@ -983,22 +874,19 @@ $error = $_GET['error'] ?? '';
                 const employmentNote = document.createElement('div');
                 employmentNote.id = 'employment-note';
                 employmentNote.style.cssText = 'background: #fff8e1; border: 2px solid #ffd54f; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #f57c00;';
-                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Intern:</strong> Fixed stipend of ₹10,000. No automatic allowances or deductions.';
+                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Intern:</strong> Fixed stipend of ₹10,000. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
                 earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
             } else if (employmentType === 'contract') {
                 // For contract employees: Only basic salary, no allowances or deductions
+                // But allow manual bonus/DA/TA if needed
                 hraInput.value = 0;
                 daInput.value = 0;
-                taInput.value = 0;
+                taSelect.value = '0';
                 daTaInput.value = 0;
                 pfInput.value = 0;
                 npsInput.value = 0;
-                cpfInput.value = 0;
                 document.getElementById('tax_deduction').value = 0;
                 professionalTaxInput.value = 0;
-                sudexoInput.value = 0;
-                incomeTaxInput.value = 0;
-                canteenInput.value = 0;
                 document.getElementById('other_deductions').value = 0;
                 document.getElementById('bonus').value = 0;
                 
@@ -1014,10 +902,10 @@ $error = $_GET['error'] ?? '';
                 const employmentNote = document.createElement('div');
                 employmentNote.id = 'employment-note';
                 employmentNote.style.cssText = 'background: #e3f2fd; border: 2px solid #64b5f6; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #1976d2;';
-                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Contract Employee:</strong> Only basic salary. Manual allowances/deductions if needed.';
+                employmentNote.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Contract Employee:</strong> Only basic salary. No automatic allowances or deductions. You can manually add bonus/DA/TA if needed.';
                 earningsHeader.parentNode.insertBefore(employmentNote, earningsHeader.nextSibling);
             } else {
-                // For permanent employees: Full 7th CPC breakdown
+                // For permanent employees: Full breakdown with HRA, DA, TA, etc.
                 basicSalaryInput.readOnly = false;
                 basicSalaryInput.style.background = '#ffffff';
                 
@@ -1025,18 +913,25 @@ $error = $_GET['error'] ?? '';
                 const employmentNote = document.getElementById('employment-note');
                 if (employmentNote) employmentNote.remove();
 
-                // Auto-calculate 7th CPC components based on rules
-                hraInput.value = (salary * hraRate / 100).toFixed(2);
+                // Transport Allowance default (highest slab); user can change
+                const taVal = parseFloat(taSelect.value) || 0;
+
+                // Auto-calculate components based on rules
+                hraInput.value = (salary * rates.hra / 100).toFixed(2);
                 daInput.value = (salary * rates.da / 100).toFixed(2);
-                taInput.value = transportAllowance.toFixed(2);
-                daTaInput.value = (transportAllowance * rates.daOnTa / 100).toFixed(2);
+                taSelect.value = '3600';
+                daTaInput.value = (3600 * rates.daOnTa / 100).toFixed(2);
                 pfInput.value = (salary * rates.epf / 100).toFixed(2);
                 npsInput.value = (salary * rates.nps / 100).toFixed(2);
-                cpfInput.value = 0;
-                sudexoInput.value = 0;
-                incomeTaxInput.value = 0;
-                canteenInput.value = 0;
-                document.getElementById('tax_deduction').value = 0;
+
+                // Calculate gross to get tax
+                const gross = salary +
+                             parseFloat(hraInput.value) +
+                             parseFloat(daInput.value) +
+                             3600 +
+                             parseFloat(daTaInput.value);
+
+                document.getElementById('tax_deduction').value = (gross * rates.tax / 100).toFixed(2);
                 professionalTaxInput.value = <?php echo $standardRates['professional_tax']; ?>;
             }
 
@@ -1054,9 +949,8 @@ $error = $_GET['error'] ?? '';
 
         // Update calculations in real-time
         const numericInputs = [
-            'basic_salary', 'hra', 'da', 'ta_amount', 'da_ta', 'canteen_subsidy', 'bonus', 
-            'tax_deduction', 'pf_deduction', 'nps_deduction', 'cpf_deduction', 
-            'professional_tax', 'sudexo_deduction', 'income_tax', 'other_deductions'
+            'basic_salary', 'hra', 'da', 'da_ta', 'bonus', 'tax_deduction',
+            'pf_deduction', 'nps_deduction', 'professional_tax', 'other_deductions'
         ];
         
         numericInputs.forEach(inputId => {
@@ -1066,11 +960,17 @@ $error = $_GET['error'] ?? '';
             }
         });
 
-        // TA input triggers DA on TA recalculation
-        taInput.addEventListener('input', () => {
-            const taVal = parseFloat(taInput.value) || 0;
+        // TA select also triggers recalculation (DA on TA depends on this)
+        taSelect.addEventListener('change', () => {
+            const taVal = parseFloat(taSelect.value) || 0;
             const daTaVal = taVal * rates.daOnTa / 100;
             daTaInput.value = daTaVal.toFixed(2);
+            const basic = parseFloat(basicSalaryInput.value) || 0;
+            const hra = parseFloat(hraInput.value) || 0;
+            const da = parseFloat(daInput.value) || 0;
+            const bonus = parseFloat(document.getElementById('bonus').value) || 0;
+            const gross = basic + hra + da + taVal + daTaVal + bonus;
+            document.getElementById('tax_deduction').value = (gross * rates.tax / 100).toFixed(2);
             updateCalculations();
         });
 
@@ -1080,19 +980,15 @@ $error = $_GET['error'] ?? '';
             const da = parseFloat(document.getElementById('da').value) || 0;
             const ta = parseFloat(document.getElementById('ta_amount').value) || 0;
             const daOnTa = parseFloat(document.getElementById('da_ta').value) || 0;
-            const canteen = parseFloat(document.getElementById('canteen_subsidy').value) || 0;
             const bonus = parseFloat(document.getElementById('bonus').value) || 0;
             const tax = parseFloat(document.getElementById('tax_deduction').value) || 0;
             const epf = parseFloat(document.getElementById('pf_deduction').value) || 0;
             const nps = parseFloat(document.getElementById('nps_deduction').value) || 0;
-            const cpf = parseFloat(document.getElementById('cpf_deduction').value) || 0;
             const pt = parseFloat(document.getElementById('professional_tax').value) || 0;
-            const sudexo = parseFloat(document.getElementById('sudexo_deduction').value) || 0;
-            const incomeTax = parseFloat(document.getElementById('income_tax').value) || 0;
             const other = parseFloat(document.getElementById('other_deductions').value) || 0;
 
-            const gross = basic + hra + da + ta + daOnTa + canteen + bonus;
-            const totalDeductions = tax + epf + nps + cpf + pt + sudexo + incomeTax + other;
+            const gross = basic + hra + da + ta + daOnTa + bonus;
+            const totalDeductions = tax + epf + nps + pt + other;
             const net = gross - totalDeductions;
 
             // Format currency
@@ -1106,16 +1002,12 @@ $error = $_GET['error'] ?? '';
             document.getElementById('display_da').textContent = formatCurrency(da);
             document.getElementById('display_ta').textContent = formatCurrency(ta);
             document.getElementById('display_da_ta').textContent = formatCurrency(daOnTa);
-            document.getElementById('display_canteen').textContent = formatCurrency(canteen);
             document.getElementById('display_bonus').textContent = formatCurrency(bonus);
             document.getElementById('display_gross').textContent = formatCurrency(gross);
             document.getElementById('display_tax').textContent = '-' + formatCurrency(tax);
             document.getElementById('display_pf').textContent = '-' + formatCurrency(epf);
             document.getElementById('display_nps').textContent = '-' + formatCurrency(nps);
-            document.getElementById('display_cpf').textContent = '-' + formatCurrency(cpf);
             document.getElementById('display_pt').textContent = '-' + formatCurrency(pt);
-            document.getElementById('display_sudexo').textContent = '-' + formatCurrency(sudexo);
-            document.getElementById('display_incometax').textContent = '-' + formatCurrency(incomeTax);
             document.getElementById('display_other').textContent = '-' + formatCurrency(other);
             document.getElementById('display_net').textContent = formatCurrency(net);
         }
