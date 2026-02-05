@@ -1,21 +1,89 @@
 <?php
+// Start output buffering to prevent any stray output from corrupting PDF
+ob_start();
+
+// Enable error reporting for debugging (logs only, no display)
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 session_start();
 
 // Support both single-role and multi-role scenarios
-// Allow access if user is logged in as accountant, or if payslip_id is provided (for direct links)
 $userRoles = $_SESSION['all_roles'] ?? [$_SESSION['role'] ?? null];
 $hasAccountantRole = in_array('accountant', $userRoles);
 
 if (!isset($_SESSION['role']) && !$hasAccountantRole) {
-    // Check if this is a direct link attempt without session
     if (empty($_GET['payslip_id'])) {
         header("Location: ../auth/login.php");
         exit;
     }
-    // Allow direct payslip PDF access with ID
 }
 
 require_once __DIR__ . '/../../app/Config/database.php';
+
+// Check if vendor autoload exists
+$autoloadPath = __DIR__ . '/../../vendor/autoload.php';
+if (!file_exists($autoloadPath)) {
+    ob_end_clean();
+    die('Error: Composer dependencies not installed. Please run "composer install" in the project directory.');
+}
+require_once $autoloadPath;
+
+// Check if TCPDF class exists
+if (!class_exists('TCPDF')) {
+    ob_end_clean();
+    die('Error: TCPDF library not found. Please run "composer install" to install dependencies.');
+}
+
+// Function to convert number to words (Indian format)
+function numberToWords($num) {
+    $ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+             'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    $tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    if ($num == 0) return 'Zero';
+    if ($num < 0) return 'Minus ' . numberToWords(abs($num));
+    
+    $num = (int)$num;
+    $words = '';
+    
+    // Crores (10 million)
+    if ($num >= 10000000) {
+        $words .= numberToWords(floor($num / 10000000)) . ' Crore ';
+        $num %= 10000000;
+    }
+    
+    // Lakhs (100 thousand)
+    if ($num >= 100000) {
+        $words .= numberToWords(floor($num / 100000)) . ' Lakh ';
+        $num %= 100000;
+    }
+    
+    // Thousands
+    if ($num >= 1000) {
+        $words .= numberToWords(floor($num / 1000)) . ' Thousand ';
+        $num %= 1000;
+    }
+    
+    // Hundreds
+    if ($num >= 100) {
+        $words .= $ones[floor($num / 100)] . ' Hundred ';
+        $num %= 100;
+    }
+    
+    if ($num >= 20) {
+        $words .= $tens[floor($num / 10)] . ' ';
+        $num %= 10;
+    }
+    
+    if ($num > 0) {
+        $words .= $ones[$num] . ' ';
+    }
+    
+    return trim($words);
+}
+
 $db = getDBConnection();
 
 // Get payslip ID from request
@@ -26,7 +94,7 @@ if (!$payslipId) {
 }
 
 try {
-    // Fetch payslip and payroll data
+    // Fetch payslip, payroll, and employee data with all required fields
     $stmt = $db->prepare("
         SELECT 
             ps.payslip_id,
@@ -40,23 +108,37 @@ try {
             pr.ta_amount,
             pr.da_on_ta,
             pr.bonus,
+            pr.canteen_subsidy,
             pr.gross_salary,
             pr.tax_deduction,
             pr.pf_deduction,
             pr.nps_deduction,
+            pr.cpf_deduction,
             pr.professional_tax,
+            pr.sudexo_deduction,
+            pr.income_tax,
             pr.other_deductions,
             pr.total_deductions,
             pr.net_salary,
+            pr.pay_level,
+            e.employee_code,
             e.full_name,
             e.designation,
             e.email,
             e.phone,
-            d.department_name
+            e.pan_no,
+            e.pran_nps_no,
+            e.bank_account_no,
+            e.ifsc_code,
+            e.bank_name,
+            e.bank_branch,
+            d.department_name,
+            pl.level_name
         FROM payslips ps
         JOIN payroll pr ON ps.payroll_id = pr.payroll_id
         JOIN employees e ON ps.employee_id = e.employee_id
         LEFT JOIN departments d ON e.department_id = d.department_id
+        LEFT JOIN pay_levels pl ON e.pay_level_id = pl.level_id
         WHERE ps.payslip_id = ?
     ");
     
@@ -73,308 +155,236 @@ try {
     die('Error: ' . htmlspecialchars($e->getMessage()));
 }
 
-// Pre-process variables to avoid null coalescing in heredoc
-$deptName = $payslip['department_name'] ?? 'N/A';
-
-// Load company settings from database
-$companyName = 'NIELIT e-HRMS';
-$companyAddress = 'NIELIT Bhubaneswar, Odisha';
-$companyPhone = '+91-674-XXXXXXX';
-$companyEmail = 'info@nielit.gov.in';
-$companyLogo = 'NIELIT-Preview.png';
-
+// Load settings for accountant name
+$accountantName = 'Assistant (Accounts)';
+$accountantNameHindi = 'सहायक (लेखा)';
 try {
-    $settingsStmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_email', 'company_phone', 'company_address', 'company_logo')");
+    $settingsStmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('accountant_name', 'accountant_name_hindi')");
     while ($setting = $settingsStmt->fetch(PDO::FETCH_ASSOC)) {
-        switch ($setting['setting_key']) {
-            case 'company_name': $companyName = $setting['setting_value']; break;
-            case 'company_email': $companyEmail = $setting['setting_value']; break;
-            case 'company_phone': $companyPhone = $setting['setting_value']; break;
-            case 'company_address': $companyAddress = $setting['setting_value'] ?: 'NIELIT Bhubaneswar, Odisha'; break;
-            case 'company_logo': $companyLogo = $setting['setting_value']; break;
-        }
+        if ($setting['setting_key'] === 'accountant_name') $accountantName = $setting['setting_value'];
+        if ($setting['setting_key'] === 'accountant_name_hindi') $accountantNameHindi = $setting['setting_value'];
     }
 } catch (Exception $e) {
     // Use defaults
 }
 
-// Build logo URL for PDF
-$logoPath = __DIR__ . '/../assets/images/' . $companyLogo;
-$logoUrl = file_exists($logoPath) ? '../assets/images/' . htmlspecialchars($companyLogo) : '';
+// Format date
+$generatedDate = date('d/m/Y', strtotime($payslip['generated_at']));
 
+// Convert net salary to words
+$netSalaryWords = 'Rupees ' . numberToWords($payslip['net_salary']) . ' only';
 
-// Generate PDF using mPDF library approach (pure PHP HTML-to-PDF via browser print)
-// For production, use: https://github.com/mpdf/mpdf or https://github.com/dompdf/dompdf
+// Get short month for display
+$monthShort = substr($payslip['month'], 0, 3);
+$yearShort = substr($payslip['year'], 2, 2);
 
-$html = <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payslip - {$payslip['full_name']}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: white; color: #333; }
-        @media print {
-            body { margin: 0; padding: 0; }
-            .no-print { display: none !important; }
-            .page { page-break-after: always; }
-        }
-        .page { width: 210mm; height: 297mm; margin: 0 auto; padding: 20px; background: white; }
-        .header { border-bottom: 3px solid #0ea5e9; margin-bottom: 20px; padding-bottom: 15px; }
-        .company-info { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
-        .company-name { font-size: 24px; font-weight: 700; color: #0b1221; }
-        .company-detail { font-size: 11px; color: #666; line-height: 1.6; }
-        .payslip-title { text-align: center; font-size: 20px; font-weight: 700; color: #0b1221; margin: 15px 0 5px 0; }
-        .payslip-period { text-align: center; font-size: 13px; color: #666; margin-bottom: 15px; }
-        
-        .section { margin: 15px 0; }
-        .section-title { background: linear-gradient(135deg, #0ea5e9, #22d3ee); color: white; padding: 10px 12px; font-weight: 700; border-radius: 4px; margin-bottom: 10px; font-size: 13px; }
-        
-        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0; }
-        .info-group { }
-        .info-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
-        .info-label { font-weight: 600; color: #555; }
-        .info-value { text-align: right; color: #333; }
-        
-        .earnings-deductions { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0; }
-        .earnings-col, .deductions-col { }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 15px; }
-        th { background: #f0f0f0; padding: 8px 10px; text-align: left; border-bottom: 2px solid #0ea5e9; font-weight: 700; color: #333; }
-        td { padding: 8px 10px; border-bottom: 1px solid #e0e0e0; }
-        tr:last-child td { border-bottom: 2px solid #0ea5e9; }
-        .amount { text-align: right; font-weight: 600; }
-        .total-row { background: #f9f9f9; font-weight: 700; }
-        .total-row .amount { color: #0ea5e9; }
-        
-        .summary-box { background: linear-gradient(135deg, #f0f9ff, #e0f7ff); padding: 15px; border-radius: 6px; border-left: 4px solid #0ea5e9; margin: 15px 0; }
-        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(14, 165, 233, 0.2); }
-        .summary-row:last-child { border-bottom: none; }
-        .summary-label { font-weight: 600; color: #0b1221; }
-        .summary-value { font-weight: 700; color: #0ea5e9; font-size: 14px; }
-        
-        .footer { margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0; font-size: 10px; color: #999; text-align: center; }
-        .footer-divider { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 20px 0; }
-        .footer-box { text-align: center; padding: 10px 0; border-top: 1px solid #333; }
-        .footer-label { font-size: 10px; color: #666; margin-top: 5px; }
-        
-        .company-logo { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; }
-        .company-header { display: flex; align-items: center; gap: 15px; }
-        
-        .no-print { background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
-        .btn-print, .btn-download { background: #0ea5e9; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; }
-        .btn-print:hover { background: #0284c7; }
-        .btn-download { background: #22d3ee; }
-        .btn-download:hover { background: #06b6d4; }
-    </style>
-</head>
-<body>
-    <div class="no-print" style="margin: 0 0 15px 0;">
-        <button class="btn-print" onclick="window.print()">🖨️ Print Payslip</button>
-        <button class="btn-download" onclick="downloadPDF()">📥 Download as PDF</button>
-        <button style="background: #999;" onclick="window.history.back()">← Back</button>
-    </div>
+// Create new PDF document using TCPDF
+$pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
 
-    <div class="page">
-        <!-- Header -->
-        <div class="header">
-            <div class="company-info">
-                <div class="company-header">
-                    {$logoUrl ? "<img src='{$logoUrl}' alt='Logo' class='company-logo'>" : ""}
-                    <div>
-                        <div class="company-name">{$companyName}</div>
-                        <div class="company-detail">{$companyAddress}</div>
-                        <div class="company-detail">📞 {$companyPhone} | ✉️ {$companyEmail}</div>
-                    </div>
-                </div>
-                </div>
-                <div>
-                    <div style="font-size: 11px; text-align: right; color: #666;">
-                        <strong>Payslip ID:</strong> {$payslip['payslip_id']}<br>
-                        <strong>Date:</strong> {$payslip['generated_at']}
-                    </div>
-                </div>
+// Set document information
+$pdf->SetCreator('NIELIT e-HRMS');
+$pdf->SetAuthor('NIELIT Bhubaneswar');
+$pdf->SetTitle('Payslip - ' . $payslip['full_name']);
+$pdf->SetSubject('Pay Slip for ' . $payslip['month'] . ' ' . $payslip['year']);
+
+// Remove default header/footer
+$pdf->setPrintHeader(false);
+$pdf->setPrintFooter(false);
+
+// Set margins
+$pdf->SetMargins(10, 10, 10);
+$pdf->SetAutoPageBreak(TRUE, 10);
+
+// Add a page
+$pdf->AddPage();
+
+// Set font for Hindi support
+$pdf->SetFont('freeserif', '', 10);
+
+// Build HTML content for NIELIT format PDF
+$html = '
+<style>
+    .header-hindi { font-size: 14px; font-weight: bold; text-align: center; color: #000080; }
+    .header-english { font-size: 12px; font-weight: bold; text-align: center; color: #000080; }
+    .address-hindi { font-size: 9px; text-align: center; color: #333; }
+    .address-english { font-size: 9px; text-align: center; color: #333; }
+    .payslip-title { font-size: 11px; font-weight: bold; text-align: center; margin: 5px 0; background: #e6e6ff; padding: 5px; }
+    .info-table { width: 100%; border-collapse: collapse; margin: 5px 0; }
+    .info-table td { padding: 3px 5px; font-size: 9px; border: 1px solid #999; }
+    .info-label { font-weight: bold; background: #f0f0f0; width: 20%; }
+    .info-value { width: 30%; }
+    .salary-table { width: 100%; border-collapse: collapse; margin: 5px 0; }
+    .salary-table th { background: #d9d9d9; padding: 5px; font-size: 9px; font-weight: bold; border: 1px solid #999; text-align: center; }
+    .salary-table td { padding: 4px 6px; font-size: 9px; border: 1px solid #999; }
+    .amount-cell { text-align: right; }
+    .total-row { background: #e6e6ff; font-weight: bold; }
+    .net-pay-row { background: #ffffcc; font-weight: bold; }
+    .words-row { font-size: 9px; font-style: italic; padding: 5px; background: #f9f9f9; border: 1px solid #999; }
+    .signature-section { margin-top: 20px; }
+    .signature-box { text-align: center; font-size: 9px; }
+    .disclaimer { font-size: 8px; color: #666; text-align: center; margin-top: 10px; font-style: italic; }
+    .date-section { text-align: right; font-size: 9px; margin: 5px 0; }
+</style>
+
+<!-- Header Section -->
+<table width="100%" cellpadding="2">
+    <tr>
+        <td width="15%" align="center">
+            <img src="' . __DIR__ . '/../assets/images/NIELIT-Preview.png" width="50" height="50">
+        </td>
+        <td width="70%" align="center">
+            <div class="header-hindi">राष्ट्रीय इलेक्ट्रॉनिकी एवं सूचना प्रौद्योगिकी संस्थान</div>
+            <div class="header-english">National Institute of Electronics and Information Technology</div>
+            <div class="address-hindi">तीसरी मंजिल, उत्तरदिशा, ओ.सी.ए.सी.टॉवर, आचार्यविहार, भुवनेश्वर 751013</div>
+            <div class="address-english">3rd Floor, North Side, OCAC Tower, Acharya Vihar, Bhubaneswar 751013</div>
+        </td>
+        <td width="15%"></td>
+    </tr>
+</table>
+
+<div class="payslip-title">Pay Slip for the Month: ' . htmlspecialchars($monthShort) . ' ' . htmlspecialchars($payslip['year']) . '</div>
+
+<div class="date-section">' . $generatedDate . '</div>
+
+<!-- Employee Information Section -->
+<table class="info-table">
+    <tr>
+        <td class="info-label">Emp No :</td>
+        <td class="info-value">' . htmlspecialchars($payslip['employee_code'] ?? 'N/A') . '</td>
+        <td class="info-label">PAN No :</td>
+        <td class="info-value">' . htmlspecialchars($payslip['pan_no'] ?? 'N/A') . '</td>
+    </tr>
+    <tr>
+        <td class="info-label">Name :</td>
+        <td class="info-value">' . htmlspecialchars($payslip['full_name']) . '</td>
+        <td class="info-label">PRAN/NPS No:</td>
+        <td class="info-value">' . htmlspecialchars($payslip['pran_nps_no'] ?? 'N/A') . '</td>
+    </tr>
+    <tr>
+        <td class="info-label">Designation :</td>
+        <td class="info-value">' . htmlspecialchars($payslip['designation']) . '</td>
+        <td class="info-label"></td>
+        <td class="info-value">' . htmlspecialchars($payslip['department_name'] ?? 'NIELIT BHUBANESWAR') . '</td>
+    </tr>
+    <tr>
+        <td class="info-label">Bank A/c No.</td>
+        <td class="info-value">' . htmlspecialchars($payslip['bank_account_no'] ?? 'N/A') . '</td>
+        <td class="info-label">Branch and<br>IFSC Code :</td>
+        <td class="info-value">' . htmlspecialchars(($payslip['bank_branch'] ?? '') . '<br>' . ($payslip['ifsc_code'] ?? 'N/A')) . '</td>
+    </tr>
+    <tr>
+        <td class="info-label">Pay Band :</td>
+        <td class="info-value">' . htmlspecialchars($payslip['pay_level'] ?? $payslip['level_name'] ?? 'N/A') . '</td>
+        <td class="info-label">Basic: Rs.</td>
+        <td class="info-value">' . number_format($payslip['basic'], 2) . '</td>
+    </tr>
+</table>
+
+<!-- Earnings and Deductions Section -->
+<table class="salary-table">
+    <tr>
+        <th width="50%" colspan="2">EARNINGS (in Rs.)</th>
+        <th width="50%" colspan="2">DEDUCTIONS (in Rs.)</th>
+    </tr>
+    <tr>
+        <td width="30%">Basic</td>
+        <td width="20%" class="amount-cell">' . number_format($payslip['basic'], 2) . '</td>
+        <td width="30%">NPS @ 10%</td>
+        <td width="20%" class="amount-cell">' . number_format($payslip['nps_deduction'], 2) . '</td>
+    </tr>
+    <tr>
+        <td>DA @ 58%</td>
+        <td class="amount-cell">' . number_format($payslip['da_amount'], 2) . '</td>
+        <td>Income Tax</td>
+        <td class="amount-cell">' . number_format($payslip['income_tax'] ?? $payslip['tax_deduction'], 2) . '</td>
+    </tr>
+    <tr>
+        <td>HRA @ 20%</td>
+        <td class="amount-cell">' . number_format($payslip['hra_amount'], 2) . '</td>
+        <td>Professional Tax</td>
+        <td class="amount-cell">' . number_format($payslip['professional_tax'], 2) . '</td>
+    </tr>
+    <tr>
+        <td>Transport Allowance</td>
+        <td class="amount-cell">' . number_format($payslip['ta_amount'], 2) . '</td>
+        <td>Voluntary EPF</td>
+        <td class="amount-cell">' . number_format($payslip['pf_deduction'], 2) . '</td>
+    </tr>
+    <tr>
+        <td>DA on TA @ 58%</td>
+        <td class="amount-cell">' . number_format($payslip['da_on_ta'], 2) . '</td>
+        <td>Group Insurance</td>
+        <td class="amount-cell">' . number_format($payslip['other_deductions'], 2) . '</td>
+    </tr>
+    <tr>
+        <td>Canteen Subsidy</td>
+        <td class="amount-cell">' . number_format($payslip['canteen_subsidy'] ?? 0, 2) . '</td>
+        <td>Sudexo</td>
+        <td class="amount-cell">' . number_format($payslip['sudexo_deduction'] ?? 0, 2) . '</td>
+    </tr>
+    <tr>
+        <td>Bonus</td>
+        <td class="amount-cell">' . number_format($payslip['bonus'], 2) . '</td>
+        <td>CPF</td>
+        <td class="amount-cell">' . number_format($payslip['cpf_deduction'] ?? 0, 2) . '</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr class="total-row">
+        <td><strong>Gross Pay</strong></td>
+        <td class="amount-cell"><strong>' . number_format($payslip['gross_salary'], 2) . '</strong></td>
+        <td><strong>Total Deductions</strong></td>
+        <td class="amount-cell"><strong>' . number_format($payslip['total_deductions'], 2) . '</strong></td>
+    </tr>
+    <tr class="net-pay-row">
+        <td colspan="2"><strong>Net Pay</strong></td>
+        <td colspan="2" class="amount-cell"><strong>Rs. ' . number_format($payslip['net_salary'], 2) . '</strong></td>
+    </tr>
+</table>
+
+<!-- Net Pay in Words -->
+<div class="words-row">
+    <strong>' . $netSalaryWords . '</strong>
+</div>
+
+<!-- Signature Section -->
+<table class="signature-section" width="100%">
+    <tr>
+        <td width="60%">&nbsp;</td>
+        <td width="40%" align="center" class="signature-box">
+            <br><br><br>
+            <div style="border-top: 1px solid #000; padding-top: 5px;">
+                <strong>' . htmlspecialchars($accountantNameHindi) . '</strong><br>
+                <strong>' . htmlspecialchars($accountantName) . '</strong><br>
+                सहायक (लेखा)<br>
+                Assistant (Accounts)
             </div>
-        </div>
+        </td>
+    </tr>
+</table>
 
-        <!-- Title -->
-        <div class="payslip-title">SALARY STATEMENT / PAYSLIP</div>
-        <div class="payslip-period">For the Month of {$payslip['month']}, {$payslip['year']}</div>
+<!-- Disclaimer -->
+<div class="disclaimer">
+    E&amp;OE. If any discrepancies found, kindly contact the concerned in Accounts Section immediately.
+</div>
+';
 
-        <!-- Employee & Company Info -->
-        <div class="two-column">
-            <div class="info-group">
-                <div style="font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid #0ea5e9; padding-bottom: 5px;">Employee Information</div>
-                <div class="info-row">
-                    <span class="info-label">Name</span>
-                    <span class="info-value">{$payslip['full_name']}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Designation</span>
-                    <span class="info-value">{$payslip['designation']}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Department</span>
-                    <span class="info-value">{$deptName}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">{$payslip['email']}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Phone</span>
-                    <span class="info-value">{$payslip['phone']}</span>
-                </div>
-            </div>
+// Write HTML content to PDF
+$pdf->writeHTML($html, true, false, true, false, '');
 
-            <div class="info-group">
-                <div style="font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid #0ea5e9; padding-bottom: 5px;">Payroll Details</div>
-                <div class="info-row">
-                    <span class="info-label">Month</span>
-                    <span class="info-value">{$payslip['month']}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Year</span>
-                    <span class="info-value">{$payslip['year']}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Payslip ID</span>
-                    <span class="info-value">{$payslip['payslip_id']}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Generated</span>
-                    <span class="info-value">{$payslip['generated_at']}</span>
-                </div>
-            </div>
-        </div>
+// Generate filename
+$filename = str_replace(' ', '_', $payslip['full_name']) . '_Payslip_' . $payslip['month'] . '_' . $payslip['year'] . '.pdf';
 
-        <!-- Earnings & Deductions -->
-        <div class="earnings-deductions">
-            <div class="earnings-col">
-                <div class="section-title">💰 EARNINGS</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Component</th>
-                            <th class="amount">Amount (₹)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Basic Salary</td>
-                            <td class="amount">{$payslip['basic']}</td>
-                        </tr>
-                        <tr>
-                            <td>HRA (20%)</td>
-                            <td class="amount">{$payslip['hra_amount']}</td>
-                        </tr>
-                        <tr>
-                            <td>DA (58%)</td>
-                            <td class="amount">{$payslip['da_amount']}</td>
-                        </tr>
-                        <tr>
-                            <td>Transport Allowance</td>
-                            <td class="amount">{$payslip['ta_amount']}</td>
-                        </tr>
-                        <tr>
-                            <td>DA on TA (58%)</td>
-                            <td class="amount">{$payslip['da_on_ta']}</td>
-                        </tr>
-                        <tr>
-                            <td>Bonus</td>
-                            <td class="amount">{$payslip['bonus']}</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>GROSS SALARY</td>
-                            <td class="amount">{$payslip['gross_salary']}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+// Clean any output buffer before sending PDF
+ob_end_clean();
 
-            <div class="deductions-col">
-                <div class="section-title">📊 DEDUCTIONS</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Component</th>
-                            <th class="amount">Amount (₹)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Income Tax (TDS)</td>
-                            <td class="amount">{$payslip['tax_deduction']}</td>
-                        </tr>
-                        <tr>
-                            <td>EPF (12%)</td>
-                            <td class="amount">{$payslip['pf_deduction']}</td>
-                        </tr>
-                        <tr>
-                            <td>NPS (10%)</td>
-                            <td class="amount">{$payslip['nps_deduction']}</td>
-                        </tr>
-                        <tr>
-                            <td>Professional Tax</td>
-                            <td class="amount">{$payslip['professional_tax']}</td>
-                        </tr>
-                        <tr>
-                            <td>Other Deductions</td>
-                            <td class="amount">{$payslip['other_deductions']}</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>TOTAL DEDUCTIONS</td>
-                            <td class="amount">{$payslip['total_deductions']}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Summary Box -->
-        <div class="summary-box">
-            <div class="summary-row">
-                <span class="summary-label">Gross Salary</span>
-                <span class="summary-value">₹ {$payslip['gross_salary']}</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Total Deductions</span>
-                <span class="summary-value">- ₹ {$payslip['total_deductions']}</span>
-            </div>
-            <div class="summary-row" style="border-bottom: 2px solid #0ea5e9; padding: 10px 0; font-size: 16px;">
-                <span class="summary-label" style="font-size: 15px;">NET SALARY (Take-Home)</span>
-                <span class="summary-value" style="font-size: 16px;">₹ {$payslip['net_salary']}</span>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <div style="margin: 10px 0; font-size: 11px; color: #333;">
-                <strong>Note:</strong> This is a computer-generated document and does not require a signature.
-            </div>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-                <p style="font-size: 10px;">For any queries regarding this payslip, please contact the HR/Accounts department.</p>
-                <p style="font-size: 9px; margin-top: 10px; color: #999;">Generated on {$payslip['generated_at']} | Payslip ID: {$payslip['payslip_id']}</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function downloadPDF() {
-            const element = document.querySelector('.page');
-            const filename = '{$payslip['full_name']}_Payslip_{$payslip['month']}_{$payslip['year']}.pdf';
-            
-            // Using html2pdf.js CDN-free alternative or print-to-PDF
-            alert('Click OK to open print dialog, then save as PDF using your browser.');
-            window.print();
-        }
-    </script>
-</body>
-</html>
-HTML;
-
-echo $html;
-?>
+// Output PDF
+try {
+    $pdf->Output($filename, 'I');
+} catch (Exception $e) {
+    die('Error generating PDF: ' . htmlspecialchars($e->getMessage()));
+}
